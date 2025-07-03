@@ -1,0 +1,19 @@
+Spring :
+  application:
+    name: lunchChat
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/lunchChat
+    username: root
+    password: ${DB_PW}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: Asia/Seoul
