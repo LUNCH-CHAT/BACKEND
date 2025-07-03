@@ -1,11 +1,12 @@
 # BACKEND
 
+---
 
-## 🪾 Branch Convention
+## 🪾 Branch
 
 
-- 컨벤션/이슈번호-이슈내용 
-  : setting/1-init
+`컨벤션/이슈번호-이슈내용`
+
 
 ---
 
