@@ -3,7 +3,9 @@
 ---
 
 ## 📚 Branch Convention- 예시:  
-  - `feat/123-login-api`  
+
+- 컨벤션/이슈번호-이슈내용 
+  - `feat/123-loginApi`  
   - `fix/99-typo`  
   - `setting/1-init`  
 
