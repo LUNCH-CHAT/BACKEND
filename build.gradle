@@ -2,9 +2,10 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.flywaydb.flyway' version '10.10.0'
 }
 
-group = 'com'
+group = 'com.UMC'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -23,25 +24,67 @@ repositories {
     mavenCentral()
 }
 
+// Flyway Gradle Plugin 설정
+flyway {
+    url = findProperty('DATABASE_URL')
+    user = findProperty('DATABASE_USERNAME')
+    password = findProperty('DATABASE_PASSWORD')
+    locations = ['classpath:db/migration']
+    cleanDisabled = false
+    baselineOnMigrate = true
+    validateOnMigrate = true
+}
+
 dependencies {
-    // Spring
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // 기본 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Flyway 의존성 추가
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+
+    // JSON 처리
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+
+    // 모니터링 및 헬스체크
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // 개발 도구
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // DB
-    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Mysql
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    // 테스트 의존성
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// Flyway 태스크 설정
+tasks.named('flywayMigrate') {
+    doFirst {
+        println "Running Flyway migration..."
+    }
+}
+
+// 빌드 전 Flyway 검증 (선택사항)
+tasks.named('build') {
+    dependsOn 'flywayValidate'
 }
