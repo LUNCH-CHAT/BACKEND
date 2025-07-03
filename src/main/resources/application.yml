@@ -1,19 +1,66 @@
-Spring :
-  application:
-    name: lunchChat
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
   datasource:
-    url: jdbc:mysql://localhost:3306/lunchChat
-    username: root
+    url: ${DB_URL}
+    username: ${DB_USER}
     password: ${DB_PW}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      maximum-pool-size: 10
+
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        jdbc:
-          time_zone: Asia/Seoul
+        use_sql_comments: true
+
+  # Flyway 설정
+  flyway:
+    enabled: true
+    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:true}
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    clean-disabled: ${FLYWAY_CLEAN_DISABLED:false}
+    baseline-version: 1
+    baseline-description: "Initial baseline"
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+server:
+  port: ${SERVER_PORT:8080}
+
+logging:
+  level:
+    com.UMC: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${LOG_LEVEL:INFO}
+    org.flywaydb: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,flyway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always

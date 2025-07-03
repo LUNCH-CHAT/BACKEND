@@ -1,0 +1,27 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    clean-disabled: true
+    validate-on-migrate: true
+
+  data:
+    redis:
+      timeout: 30000ms
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.UMC: INFO
+    org.springframework.security: WARN
+    org.flywaydb: INFO
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%level] %logger{36} - %msg%n"
