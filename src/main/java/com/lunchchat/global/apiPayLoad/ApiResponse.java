@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.lunchchat.global.apiPayLoad.code.BaseCode;
+import com.lunchchat.global.apiPayLoad.code.status.SuccessStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -29,7 +30,6 @@ public class ApiResponse<T> {
     return new ApiResponse<>(true, code.getReasonHttpStatus().getCode(),
         code.getReasonHttpStatus().getMessage(), result);
   }
-
 
   // 실패한 경우 응답 생성
   public static <T> ApiResponse<T> onFailure(String code, String message, T data) {
