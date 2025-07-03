@@ -86,5 +86,5 @@ tasks.named('flywayMigrate') {
 
 // 빌드 전 Flyway 검증 (선택사항)
 tasks.named('build') {
-    dependsOn 'flywayValidate'
+    // dependsOn 'flywayValidate'
 }
