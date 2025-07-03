@@ -1,14 +1,12 @@
 # BACKEND
 
----
 
-##Branch Convention
+## Branch Convention
 
 컨벤션명/이슈번호-이슈내용
 
----
 
-##Commit Convention
+## Commit Convention
 
 커밋 타입	설명	커밋 메시지 예시
 ✨ Feat	새로운 기능 추가	[FEAT] #이슈번호: 기능 추가
@@ -20,9 +18,8 @@
 🔥 Remove	파일 또는 폴더 삭제	[REMOVE] #이슈번호: 불필요한 파일 삭제
 🚚 Rename	파일 또는 폴더명 수정	[RENAME] #이슈번호: 폴더명 변경
 
----
 
-##Issue Template
+## Issue Template
 
 ## 어떤 기능인가요?
 
@@ -36,9 +33,8 @@
 
 ## 참고할만한 자료(선택)
 
----
 
-Pull Request Template
+## Pull Request Template
 
 ## 🎋 이슈 및 작업중인 브랜치
 
