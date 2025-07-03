@@ -5,9 +5,8 @@
 ## 📚 Branch Convention- 예시:  
 
 - 컨벤션/이슈번호-이슈내용 
-  - `feat/123-loginApi`  
-  - `fix/99-typo`  
-  - `setting/1-init`  
+  - feat/123-loginApi
+  - setting/1-init
 
 ---
 
@@ -44,7 +43,7 @@
 
 ---
 
-## PullRequest Template
+## 📚 PullRequest Template
 
 ```markdown
 ## 🎋 이슈 및 작업중인 브랜치
