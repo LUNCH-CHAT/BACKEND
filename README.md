@@ -1,8 +1,7 @@
 # BACKEND
 
----
 
-## 📚 Branch Convention
+## 🪾 Branch Convention
 
 
 - 컨벤션/이슈번호-이슈내용 
