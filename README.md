@@ -5,8 +5,9 @@
 ## 🪾 Branch
 
 
-`컨벤션/이슈번호-이슈내용`
-
+- 컨벤션/이슈번호-이슈내용
+  - setting/1-init
+  - feat/2-loginAPI
 
 ---
 
