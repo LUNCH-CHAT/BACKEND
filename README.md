@@ -28,9 +28,6 @@
 
 ## 🗂️ Issue Template
 
-<details>
-<summary>이슈 작성 템플릿 보기/접기</summary>
-
 ```markdown
 ## 어떤 기능인가요?
 
@@ -43,7 +40,13 @@
 - [ ] TODO
 
 ## 참고할만한 자료(선택)
+```
 
+---
+
+## PullRequest Template
+
+```markdown
 ## 🎋 이슈 및 작업중인 브랜치
 
 - ex) feat/123-login-api
@@ -58,4 +61,4 @@
 - [ ] **Assignees** 등록을 하였나요?
 - [ ] **라벨(Label)** 등록을 하였나요?
 - [ ] PR 머지하기 전 반드시 **CI가 정상적으로 작동하는지 확인**해주세요!
-
+```
