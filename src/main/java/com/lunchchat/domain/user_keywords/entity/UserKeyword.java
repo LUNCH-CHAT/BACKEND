@@ -1,15 +1,13 @@
-package com.lunchchat.domain.user_keywords;
+package com.lunchchat.domain.user_keywords.entity;
 
-import com.lunchchat.domain.users.User;
+import com.lunchchat.domain.users.entity.User;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class UserKeyword extends BaseEntity {
 
     @Id
@@ -30,9 +28,4 @@ public class UserKeyword extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    public enum KeywordType {
-        EXPRESS, // express
-        GOAL, // goal
-        INTEREST // interest
-    }
 }

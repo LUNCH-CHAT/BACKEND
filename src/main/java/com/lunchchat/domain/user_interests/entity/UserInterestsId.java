@@ -1,4 +1,4 @@
-package com.lunchchat.domain.user_interests;
+package com.lunchchat.domain.user_interests.entity;
 
 import lombok.EqualsAndHashCode;
 import java.io.Serializable;

@@ -1,16 +1,14 @@
-package com.lunchchat.domain.users;
+package com.lunchchat.domain.users.entity;
 
-import com.lunchchat.domain.college.College;
-import com.lunchchat.domain.department.Department;
+import com.lunchchat.domain.college.entity.College;
+import com.lunchchat.domain.department.entity.Department;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class User extends BaseEntity {
 
     @Id

@@ -1,21 +1,20 @@
-package com.lunchchat.domain.project_info;
+package com.lunchchat.domain.faq.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-public class ProjectInfo {
+public class Faq {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String title;
+    @Column(columnDefinition = "TEXT")
+    private String question;
 
     @Column(columnDefinition = "TEXT")
-    private String content;
+    private String answer;
 }

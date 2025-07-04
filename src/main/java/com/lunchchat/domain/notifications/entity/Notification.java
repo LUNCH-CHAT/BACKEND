@@ -1,15 +1,13 @@
-package com.lunchchat.domain.notifications;
+package com.lunchchat.domain.notifications.entity;
 
-import com.lunchchat.domain.users.User;
+import com.lunchchat.domain.users.entity.User;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Notification extends BaseEntity {
 
     @Id

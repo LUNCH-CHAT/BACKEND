@@ -1,7 +1,7 @@
-package com.lunchchat.domain.chat_message;
+package com.lunchchat.domain.chat_message.entity;
 
-import com.lunchchat.domain.chat_room.ChatRoom;
-import com.lunchchat.domain.users.User;
+import com.lunchchat.domain.chat_room.entity.ChatRoom;
+import com.lunchchat.domain.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,9 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class ChatMessage {
 
     @Id

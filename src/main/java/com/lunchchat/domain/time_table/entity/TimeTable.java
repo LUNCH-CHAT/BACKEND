@@ -1,6 +1,6 @@
-package com.lunchchat.domain.time_table;
+package com.lunchchat.domain.time_table.entity;
 
-import com.lunchchat.domain.users.User;
+import com.lunchchat.domain.users.entity.User;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,9 +9,7 @@ import java.time.LocalTime;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class TimeTable extends BaseEntity {
 
     @Id
@@ -24,10 +22,6 @@ public class TimeTable extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TimeTableType type;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private DayOfWeek dayOfWeek;
 
     private LocalTime startTime;
@@ -36,12 +30,4 @@ public class TimeTable extends BaseEntity {
 
     private String subjectName;
 
-    public enum TimeTableType {
-        TIMETABLE,
-        COFFEECHAT
-    }
-
-    public enum DayOfWeek {
-        MON, TUE, WED, THU, FRI, SAT, SUN
-    }
 }

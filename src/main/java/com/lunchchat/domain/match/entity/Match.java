@@ -1,6 +1,6 @@
-package com.lunchchat.domain.match;
+package com.lunchchat.domain.match.entity;
 
-import com.lunchchat.domain.users.User;
+import com.lunchchat.domain.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Match {
 
     @Id
@@ -30,9 +28,5 @@ public class Match {
 
     private LocalDateTime createdAt;
 
-    public enum MatchStatus {
-        REQUESTED,
-        ACCEPTED,
-        REJECTED
-    }
+    
 }

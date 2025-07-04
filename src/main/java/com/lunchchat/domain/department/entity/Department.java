@@ -1,14 +1,12 @@
-package com.lunchchat.domain.department;
+package com.lunchchat.domain.department.entity;
 
-import com.lunchchat.domain.college.College;
+import com.lunchchat.domain.college.entity.College;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Department {
 
     @Id

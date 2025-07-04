@@ -1,20 +1,17 @@
-package com.lunchchat.domain.chat_room;
+package com.lunchchat.domain.college.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-public class ChatRoom {
+public class College {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime createdAt;
+    @Column(nullable = false, unique = true)
+    private String name;
 }
