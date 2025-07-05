@@ -2,6 +2,7 @@ package com.lunchchat.domain.member.entity;
 
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
+import com.lunchchat.domain.user_keywords.entity.UserKeyword;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +35,7 @@ public class Member extends BaseEntity {
 
   private String nickname;
 
-  private Long studentId;
+  private Long studentNo;
 
   @Enumerated(EnumType.STRING)
   private LoginType loginType;
@@ -49,25 +51,23 @@ public class Member extends BaseEntity {
   @Column(columnDefinition = "TEXT")
   private String profileIntro;
 
-  //setter
-  public void setId(Long id) {
-    this.id = id;
-  }
-  public void setMembername(String membername) {
-    this.membername = membername;
-  }
-
-  public void setEmail(String email) {
+  //생성자
+  public Member(String email, LoginType loginType) {
     this.email = email;
+    this.loginType = loginType;
   }
 
-  public void setNickname(String nickname) {
+  //setter
+  public void changeNickname(String nickname) {
     this.nickname = nickname;
   }
 
-  public void setStudentId(Long studentId) {
-    this.studentId = studentId;
+  public void changeDepartment(Department department) {
+    this.department = department;
   }
 
+  public void updateProfileIntro(String profileIntro) {
+    this.profileIntro = profileIntro;
+  }
 
 }
