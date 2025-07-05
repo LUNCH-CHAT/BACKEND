@@ -2,7 +2,8 @@ package com.lunchchat.domain.member.entity;
 
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
-import com.lunchchat.domain.user_keywords.entity.UserKeyword;
+import com.lunchchat.domain.member.entity.enums.LoginType;
+import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,7 +15,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,22 +28,36 @@ public class Member extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  //실명
   @Column(nullable = false, unique = true)
   private String membername;
 
+  //이메일
+  @Column(nullable = false,unique = true)
   private String email;
 
+  //닉네임
   private String nickname;
 
-  private Long studentNo;
+  //학번
+  private String studentNo;
 
+  //로그인 타입
   @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private LoginType loginType;
 
+  //대학
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "university_id")
+  private University university;
+
+  //단과대
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "college_id")
   private College college;
 
+  //학과
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "department_id")
   private Department department;
@@ -58,11 +72,15 @@ public class Member extends BaseEntity {
   }
 
   //setter
-  public void changeNickname(String nickname) {
+  public void updateNickname(String nickname) {
     this.nickname = nickname;
   }
 
-  public void changeDepartment(Department department) {
+  public void updateCollege(College college) {
+    this.college = college;
+  }
+
+  public void updateDepartment(Department department) {
     this.department = department;
   }
 

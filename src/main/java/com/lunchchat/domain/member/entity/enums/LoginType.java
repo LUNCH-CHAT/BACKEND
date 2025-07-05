@@ -1,4 +1,4 @@
-package com.lunchchat.domain.member.entity;
+package com.lunchchat.domain.member.entity.enums;
 
 public enum LoginType {
   LChat("Lchat"), Google("Google");

@@ -1,4 +1,4 @@
-package com.lunchchat.domain.member.entity;
+package com.lunchchat.domain.member.entity.enums;
 
 public enum MemberStatus {
   ACTIVE("ACTIVE"),INACTIVE("INACTIVE"),PENDING("PENDING");
