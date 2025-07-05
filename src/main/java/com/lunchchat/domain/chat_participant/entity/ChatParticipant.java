@@ -1,7 +1,7 @@
 package com.lunchchat.domain.chat_participant.entity;
 
 import com.lunchchat.domain.chat_room.entity.ChatRoom;
-import com.lunchchat.domain.users.entity.User;
+import com.lunchchat.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +20,6 @@ public class ChatParticipant implements Serializable {
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "member_id")
+    private Member member;
 }

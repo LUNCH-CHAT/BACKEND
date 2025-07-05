@@ -6,5 +6,5 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class ChatParticipantId implements Serializable {
     private Long chatRoom;
-    private Long user;
+    private Long member;
 }

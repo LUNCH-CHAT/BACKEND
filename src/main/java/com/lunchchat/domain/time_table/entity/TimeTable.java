@@ -1,6 +1,6 @@
 package com.lunchchat.domain.time_table.entity;
 
-import com.lunchchat.domain.users.entity.User;
+import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,8 +17,8 @@ public class TimeTable extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

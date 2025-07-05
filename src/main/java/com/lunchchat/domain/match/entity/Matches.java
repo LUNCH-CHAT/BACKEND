@@ -1,6 +1,6 @@
 package com.lunchchat.domain.match.entity;
 
-import com.lunchchat.domain.users.entity.User;
+import com.lunchchat.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,19 +9,19 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Match {
+public class Matches {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "from_user_id")
-    private User fromUser;
+    @JoinColumn(name = "from_member_id")
+    private Member fromMember;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "to_user_id")
-    private User toUser;
+    @JoinColumn(name = "to_member_id")
+    private Member toMember;
 
     @Enumerated(EnumType.STRING)
     private MatchStatus status;

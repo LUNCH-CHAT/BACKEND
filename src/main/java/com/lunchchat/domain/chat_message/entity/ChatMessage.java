@@ -1,7 +1,7 @@
 package com.lunchchat.domain.chat_message.entity;
 
 import com.lunchchat.domain.chat_room.entity.ChatRoom;
-import com.lunchchat.domain.users.entity.User;
+import com.lunchchat.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +22,7 @@ public class ChatMessage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
-    private User sender;
+    private Member sender;
 
     @Column(columnDefinition = "TEXT")
     private String content;
