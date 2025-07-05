@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Match {
+public class Matches {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
