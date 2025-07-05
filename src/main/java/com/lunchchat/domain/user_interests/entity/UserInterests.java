@@ -1,7 +1,7 @@
 package com.lunchchat.domain.user_interests.entity;
 
 import com.lunchchat.domain.interests.entity.Interests;
-import com.lunchchat.domain.users.entity.User;
+import com.lunchchat.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,8 +15,8 @@ public class UserInterests implements Serializable {
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "member_id")
+    private Member user;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
