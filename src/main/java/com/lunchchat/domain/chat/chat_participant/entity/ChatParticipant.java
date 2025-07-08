@@ -1,6 +1,6 @@
-package com.lunchchat.domain.chat_participant.entity;
+package com.lunchchat.domain.chat.chat_participant.entity;
 
-import com.lunchchat.domain.chat_room.entity.ChatRoom;
+import com.lunchchat.domain.chat.chat_room.entity.ChatRoom;
 import com.lunchchat.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;

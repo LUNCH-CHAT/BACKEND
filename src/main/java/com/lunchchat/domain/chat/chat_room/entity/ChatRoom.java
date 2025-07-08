@@ -1,4 +1,4 @@
-package com.lunchchat.domain.chat_room.entity;
+package com.lunchchat.domain.chat.chat_room.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
