@@ -2,6 +2,7 @@ package com.lunchchat.domain.chat.chat_message.entity;
 
 import com.lunchchat.domain.chat.chat_room.entity.ChatRoom;
 import com.lunchchat.domain.member.entity.Member;
+import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessage {
+public class ChatMessage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
