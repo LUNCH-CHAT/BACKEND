@@ -1,4 +1,4 @@
-package com.lunchchat.domain.notifications.entity;
+package com.lunchchat.domain.notification.entity;
 
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.global.common.BaseEntity;
