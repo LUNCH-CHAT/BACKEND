@@ -16,13 +16,22 @@ public class ChatRoom extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "starter_id")
-    private Member starter;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "starter_id")
+//    private Member starter;
+//
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "friend_id")
+//    private Member friend;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_id")
-    private Member friend;
+    private Long starterId;
 
-//    private LocalDateTime createdAt;
+    private Long friendId;
+
+    public static ChatRoom of(Long starterId, Long friendId) {
+        ChatRoom room = new ChatRoom();
+        room.starterId = starterId;
+        room.friendId = friendId;
+        return room;
+    }
 }
