@@ -1,4 +1,4 @@
-package com.lunchchat.global.auth.service;
+package com.lunchchat.global.security.auth.service;
 
 import org.springframework.stereotype.Service;
 

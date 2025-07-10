@@ -22,7 +22,7 @@ public class ApiResponse<T> {
   // 성공한 경우 응답 생성
 
   public static <T> ApiResponse<T> onSuccess(T result) {
-    return new ApiResponse<>(true, SuccessStatus._OK.getCode(), SuccessStatus._OK.getMessage(),
+    return new ApiResponse<>(true, SuccessStatus.OK.getCode(), SuccessStatus.OK.getMessage(),
         result);
   }
 

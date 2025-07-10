@@ -1,4 +1,4 @@
-package com.lunchchat.global.auth.dto;
+package com.lunchchat.global.security.auth.dto;
 
 public record GoogleUserDTO(
     String email,

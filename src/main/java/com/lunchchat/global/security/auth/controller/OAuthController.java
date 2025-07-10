@@ -1,7 +1,7 @@
-package com.lunchchat.global.auth.controller;
+package com.lunchchat.global.security.auth.controller;
 
 import com.lunchchat.global.apiPayLoad.ApiResponse;
-import com.lunchchat.global.auth.service.GoogleAuthService;
+import com.lunchchat.global.security.auth.service.GoogleAuthService;
 import com.lunchchat.global.config.security.JwtConfig;
 import com.lunchchat.global.security.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
