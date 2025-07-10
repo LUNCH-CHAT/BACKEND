@@ -31,8 +31,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
   // 로그인 시도 메서드 -> UsernamePasswordAuthenticationFilter에서 상속
   @Override
-  public Authentication attemptAuthentication((HttpServletRequest request, HttpServletResponse response) throws AuthenticationException){
+  public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException{
 
+    try{
+
+      return authenticationManager.authenticate();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
 
