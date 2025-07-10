@@ -1,4 +1,4 @@
-package com.lunchchat.global.config;
+package com.lunchchat.global.config.security;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
