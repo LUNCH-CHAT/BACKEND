@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
-    Optional<ChatRoom> findByStarterAndFriend(Long starterId, Long friendId);
+    Optional<ChatRoom> findByStarterIdAndFriendId(Long starterId, Long friendId);
 
     // Custom query methods can be defined here if needed
     // For example, to find chat rooms by user ID or other criteria
