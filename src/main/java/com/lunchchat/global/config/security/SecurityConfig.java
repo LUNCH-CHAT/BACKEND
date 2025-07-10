@@ -18,11 +18,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
   private final CorsConfigurationSource corsConfigurationSource;
   private final JwtFilterConfig jwtFilterConfig;
+
+  public SecurityConfig(CorsConfigurationSource corsConfigurationSource,JwtFilterConfig jwtFilterConfig) {
+    this.corsConfigurationSource = corsConfigurationSource;
+    this.jwtFilterConfig = jwtFilterConfig;
+  }
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

@@ -8,10 +8,13 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
-@RequiredArgsConstructor
 public class AuthenticationConfig {
 
   private final AuthenticationConfiguration authenticationConfiguration;
+
+  public AuthenticationConfig(AuthenticationConfiguration authenticationConfiguration) {
+    this.authenticationConfiguration = authenticationConfiguration;
+  }
 
   @Bean
   public AuthenticationManager authenticationManager() throws Exception {
