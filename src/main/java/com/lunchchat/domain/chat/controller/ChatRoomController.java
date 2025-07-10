@@ -1,10 +1,8 @@
 package com.lunchchat.domain.chat.controller;
 
-import com.lunchchat.domain.chat.chat_room.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.request.CreateChatRoomReq;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
 import com.lunchchat.domain.chat.service.ChatRoomService;
-import com.lunchchat.domain.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

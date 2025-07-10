@@ -33,8 +33,8 @@ public class ChatRoomService {
 
         // 기존 채팅방 존재하는지 확인 (starter-friend / friend-starter 모두 포함)
         Optional<ChatRoom> existingRoom = chatRoomRepository
-                .findByStarterAndFriend(starterId, friendId)
-                .or(() -> chatRoomRepository.findByStarterAndFriend(friendId, starterId));
+                .findByStarterIdAndFriendId(starterId, friendId)
+                .or(() -> chatRoomRepository.findByStarterIdAndFriendId(friendId, starterId));
 
         ChatRoom chatRoom = existingRoom.orElseGet(() -> {
             ChatRoom newRoom = ChatRoom.of(starterId, friendId);
@@ -46,6 +46,10 @@ public class ChatRoomService {
                 chatRoom.getStarterId(),
                 chatRoom.getFriendId()
         );
+    }
+
+    public void exitRoom(){
+
     }
 
 }
