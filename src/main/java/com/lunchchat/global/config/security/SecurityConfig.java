@@ -31,6 +31,11 @@ public class SecurityConfig {
     this.jwtFilterConfig = jwtFilterConfig;
   }
 
+  public SecurityConfig(CorsConfigurationSource corsConfigurationSource,JwtFilterConfig jwtFilterConfig) {
+    this.corsConfigurationSource = corsConfigurationSource;
+    this.jwtFilterConfig = jwtFilterConfig;
+  }
+
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
