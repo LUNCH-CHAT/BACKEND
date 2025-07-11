@@ -8,7 +8,7 @@ import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.repository.MatchRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
-import com.lunchchat.global.apiPayLoad.exception.handler.MatchHandler;
+import com.lunchchat.global.apiPayLoad.exception.handler.MatchException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class MatchQueryServiceImpl implements MatchQueryService {
       case RECEIVED ->
           matches = matchRepository.findByStatusAndToMemberId(MatchStatus.REQUESTED, memberId);
 
-      default -> throw new MatchHandler(ErrorStatus.INVALID_MATCH_STATUS);
+      default -> throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
     }
 
     return matches;
