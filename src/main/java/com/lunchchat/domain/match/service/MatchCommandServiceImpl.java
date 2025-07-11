@@ -1,11 +1,13 @@
 package com.lunchchat.domain.match.service;
 
 import com.lunchchat.domain.match.converter.MatchConverter;
+import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.repository.MatchRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
+import com.lunchchat.global.apiPayLoad.exception.handler.MatchHandler;
 import com.lunchchat.global.apiPayLoad.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,10 @@ public class MatchCommandServiceImpl implements MatchCommandService {
   @Override
   @Transactional
   public Matches requestMatch(Long memberId, Long toMemberId) {
+    if (memberId.equals(toMemberId)) {
+      throw new MatchHandler(ErrorStatus.SELF_MATCH_REQUEST);
+    }
+
     Member fromMember = memberRepository.findById(memberId)
         .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
 
@@ -30,4 +36,31 @@ public class MatchCommandServiceImpl implements MatchCommandService {
     return matchRepository.save(newMatch);
   }
 
+  @Override
+  @Transactional
+  public void acceptMatch(Long matchId, Long memberId) {
+    Matches match = matchRepository.findById(matchId)
+        .orElseThrow(() -> new MatchHandler(ErrorStatus.MATCH_NOT_FOUND));
+
+    if (match.getStatus() != MatchStatus.REQUESTED) {
+      throw new MatchHandler(ErrorStatus.INVALID_MATCH_STATUS);
+    }
+
+    match.updateStatus(MatchStatus.ACCEPTED);
+    matchRepository.save(match);
+  }
+
+  @Override
+  @Transactional
+  public void rejectMatch(Long matchId, Long memberId) {
+    Matches match = matchRepository.findById(matchId)
+        .orElseThrow(() -> new MatchHandler(ErrorStatus.MATCH_NOT_FOUND));
+
+    if (match.getStatus() != MatchStatus.REQUESTED) {
+      throw new MatchHandler(ErrorStatus.INVALID_MATCH_STATUS);
+    }
+
+    match.updateStatus(MatchStatus.REJECTED);
+    matchRepository.save(match);
+  }
 }
