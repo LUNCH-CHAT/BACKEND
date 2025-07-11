@@ -7,9 +7,10 @@ import com.lunchchat.domain.match.repository.MatchRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
-import com.lunchchat.global.apiPayLoad.exception.handler.MatchHandler;
+import com.lunchchat.global.apiPayLoad.exception.handler.MatchException;
 import com.lunchchat.global.apiPayLoad.exception.handler.MemberHandler;
 import jakarta.transaction.Transactional;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,12 @@ public class MatchCommandServiceImpl implements MatchCommandService {
   @Transactional
   public Matches requestMatch(Long memberId, Long toMemberId) {
     if (memberId.equals(toMemberId)) {
-      throw new MatchHandler(ErrorStatus.SELF_MATCH_REQUEST);
+      throw new MatchException(ErrorStatus.SELF_MATCH_REQUEST);
+    }
+
+    Optional<Matches> existingMatch = matchRepository.findExistingMatchBetween(memberId, toMemberId);
+    if (existingMatch.isPresent()) {
+      throw new MatchException(ErrorStatus.ALREADY_MATCHED);
     }
 
     Member fromMember = memberRepository.findById(memberId)
@@ -40,10 +46,10 @@ public class MatchCommandServiceImpl implements MatchCommandService {
   @Transactional
   public void acceptMatch(Long matchId, Long memberId) {
     Matches match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new MatchHandler(ErrorStatus.MATCH_NOT_FOUND));
+        .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
 
     if (match.getStatus() != MatchStatus.REQUESTED) {
-      throw new MatchHandler(ErrorStatus.INVALID_MATCH_STATUS);
+      throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
     }
 
     match.updateStatus(MatchStatus.ACCEPTED);
@@ -54,10 +60,10 @@ public class MatchCommandServiceImpl implements MatchCommandService {
   @Transactional
   public void rejectMatch(Long matchId, Long memberId) {
     Matches match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new MatchHandler(ErrorStatus.MATCH_NOT_FOUND));
+        .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
 
     if (match.getStatus() != MatchStatus.REQUESTED) {
-      throw new MatchHandler(ErrorStatus.INVALID_MATCH_STATUS);
+      throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
     }
 
     match.updateStatus(MatchStatus.REJECTED);
