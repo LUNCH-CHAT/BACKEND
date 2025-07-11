@@ -26,7 +26,7 @@ public class OAuthController {
 
 
   // 로그인
-  @GetMapping("/login/google")
+  @GetMapping("/callback/google")
   public ApiResponse<?> login(@RequestParam("code") String accessCode, HttpServletResponse response) {
     try {
       return ApiResponse.onSuccess("LoginSuccess");
