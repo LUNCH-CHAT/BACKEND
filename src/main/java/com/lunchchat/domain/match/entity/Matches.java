@@ -30,5 +30,5 @@ public class Matches {
 
     private LocalDateTime createdAt;
 
-    
+    public void updateStatus(MatchStatus status) { this.status = status; }
 }
