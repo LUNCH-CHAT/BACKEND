@@ -1,11 +1,13 @@
 package com.lunchchat.domain.match.converter;
 
 import com.lunchchat.domain.match.dto.MatchResponseDto;
+import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.user_interests.entity.UserInterests;
 import com.lunchchat.domain.user_keywords.entity.UserKeyword;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,5 +49,22 @@ public class MatchConverter {
             .interestName(interest.getInterests().getName().toString())
             .build())
         .collect(Collectors.toList());
+  }
+
+  public static MatchResponseDto.MatchResultDto toMatchResultDto(Matches match) {
+    return MatchResponseDto.MatchResultDto.builder()
+        .id(match.getId())
+        .status(match.getStatus())
+        .createdAt(match.getCreatedAt())
+        .build();
+  }
+
+  public static Matches toMatchEntity(Member fromMember, Member toMember) {
+    return Matches.builder()
+        .fromMember(fromMember)
+        .toMember(toMember)
+        .status(MatchStatus.REQUESTED)
+        .createdAt(LocalDateTime.now())
+        .build();
   }
 }

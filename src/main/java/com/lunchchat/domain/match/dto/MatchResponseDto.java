@@ -1,5 +1,6 @@
 package com.lunchchat.domain.match.dto;
 
+import com.lunchchat.domain.match.entity.MatchStatus;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,5 +47,15 @@ public class MatchResponseDto {
     public static class InterestDto {
         private Long id;
         private String interestName;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MatchResultDto {
+        private Long id;
+        private MatchStatus status;
+        private LocalDateTime createdAt;
     }
 }
