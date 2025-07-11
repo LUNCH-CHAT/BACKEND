@@ -27,7 +27,7 @@ public class MatchCommandServiceImpl implements MatchCommandService {
       throw new MatchException(ErrorStatus.SELF_MATCH_REQUEST);
     }
 
-    Optional<Matches> existingMatch = matchRepository.findExistingMatchBetween(memberId, toMemberId);
+    Optional<Matches> existingMatch = matchRepository.findActiveMatchBetween(memberId, toMemberId);
     if (existingMatch.isPresent()) {
       throw new MatchException(ErrorStatus.ALREADY_MATCHED);
     }
