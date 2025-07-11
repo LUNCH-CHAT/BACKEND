@@ -3,6 +3,7 @@ package com.lunchchat.domain.member.entity;
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
 import com.lunchchat.domain.member.entity.enums.LoginType;
+import com.lunchchat.domain.member.entity.enums.MemberStatus;
 import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.Column;
@@ -47,6 +48,10 @@ public class Member extends BaseEntity {
   @Column(nullable = false)
   private LoginType loginType;
 
+  //로그인 상태
+  @Enumerated(EnumType.STRING)
+  private MemberStatus Status;
+
   //대학
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "university_id")
@@ -87,5 +92,4 @@ public class Member extends BaseEntity {
   public void updateProfileIntro(String profileIntro) {
     this.profileIntro = profileIntro;
   }
-
 }

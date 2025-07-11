@@ -6,6 +6,12 @@ spring:
     hikari:
       maximum-pool-size: 5
 
+  jwt:
+    header: authorization
+    secret: ${SECRET_KEY}
+    access-token-validity-in-seconds: 3600
+    refresh-token-validity-in-seconds: 604800
+
   jpa:
     hibernate:
       ddl-auto: update

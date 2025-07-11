@@ -10,6 +10,7 @@ public class JwtConfig {
   private String header;
   private String secret;
   private Long accessTokenValidityInSeconds;
+  private Long refreshTokenValidityInSeconds;
 
   // Getters
   public String getHeader() {
@@ -24,6 +25,10 @@ public class JwtConfig {
     return accessTokenValidityInSeconds;
   }
 
+  public Long getRefreshTokenValidityInSeconds() {
+    return refreshTokenValidityInSeconds;
+  }
+
   // Setters
   public void setHeader(String header) {
     this.header = header;
@@ -35,6 +40,10 @@ public class JwtConfig {
 
   public void setAccessTokenValidityInSeconds(Long accessTokenValidityInSeconds) {
     this.accessTokenValidityInSeconds = accessTokenValidityInSeconds;
+  }
+
+  public void setRefreshTokenValidityInSeconds(Long refreshTokenValidityInSeconds) {
+    this.refreshTokenValidityInSeconds = refreshTokenValidityInSeconds;
   }
 
 }

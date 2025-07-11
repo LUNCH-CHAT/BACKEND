@@ -4,8 +4,6 @@ import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.security.jwt.JwtFilter;
 import com.lunchchat.global.security.jwt.JwtUtil;
 import com.lunchchat.global.security.jwt.LoginFilter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
