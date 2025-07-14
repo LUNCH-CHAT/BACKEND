@@ -28,8 +28,8 @@ public class ChatRoom extends BaseEntity {
 
     private Long friendId;
 
-    boolean isDeletedFromStarter = false;
-    boolean isDeletedFromFriend = false;
+    boolean isExitedByStarter = false;
+    boolean isExitedByFriend = false;
     LocalDateTime lastMessageSendAt;
 
     public static ChatRoom of(Long starterId, Long friendId) {
@@ -40,14 +40,14 @@ public class ChatRoom extends BaseEntity {
     }
 
     public void activateRoom() {
-        this.isDeletedFromStarter = false;
-        this.isDeletedFromFriend = false;
+        this.isExitedByStarter = false;
+        this.isExitedByFriend = false;
         this.lastMessageSendAt = LocalDateTime.now();
     }
 
     public void quit(Long userId) {
         if (this.getStarterId().equals(userId))
-            this.isDeletedFromStarter = true;
-        else this.isDeletedFromFriend = true;
+            this.isExitedByStarter = true;
+        else this.isExitedByFriend = true;
     }
 }
