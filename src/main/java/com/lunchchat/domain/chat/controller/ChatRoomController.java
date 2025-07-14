@@ -1,6 +1,7 @@
 package com.lunchchat.domain.chat.controller;
 
 import com.lunchchat.domain.chat.dto.request.CreateChatRoomReq;
+import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
 import com.lunchchat.domain.chat.service.ChatRoomService;
@@ -30,8 +31,6 @@ public class ChatRoomController {
         return ResponseEntity.ok(response);
     }
 
-    //채팅방 입장
-
     //채팅방 리스트 조회
     @GetMapping
     public ResponseEntity<List<ChatRoomCardRes>> getChatRooms(@RequestParam("userId") Long userId) {
@@ -46,4 +45,10 @@ public class ChatRoomController {
         return ResponseEntity.noContent().build();
     }
 
+    // 채팅방 내 메시지 전체 조회
+    @GetMapping("/{roomId}/messages")
+    public ResponseEntity<List<ChatMessageRes>> getChatMessages(@PathVariable Long roomId, @RequestParam("userId") Long userId) {
+        List<ChatMessageRes> messages = chatRoomService.getChatMessages(roomId, userId);
+        return ResponseEntity.ok(messages);
+    }
 }

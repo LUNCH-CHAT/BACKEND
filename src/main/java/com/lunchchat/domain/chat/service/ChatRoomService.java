@@ -3,6 +3,7 @@ package com.lunchchat.domain.chat.service;
 import com.lunchchat.domain.chat.chat_message.entity.ChatMessage;
 import com.lunchchat.domain.chat.chat_room.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.request.CreateChatRoomReq;
+import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
 import com.lunchchat.domain.chat.repository.ChatMessageRepository;
@@ -102,5 +103,22 @@ public class ChatRoomService {
         return result;
     }
 
+    // 채팅방 내 채팅 메시지 조회
+    @Transactional(readOnly = true)
+    public List<ChatMessageRes> getChatMessages(Long roomId, Long userId) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        // 해당 사용자가 채팅방에 속해있는지 확인
+        if (!room.getStarterId().equals(userId) && !room.getFriendId().equals(userId)) {
+            throw new IllegalArgumentException("해당 채팅방에 접근할 수 없습니다.");
+        }
+
+        List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomOrderBySentAtAsc(room);
+
+        return messages.stream()
+                .map(ChatMessageRes::from)
+                .toList();
+    }
 
 }
