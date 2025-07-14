@@ -45,9 +45,12 @@ public class ChatRoom extends BaseEntity {
         this.lastMessageSendAt = LocalDateTime.now();
     }
 
-    public void quit(Long userId) {
+    public void exit(Long userId) {
         if (this.getStarterId().equals(userId))
             this.isExitedByStarter = true;
-        else this.isExitedByFriend = true;
+        else if (this.getFriendId().equals(userId))
+            this.isExitedByFriend = true;
+        else
+            throw new IllegalArgumentException("채팅방에 속한 사용자가 아닙니다. ");
     }
 }
