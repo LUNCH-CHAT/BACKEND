@@ -5,5 +5,4 @@ import com.lunchchat.domain.match.entity.Matches;
 public interface MatchCommandService {
   Matches requestMatch(Long memberId, Long toMemberId);
   void acceptMatch(Long matchId, Long memberId);
-  void rejectMatch(Long matchId, Long memberId);
 }

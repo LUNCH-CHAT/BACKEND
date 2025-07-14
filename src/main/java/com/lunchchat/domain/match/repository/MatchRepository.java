@@ -25,7 +25,6 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
     SELECT m FROM Matches m
     WHERE ((m.fromMember.id = :memberId AND m.toMember.id = :toMemberId)
         OR (m.fromMember.id = :toMemberId AND m.toMember.id = :memberId))
-      AND m.status != 'REJECTED'
 """)
     Optional<Matches> findActiveMatchBetween(@Param("memberId") Long memberId, @Param("toMemberId") Long toMemberId);
 }

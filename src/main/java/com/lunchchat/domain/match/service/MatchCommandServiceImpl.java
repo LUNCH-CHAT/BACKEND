@@ -6,6 +6,7 @@ import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.repository.MatchRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
+import com.lunchchat.domain.user_statistics.service.UserStatisticsCommandService;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.MatchException;
 import com.lunchchat.global.apiPayLoad.exception.handler.MemberHandler;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 public class MatchCommandServiceImpl implements MatchCommandService {
   private final MatchRepository matchRepository;
   private final MemberRepository memberRepository;
+  private final UserStatisticsCommandService userStatisticsCommandService;
 
   @Override
   @Transactional
@@ -39,6 +41,8 @@ public class MatchCommandServiceImpl implements MatchCommandService {
         .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
 
     Matches newMatch = MatchConverter.toMatchEntity(fromMember, toMember);
+    userStatisticsCommandService.incrementRequestedCount(memberId);
+    userStatisticsCommandService.incrementReceivedCount(toMemberId);
     return matchRepository.save(newMatch);
   }
 
@@ -48,25 +52,22 @@ public class MatchCommandServiceImpl implements MatchCommandService {
     Matches match = matchRepository.findById(matchId)
         .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
 
+    Member from = match.getFromMember();
+    Member to = match.getToMember();
+
     if (match.getStatus() != MatchStatus.REQUESTED) {
       throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
+    }
+
+    if (!to.getId().equals(memberId)) {
+      throw new MatchException(ErrorStatus.INVALID_MATCH_ID);
     }
 
     match.updateStatus(MatchStatus.ACCEPTED);
-    matchRepository.save(match);
-  }
 
-  @Override
-  @Transactional
-  public void rejectMatch(Long matchId, Long memberId) {
-    Matches match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
+    userStatisticsCommandService.incrementAcceptedCount(from.getId());
+    userStatisticsCommandService.incrementAcceptedCount(to.getId());
 
-    if (match.getStatus() != MatchStatus.REQUESTED) {
-      throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
-    }
-
-    match.updateStatus(MatchStatus.REJECTED);
     matchRepository.save(match);
   }
 }
