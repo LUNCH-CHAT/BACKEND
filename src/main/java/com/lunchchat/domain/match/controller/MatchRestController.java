@@ -63,15 +63,4 @@ public class MatchRestController {
     matchCommandService.acceptMatch(id, currentUserId);
     return ApiResponse.onSuccess(null);
   }
-
-  @PatchMapping("/{id}/reject")
-  @Operation(summary = "매칭 거절", description = "특정 매칭 요청을 거절합니다.")
-  public ApiResponse<Void> rejectMatch(@PathVariable Long id) {
-
-    // TODO: 인증 유저로 교체
-    Long currentUserId = 1L;
-
-    matchCommandService.rejectMatch(id, currentUserId);
-    return ApiResponse.onSuccess(null);
-  }
 }
