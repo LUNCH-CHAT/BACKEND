@@ -46,9 +46,6 @@ public class Member extends BaseEntity {
   @Column(nullable = false,unique = true)
   private String email;
 
-  //닉네임
-  private String nickname;
-
   //학번
   private String studentNo;
 
@@ -75,14 +72,11 @@ public class Member extends BaseEntity {
   @JoinColumn(name = "department_id")
   private Department department;
 
-  @Column(columnDefinition = "TEXT")
-  private String profileIntro;
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-  private List<UserInterests> userInterests = new ArrayList<>();
-
-  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<UserKeyword> userKeywords = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<UserInterests> userInterests = new ArrayList<>();
 
   //생성자
   public Member(String email, LoginType loginType) {
@@ -91,10 +85,6 @@ public class Member extends BaseEntity {
   }
 
   //setter
-  public void updateNickname(String nickname) {
-    this.nickname = nickname;
-  }
-
   public void updateCollege(College college) {
     this.college = college;
   }
@@ -102,9 +92,4 @@ public class Member extends BaseEntity {
   public void updateDepartment(Department department) {
     this.department = department;
   }
-
-  public void updateProfileIntro(String profileIntro) {
-    this.profileIntro = profileIntro;
-  }
-
 }
