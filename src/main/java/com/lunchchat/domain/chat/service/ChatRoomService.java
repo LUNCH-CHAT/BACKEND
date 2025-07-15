@@ -56,6 +56,7 @@ public class ChatRoomService {
     }
 
     //채팅방 퇴장
+    @Transactional
     public void exitRoom(Long roomId, Long userId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
@@ -70,6 +71,7 @@ public class ChatRoomService {
     }
 
     //채팅방 리스트 조회
+    @Transactional(readOnly = true)
     public List<ChatRoomCardRes> getChatRooms(Long userId) {
         List<ChatRoom> rooms = chatRoomRepository.findAllByStarterIdOrFriendId(userId, userId);
 
@@ -95,7 +97,7 @@ public class ChatRoomService {
                     room.getId(),
                     friendName,
                     lastMessage.getContent(),
-                    lastMessage.getSentAt(),
+                    lastMessage.getCreatedAt(),
                     unreadCount
             ));
         }
