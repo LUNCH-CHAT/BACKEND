@@ -65,8 +65,10 @@ public class ChatRoomService {
 
         chatRoom.exit(userId);
 
+        // 채팅방에서 양쪽 모두 퇴장했는지 확인
         if(chatRoom.isExitedByStarter() && chatRoom.isExitedByFriend()) {
-            chatRoomRepository.delete(chatRoom);
+            chatMessageRepository.deleteByChatRoom(chatRoom);   //관련 채팅 메시지 삭제
+            chatRoomRepository.delete(chatRoom);    //채팅방 삭제
         }
     }
 
@@ -83,6 +85,13 @@ public class ChatRoomService {
         List<ChatRoomCardRes> result = new ArrayList<>();
 
         for (ChatRoom room : filteredRooms) {
+
+            // 나간 채팅방은 제외
+            if ((room.getStarterId().equals(userId) && room.isExitedByStarter()) ||
+                    (room.getFriendId().equals(userId) && room.isExitedByFriend())) {
+                continue;
+            }
+
             ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
                     .orElseThrow(() -> new IllegalStateException("채팅방에 메시지가 존재하지 않습니다."));
 

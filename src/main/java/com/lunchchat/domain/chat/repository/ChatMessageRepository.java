@@ -14,6 +14,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     List<ChatMessage> findAllByChatRoomOrderBySentAtAsc(ChatRoom room);
 
+    void deleteByChatRoom(ChatRoom chatRoom);
+
     // Custom query methods can be defined here if needed
     // For example, to find messages by chat room ID or user ID
 
