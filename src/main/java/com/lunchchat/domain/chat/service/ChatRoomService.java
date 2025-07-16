@@ -8,8 +8,10 @@ import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
 import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.chat.repository.ChatRoomRepository;
+import com.lunchchat.domain.member.entity.Member;
+import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
-import com.lunchchat.global.apiPayLoad.exception.ChatException;
+import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +25,7 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
-//    private final MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public CreateChatRoomRes createRoom(CreateChatRoomReq req) {
@@ -34,11 +36,11 @@ public class ChatRoomService {
             throw new ChatException(ErrorStatus.CANNOT_CHAT_WITH_SELF);
         }
 
-//        유저 구현시 검증 예정
-//        Member starter = memberRepository.findById(starterId)
-//                .orElseThrow(() -> new NoSuchElementException("Starter not found"));
-//        Member friend = memberRepository.findById(friendId)
-//                .orElseThrow(() -> new NoSuchElementException("Friend not found"));
+        Member starter = memberRepository.findById(starterId)
+                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+
+        Member friend = memberRepository.findById(friendId)
+                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
         // 기존 채팅방 존재하는지 확인 (starter-friend / friend-starter 모두 포함)
         Optional<ChatRoom> existingRoom = chatRoomRepository
@@ -46,14 +48,14 @@ public class ChatRoomService {
                 .or(() -> chatRoomRepository.findByStarterIdAndFriendId(friendId, starterId));
 
         ChatRoom chatRoom = existingRoom.orElseGet(() -> {
-            ChatRoom newRoom = ChatRoom.of(starterId, friendId);
+            ChatRoom newRoom = ChatRoom.of(starter, friend);
             return chatRoomRepository.save(newRoom);
         });
 
         return new CreateChatRoomRes(
                 chatRoom.getId(),
-                chatRoom.getStarterId(),
-                chatRoom.getFriendId()
+                chatRoom.getStarter().getId(),
+                chatRoom.getFriend().getId()
         );
     }
 
@@ -63,7 +65,14 @@ public class ChatRoomService {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
 
-        //유저 구현시 유저 검증
+        //사용자 존재 확인
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+
+        // 채팅방에 속한 사용자만 퇴장 가능
+        if (!chatRoom.getStarter().equals(member) && !chatRoom.getFriend().equals(member)) {
+            throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
+        }
 
         chatRoom.exit(userId);
 
@@ -77,32 +86,33 @@ public class ChatRoomService {
     //채팅방 리스트 조회
     @Transactional(readOnly = true)
     public List<ChatRoomCardRes> getChatRooms(Long userId) {
-        List<ChatRoom> rooms = chatRoomRepository.findAllByStarterIdOrFriendId(userId, userId);
 
-        // 메시지가 있는 방만 필터링
-        List<ChatRoom> filteredRooms = rooms.stream()
-                .filter(room -> chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room).isPresent())
-                .toList();
+        // 유저 존재 검증
+        Member user = memberRepository.findById(userId)
+                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+
+        // 사용자 기준 채팅방 조회
+        List<ChatRoom> rooms = chatRoomRepository.findAllByStarterOrFriend(user, user);
 
         List<ChatRoomCardRes> result = new ArrayList<>();
 
-        for (ChatRoom room : filteredRooms) {
-
+        for (ChatRoom room : rooms) {
             // 나간 채팅방은 제외
-            if ((room.getStarterId().equals(userId) && room.isExitedByStarter()) ||
-                    (room.getFriendId().equals(userId) && room.isExitedByFriend())) {
+            if ((room.getStarter().equals(user) && room.isExitedByStarter()) ||
+                    (room.getFriend().equals(user) && room.isExitedByFriend())) {
                 continue;
             }
 
+            // 최근 메시지 조회
             ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
                     .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
 
-            Long friendId = room.getStarterId().equals(userId) ? room.getFriendId() : room.getStarterId();
+            //상대방 정보
+            Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+            String friendName = friend.getMembername();
 
-            // TODO: 유저 로직 구현 시 친구 이름 조회
-            String friendName = "친구 #" + friendId;
-
-            int unreadCount = chatMessageRepository.countByChatRoomAndSenderIdNotAndIsReadFalse(room, userId);
+            //안 읽은 메시지 수
+            int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
 
             result.add(new ChatRoomCardRes(
                     room.getId(),
@@ -116,18 +126,28 @@ public class ChatRoomService {
         return result;
     }
 
-    // 채팅방 내 채팅 메시지 조회
+    // 채팅방 내 채팅 메시지 조회(단일 채팅방 조회)
     @Transactional(readOnly = true)
     public List<ChatMessageRes> getChatMessages(Long roomId, Long userId) {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
 
+        Member user = memberRepository.findById(userId)
+                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+
         // 해당 사용자가 채팅방에 속해있는지 확인
-        if (!room.getStarterId().equals(userId) && !room.getFriendId().equals(userId)) {
+        if (!room.getStarter().equals(user) && !room.getFriend().equals(user)) {
             throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
+        //채팅방 퇴장 여부 확인
+
         List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomOrderBySentAtAsc(room);
+
+        messages.stream()
+                .filter(msg -> !msg.getSender().equals(user)) // 상대방이 보낸 메시지
+                .filter(msg -> !msg.getIsRead())              // 아직 읽지 않은 메시지
+                .forEach(msg -> msg.markAsRead());            // 읽음 처리
 
         return messages.stream()
                 .map(ChatMessageRes::from)

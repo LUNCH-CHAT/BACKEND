@@ -21,25 +21,28 @@ public class ChatMessage extends BaseEntity {
     @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "sender_id")
-//    private Member sender;
-
-    private Long senderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private Member sender;
 
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    private Boolean isRead;
+    private Boolean isRead = false;
 
     private LocalDateTime sentAt;
 
-    public static ChatMessage of(ChatRoom chatRoom, Long senderId, String content) {
+    public static ChatMessage of(ChatRoom chatRoom, Member sender, String content) {
         ChatMessage message = new ChatMessage();
         message.chatRoom = chatRoom;
-        message.senderId = senderId;
+        message.sender = sender;
         message.content = content;
-
+        message.isRead = false;
+        message.sentAt = LocalDateTime.now();
         return message;
+    }
+
+    public void markAsRead() {
+        this.isRead = true;
     }
 }

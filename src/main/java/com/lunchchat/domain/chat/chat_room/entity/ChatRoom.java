@@ -16,26 +16,23 @@ public class ChatRoom extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "starter_id")
-//    private Member starter;
-//
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "friend_id")
-//    private Member friend;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "starter_id")
+    private Member starter;
 
-    private Long starterId;
-
-    private Long friendId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "friend_id")
+    private Member friend;
 
     boolean isExitedByStarter = false;
     boolean isExitedByFriend = false;
     LocalDateTime lastMessageSendAt;
 
-    public static ChatRoom of(Long starterId, Long friendId) {
+    public static ChatRoom of(Member starter, Member friend) {
         ChatRoom room = new ChatRoom();
-        room.starterId = starterId;
-        room.friendId = friendId;
+        room.starter = starter;
+        room.friend = friend;
+        room.lastMessageSendAt = LocalDateTime.now();
         return room;
     }
 
@@ -46,9 +43,9 @@ public class ChatRoom extends BaseEntity {
     }
 
     public void exit(Long userId) {
-        if (this.getStarterId().equals(userId))
+        if (this.getStarter().getId().equals(userId))
             this.isExitedByStarter = true;
-        else if (this.getFriendId().equals(userId))
+        else if (this.getFriend().getId().equals(userId))
             this.isExitedByFriend = true;
         else
             throw new IllegalArgumentException("채팅방에 속한 사용자가 아닙니다. ");

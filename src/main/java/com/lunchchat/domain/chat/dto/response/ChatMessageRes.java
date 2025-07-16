@@ -16,7 +16,7 @@ public record ChatMessageRes(
         return new ChatMessageRes(
             chatMessage.getId(),
             chatMessage.getChatRoom().getId(),
-            chatMessage.getSenderId(),
+            chatMessage.getSender().getId(),
             chatMessage.getContent(),
             chatMessage.getCreatedAt()
         );
@@ -26,7 +26,7 @@ public record ChatMessageRes(
         return new ChatMessageRes(
             message.getId(),
             roomId,
-            message.getSenderId(),
+            message.getSender().getId(),
             message.getContent(),
             message.getCreatedAt()
         );

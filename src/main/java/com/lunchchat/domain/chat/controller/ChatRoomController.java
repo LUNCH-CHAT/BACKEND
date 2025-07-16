@@ -50,7 +50,7 @@ public class ChatRoomController {
         return ResponseEntity.ok(ApiResponse.onSuccess(null));
     }
 
-    // 채팅방 내 메시지 전체 조회
+    // 채팅방 내 메시지 전체 조회(단일 채팅방 조회)
     @GetMapping("/{roomId}/messages")
     @Operation(summary = "채팅방 내 메시지 조회")
     public ResponseEntity<ApiResponse<List<ChatMessageRes>>> getChatMessages(@PathVariable Long roomId, @RequestParam("userId") Long userId) {
