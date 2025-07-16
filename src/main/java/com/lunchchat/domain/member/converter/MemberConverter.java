@@ -18,6 +18,7 @@ public class MemberConverter {
                 .nickname(member.getNickname())
                 .email(member.getEmail())
                 .studentNo(member.getStudentNo())
+                .profileImageUrl(member.getProfileImageUrl())
                 .university(member.getUniversity().getName())
                 .college(member.getCollege().getName())
                 .department(member.getDepartment().getName())
