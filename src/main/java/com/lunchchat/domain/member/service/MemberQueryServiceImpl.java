@@ -36,7 +36,9 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId) {
+
         Member currentMember = memberRepository.findById(currentMemberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
@@ -59,22 +61,17 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                 })
                 .limit(10)
                 .map(arr -> MemberRecommendationConverter.toRecommendationResponse(
-                        (Member) arr[0],
-                        (int) arr[1],
-                        (int) arr[2]
-                ))
+                        (Member) arr[0]))
                 .collect(Collectors.toList());
     }
-
-
 
     private int calculateTimeTableOverlap(List<TimeTable> tts1, List<TimeTable> tts2) {
         return (int) tts1.stream()
                 .filter(tt1 -> tts2.stream()
                         .anyMatch(tt2 ->
                                 tt1.getDayOfWeek().equals(tt2.getDayOfWeek()) &&
-                                        !(tt1.getEndTime().isBefore(tt2.getStartTime())
-                                                || tt1.getStartTime().isAfter(tt2.getEndTime()))
+                                        !(tt1.getEndTime().isBefore(tt2.getStartTime()) ||
+                                                tt1.getStartTime().isAfter(tt2.getEndTime()))
                         )
                 ).count();
     }
@@ -86,3 +83,4 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                 .count();
     }
 }
+
