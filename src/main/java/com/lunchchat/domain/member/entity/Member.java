@@ -4,6 +4,7 @@ import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
 import com.lunchchat.domain.member.entity.enums.LoginType;
 import com.lunchchat.domain.member.entity.enums.MemberStatus;
+import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.domain.user_interests.entity.UserInterests;
 import com.lunchchat.domain.user_keywords.entity.UserKeyword;
@@ -85,6 +86,9 @@ public class Member extends BaseEntity {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<UserInterests> userInterests = new ArrayList<>();
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<TimeTable> timeTables = new ArrayList<>();
 
   //생성자
   public Member(String email, LoginType loginType) {
