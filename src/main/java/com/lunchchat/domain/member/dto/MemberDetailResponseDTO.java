@@ -23,6 +23,7 @@ public class MemberDetailResponseDTO {
     private String college;
     private String department;
     private String profileIntro;
+    private String profileImageUrl;
 
     private List<UserKeywordDTO> userKeywords;
     private List<UserInterestDTO> userInterests;
