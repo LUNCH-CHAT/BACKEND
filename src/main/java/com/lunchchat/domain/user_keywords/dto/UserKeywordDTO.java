@@ -9,7 +9,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class UserKeywordDTO {
-    private Integer id;
+    private Long id;
     private String type;
     private String title;
     private String description;

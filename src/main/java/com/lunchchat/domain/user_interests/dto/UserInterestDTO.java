@@ -9,7 +9,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class UserInterestDTO {
-    private Integer id;
+    private Long id;
     private String name;
 
     public static UserInterestDTO from(UserInterests userInterest) {
