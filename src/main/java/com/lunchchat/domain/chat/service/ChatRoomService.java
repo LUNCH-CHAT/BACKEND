@@ -8,6 +8,8 @@ import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
 import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.chat.repository.ChatRoomRepository;
+import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
+import com.lunchchat.global.apiPayLoad.exception.ChatException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +31,7 @@ public class ChatRoomService {
         Long friendId = req.friendId();
 
         if (starterId.equals(friendId)) {
-            throw new IllegalArgumentException("자기 자신과는 채팅할 수 없습니다.");
+            throw new ChatException(ErrorStatus.CANNOT_CHAT_WITH_SELF);
         }
 
 //        유저 구현시 검증 예정
@@ -59,7 +61,7 @@ public class ChatRoomService {
     @Transactional
     public void exitRoom(Long roomId, Long userId) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+                .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
 
         //유저 구현시 유저 검증
 
@@ -93,7 +95,7 @@ public class ChatRoomService {
             }
 
             ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
-                    .orElseThrow(() -> new IllegalStateException("채팅방에 메시지가 존재하지 않습니다."));
+                    .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
 
             Long friendId = room.getStarterId().equals(userId) ? room.getFriendId() : room.getStarterId();
 
@@ -118,11 +120,11 @@ public class ChatRoomService {
     @Transactional(readOnly = true)
     public List<ChatMessageRes> getChatMessages(Long roomId, Long userId) {
         ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+                .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
 
         // 해당 사용자가 채팅방에 속해있는지 확인
         if (!room.getStarterId().equals(userId) && !room.getFriendId().equals(userId)) {
-            throw new IllegalArgumentException("해당 채팅방에 접근할 수 없습니다.");
+            throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
         List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomOrderBySentAtAsc(room);

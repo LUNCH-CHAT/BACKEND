@@ -5,6 +5,7 @@ import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
 import com.lunchchat.domain.chat.service.ChatRoomService;
+import com.lunchchat.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
@@ -30,32 +31,29 @@ public class ChatRoomController {
     //채팅방 생성
     @PostMapping
     @Operation(summary = "채팅방 생성")
-    public ResponseEntity<CreateChatRoomRes> createChatRoom(@RequestBody CreateChatRoomReq req) {
-        CreateChatRoomRes response = chatRoomService.createRoom(req);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<CreateChatRoomRes>> createChatRoom(@RequestBody CreateChatRoomReq req) {
+        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.createRoom(req)));
     }
 
     //채팅방 리스트 조회
     @GetMapping
     @Operation(summary = "채팅방 리스트 조회")
-    public ResponseEntity<List<ChatRoomCardRes>> getChatRooms(@RequestParam("userId") Long userId) {
-        List<ChatRoomCardRes> rooms = chatRoomService.getChatRooms(userId);
-        return ResponseEntity.ok(rooms);
+    public ResponseEntity<ApiResponse<List<ChatRoomCardRes>>> getChatRooms(@RequestParam("userId") Long userId) {
+        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.getChatRooms(userId)));
     }
 
     //채팅방 퇴장
     @PatchMapping("/{roomId}")
     @Operation(summary = "채팅방 퇴장")
-    public ResponseEntity<Void> exitChatRoom(@PathVariable Long roomId, @RequestParam("userId") Long userId) {
+    public ResponseEntity<ApiResponse<Void>> exitChatRoom(@PathVariable Long roomId, @RequestParam("userId") Long userId) {
         chatRoomService.exitRoom(roomId, userId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.onSuccess(null));
     }
 
     // 채팅방 내 메시지 전체 조회
     @GetMapping("/{roomId}/messages")
     @Operation(summary = "채팅방 내 메시지 조회")
-    public ResponseEntity<List<ChatMessageRes>> getChatMessages(@PathVariable Long roomId, @RequestParam("userId") Long userId) {
-        List<ChatMessageRes> messages = chatRoomService.getChatMessages(roomId, userId);
-        return ResponseEntity.ok(messages);
+    public ResponseEntity<ApiResponse<List<ChatMessageRes>>> getChatMessages(@PathVariable Long roomId, @RequestParam("userId") Long userId) {
+        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.getChatMessages(roomId, userId)));
     }
 }
