@@ -1,14 +1,14 @@
 package com.lunchchat.domain.member.controller;
 
 import com.lunchchat.domain.member.dto.MemberDetailResponseDTO;
+import com.lunchchat.domain.member.dto.MemberRecommendationResponseDTO;
 import com.lunchchat.domain.member.service.MemberQueryService;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +23,11 @@ public class MemberController {
         MemberDetailResponseDTO detail = memberQueryService.getMemberDetail(memberId);
         return ApiResponse.onSuccess(detail);
     }
-}
 
+    @GetMapping("/recommendations")
+    @Operation(summary = "시간표, 관심사가 겹치는 프로필 추천", description = "시간표 & 관심사 기준 추천 사용자들을 조회합니다.")
+    public ApiResponse<List<MemberRecommendationResponseDTO>> getRecommendedMembers(@RequestParam Long currentMemberId) {
+        return ApiResponse.onSuccess(memberQueryService.getRecommendedMembers(currentMemberId));
+    }
+}
 
