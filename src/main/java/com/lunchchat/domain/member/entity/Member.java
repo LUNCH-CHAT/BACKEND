@@ -39,6 +39,9 @@ public class Member extends BaseEntity {
   //학번
   private String studentNo;
 
+  //프로필 사진
+  private String profileImageUrl;
+
   //로그인 타입
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
