@@ -1,15 +1,21 @@
 package com.lunchchat.domain.member.dto;
 
+import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
+import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import lombok.Builder;
 import lombok.Getter;
 
-@Builder
+import java.util.List;
+
 @Getter
+@Builder
 public class MemberRecommendationResponseDTO {
     private Long memberId;
-    private String nickname;
-    private String profileIntro;
+    private String memberName;
     private String profileImageUrl;
-    private int matchedTimeTableCount;
-    private int matchedInterestsCount;
+    private String studentNo;
+    private String department;
+    private List<UserInterestDTO> userInterests;
+    private List<UserKeywordDTO> userKeywords;
 }
+
