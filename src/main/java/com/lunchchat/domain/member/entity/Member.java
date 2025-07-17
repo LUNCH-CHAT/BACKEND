@@ -51,6 +51,14 @@ public class Member extends BaseEntity {
   //닉네임
   private String nickname;
 
+  //비밀번호
+  @Column(nullable = false)
+  private String password;
+
+  //role
+  @Column(nullable = false)
+  private String role;
+
   //학번
   private String studentNo;
 
@@ -97,9 +105,13 @@ public class Member extends BaseEntity {
   private List<UserInterests> userInterests = new ArrayList<>();
 
   //생성자
-  public Member(String email, LoginType loginType) {
+  public Member(String email, String membername,LoginType loginType,MemberStatus status, String password, String role) {
     this.email = email;
+    this.membername = membername;
     this.loginType = loginType;
+    this.Status = status;
+    this.password = password;
+    this.role = role;
   }
 
   //setter
