@@ -3,6 +3,7 @@ package com.lunchchat.domain.member.entity;
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
 import com.lunchchat.domain.member.entity.enums.LoginType;
+import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.domain.user_interests.entity.UserInterests;
 import com.lunchchat.domain.user_keywords.entity.UserKeyword;
@@ -21,9 +22,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,6 +49,9 @@ public class Member extends BaseEntity {
 
   //학번
   private String studentNo;
+
+  //프로필 사진
+  private String profileImageUrl;
 
   //로그인 타입
   @Enumerated(EnumType.STRING)
@@ -70,6 +78,9 @@ public class Member extends BaseEntity {
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<UserInterests> userInterests = new ArrayList<>();
+
+  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<TimeTable> timeTables = new ArrayList<>();
 
   //생성자
   public Member(String email, LoginType loginType) {
