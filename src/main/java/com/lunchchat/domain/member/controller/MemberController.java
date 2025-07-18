@@ -1,7 +1,7 @@
 package com.lunchchat.domain.member.controller;
 
 import com.lunchchat.domain.member.dto.MemberDetailResponseDTO;
-import com.lunchchat.domain.member.dto.MemberRecommendationResponseDTO;
+import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.service.MemberQueryService;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,9 +30,12 @@ public class MemberController {
 
     @GetMapping("/recommendations")
     @Operation(summary = "시간표, 관심사가 겹치는 프로필 추천", description = "시간표 & 관심사 기준 추천 사용자들을 조회합니다.")
-    public ApiResponse<List<MemberRecommendationResponseDTO>> getRecommendedMembers(@RequestParam Long currentMemberId) {
+    public ApiResponse<List<MemberResponseDTO.MemberRecommendationResponseDTO>> getRecommendedMembers(@RequestParam Long currentMemberId) {
         return ApiResponse.onSuccess(memberQueryService.getRecommendedMembers(currentMemberId));
     }
+
+//    @GetMapping("/mypage")
+
 }
 
 
