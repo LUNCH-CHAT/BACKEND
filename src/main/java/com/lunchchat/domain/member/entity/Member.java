@@ -98,11 +98,6 @@ public class Member extends BaseEntity {
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TimeTable> timeTables = new ArrayList<>();
 
-  @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserKeyword> userKeywords = new ArrayList<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserInterests> userInterests = new ArrayList<>();
 
   //생성자
   public Member(String email, String membername,LoginType loginType,MemberStatus status, String password, String role) {
@@ -125,10 +120,6 @@ public class Member extends BaseEntity {
 
   public void updateDepartment(Department department) {
     this.department = department;
-  }
-
-  public void updateProfileIntro(String profileIntro) {
-    this.profileIntro = profileIntro;
   }
 
 }
