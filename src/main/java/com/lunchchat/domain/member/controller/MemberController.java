@@ -11,8 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-
+import com.lunchchat.domain.notification.dto.FcmUpdateRequestDto;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,9 +27,9 @@ public class MemberController {
 
     @PatchMapping("/{memberId}/fcm-token")
     @Operation(summary = "FCM 토큰 업데이트", description = "사용자의 FCM 토큰을 업데이트합니다.")
-    public ApiResponse<SuccessStatus> updateFcmToken(@PathVariable Long memberId, @RequestBody Map<String, String> request) {
-        memberCommandService.updateFcmToken(memberId, request.get("fcmToken"));
-        return ApiResponse.onSuccess(SuccessStatus.FCM_TOKEN_UPDATE_SUCCESS);
+    public ApiResponse<SuccessStatus> updateFcmToken(@PathVariable Long memberId, @RequestBody FcmUpdateRequestDto request) {
+        memberCommandService.updateFcmToken(memberId, request.getFcmToken());
+        return ApiResponse.of(SuccessStatus.FCM_TOKEN_UPDATE_SUCCESS, null);
     }
 
     @GetMapping("/{memberId}")
