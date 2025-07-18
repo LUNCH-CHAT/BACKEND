@@ -10,6 +10,7 @@ import com.lunchchat.global.config.security.JwtConfig;
 import com.lunchchat.global.security.jwt.JwtTokenProvider;
 import com.lunchchat.global.security.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -41,7 +42,7 @@ public class OAuthController {
   }
 
 //  // 콜백
-//  @GetMapping("/google/callback")
+//  @GetMapping("/callback/google")
 //  public ResponseEntity<Void> googleCallback(@RequestParam("code") String code) {
 //    HttpHeaders headers = new HttpHeaders();
 //
@@ -51,6 +52,10 @@ public class OAuthController {
 //    return new ResponseEntity<>(headers, HttpStatus.FOUND);
 //  }
 
+  @GetMapping("/callback/google")
+  public void redirectTo(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
+    response.sendRedirect("http://localhost:8080/auth/login?code=" + code);
+  }
 
 
   @GetMapping("/login")

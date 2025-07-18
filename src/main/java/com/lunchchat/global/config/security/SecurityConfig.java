@@ -54,6 +54,7 @@ public class SecurityConfig {
     //경로별 인가 작업
     http
         .authorizeHttpRequests((auth)-> auth
+            .requestMatchers("/auth/**").permitAll()
             .requestMatchers("/swagger", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Swagger 허용
             .requestMatchers("/actuator/**").permitAll()
             .anyRequest().authenticated()

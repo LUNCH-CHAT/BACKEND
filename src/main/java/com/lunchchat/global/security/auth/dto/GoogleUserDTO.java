@@ -1,5 +1,7 @@
 package com.lunchchat.global.security.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public record GoogleUserDTO(){
 
   public record Request(
@@ -13,6 +15,7 @@ public record GoogleUserDTO(){
 
   // 구글 토큰 응답
   public record TokenResponse(
+      @JsonProperty("access_token")
       String accessToken
   ) {}
 
