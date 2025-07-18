@@ -10,8 +10,6 @@ import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
-import com.lunchchat.global.apiPayLoad.exception.GeneralException;
-
 import com.lunchchat.global.apiPayLoad.exception.handler.MemberHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;

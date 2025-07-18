@@ -10,5 +10,4 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
   // 이메일 기준 조회
   Optional<Member> findByEmail (String email);
-
 }

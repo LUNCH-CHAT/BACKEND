@@ -58,7 +58,7 @@ public class Member extends BaseEntity {
   //role
   @Column(nullable = false)
   private String role;
-
+  
   //학번
   private String studentNo;
 
@@ -98,7 +98,6 @@ public class Member extends BaseEntity {
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TimeTable> timeTables = new ArrayList<>();
 
-
   //생성자
   public Member(String email, String membername,LoginType loginType,MemberStatus status, String password, String role) {
     this.email = email;
@@ -110,10 +109,6 @@ public class Member extends BaseEntity {
   }
 
   //setter
-  public void updateNickname(String nickname) {
-    this.nickname = nickname;
-  }
-
   public void updateCollege(College college) {
     this.college = college;
   }
@@ -121,5 +116,4 @@ public class Member extends BaseEntity {
   public void updateDepartment(Department department) {
     this.department = department;
   }
-
 }
