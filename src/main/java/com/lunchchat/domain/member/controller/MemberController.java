@@ -1,7 +1,7 @@
 package com.lunchchat.domain.member.controller;
 
-import com.lunchchat.domain.member.dto.MemberDetailResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO;
+import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.service.MemberQueryService;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,8 +23,8 @@ public class MemberController {
 
     @GetMapping("/{memberId}")
     @Operation(summary = "특정 사용자 프로필 상세 조회", description = "특정 사용자의 프로필을 상세 조회합니다.")
-    public ApiResponse<MemberDetailResponseDTO> getMemberDetail(@PathVariable Long memberId) {
-        MemberDetailResponseDTO detail = memberQueryService.getMemberDetail(memberId);
+    public ApiResponse<MemberResponseDTO.MemberDetailResponseDTO> getMemberDetail(@PathVariable Long memberId) {
+        MemberResponseDTO.MemberDetailResponseDTO detail = memberQueryService.getMemberDetail(memberId);
         return ApiResponse.onSuccess(detail);
     }
 
@@ -34,8 +34,12 @@ public class MemberController {
         return ApiResponse.onSuccess(memberQueryService.getRecommendedMembers(currentMemberId));
     }
 
-//    @GetMapping("/mypage")
-
+    @GetMapping("/mypage")
+    @Operation(summary = "마이페이지 조회", description = "마이페이지를 조회합니다.")
+    public ApiResponse<MemberResponseDTO.MyPageResponseDTO> getMyPageInfo(Member member) {
+        // TODO: 현재는 하드코딩된 memberId를 사용하고 있습니다. 추후 인증 시스템이 구현되면 수정 필요.
+        MemberResponseDTO.MyPageResponseDTO myPage = memberQueryService.getMyPage(1L);
+        return ApiResponse.onSuccess(myPage);
+    }
 }
-
 
