@@ -12,7 +12,10 @@ import lombok.Getter;
 public enum SuccessStatus implements BaseCode {
 
     // 일반적인 응답
-    _OK(HttpStatus.OK, "COMMON200", "성공입니다.");
+    _OK(HttpStatus.OK, "COMMON200", "성공입니다."),
+
+    // FCM 관련 응답
+    FCM_TOKEN_UPDATE_SUCCESS(HttpStatus.OK, "FCM200", "FCM 토큰이 성공적으로 업데이트되었습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

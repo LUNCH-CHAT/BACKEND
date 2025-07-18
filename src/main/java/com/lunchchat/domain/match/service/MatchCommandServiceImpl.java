@@ -18,56 +18,64 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class MatchCommandServiceImpl implements MatchCommandService {
-  private final MatchRepository matchRepository;
-  private final MemberRepository memberRepository;
-  private final UserStatisticsCommandService userStatisticsCommandService;
 
-  @Override
-  @Transactional
-  public Matches requestMatch(Long memberId, Long toMemberId) {
-    if (memberId.equals(toMemberId)) {
-      throw new MatchException(ErrorStatus.SELF_MATCH_REQUEST);
+    private final MatchRepository matchRepository;
+    private final MemberRepository memberRepository;
+    private final UserStatisticsCommandService userStatisticsCommandService;
+    private final MatchNotificationService matchNotificationService;
+
+    @Override
+    @Transactional
+    public Matches requestMatch(Long memberId, Long toMemberId) {
+        if (memberId.equals(toMemberId)) {
+            throw new MatchException(ErrorStatus.SELF_MATCH_REQUEST);
+        }
+
+        Optional<Matches> existingMatch = matchRepository.findActiveMatchBetween(memberId,
+            toMemberId);
+        if (existingMatch.isPresent()) {
+            throw new MatchException(ErrorStatus.ALREADY_MATCHED);
+        }
+
+        Member fromMember = memberRepository.findById(memberId)
+            .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
+
+        Member toMember = memberRepository.findById(toMemberId)
+            .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
+
+        Matches newMatch = MatchConverter.toMatchEntity(fromMember, toMember);
+        userStatisticsCommandService.incrementRequestedCount(memberId);
+        userStatisticsCommandService.incrementReceivedCount(toMemberId);
+
+        matchNotificationService.sendMatchRequestNotification(fromMember, toMember);
+
+        return matchRepository.save(newMatch);
     }
 
-    Optional<Matches> existingMatch = matchRepository.findActiveMatchBetween(memberId, toMemberId);
-    if (existingMatch.isPresent()) {
-      throw new MatchException(ErrorStatus.ALREADY_MATCHED);
+    @Override
+    @Transactional
+    public void acceptMatch(Long matchId, Long memberId) {
+        Matches match = matchRepository.findById(matchId)
+            .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
+
+        Member from = match.getFromMember();
+        Member to = match.getToMember();
+
+        if (match.getStatus() != MatchStatus.REQUESTED) {
+            throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
+        }
+
+        if (!to.getId().equals(memberId)) {
+            throw new MatchException(ErrorStatus.INVALID_MATCH_ID);
+        }
+
+        match.updateStatus(MatchStatus.ACCEPTED);
+
+        userStatisticsCommandService.incrementAcceptedCount(from.getId());
+        userStatisticsCommandService.incrementAcceptedCount(to.getId());
+
+        matchNotificationService.sendMatchAcceptNotification(from, to);
+
+        matchRepository.save(match);
     }
-
-    Member fromMember = memberRepository.findById(memberId)
-        .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
-
-    Member toMember = memberRepository.findById(toMemberId)
-        .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
-
-    Matches newMatch = MatchConverter.toMatchEntity(fromMember, toMember);
-    userStatisticsCommandService.incrementRequestedCount(memberId);
-    userStatisticsCommandService.incrementReceivedCount(toMemberId);
-    return matchRepository.save(newMatch);
-  }
-
-  @Override
-  @Transactional
-  public void acceptMatch(Long matchId, Long memberId) {
-    Matches match = matchRepository.findById(matchId)
-        .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
-
-    Member from = match.getFromMember();
-    Member to = match.getToMember();
-
-    if (match.getStatus() != MatchStatus.REQUESTED) {
-      throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
-    }
-
-    if (!to.getId().equals(memberId)) {
-      throw new MatchException(ErrorStatus.INVALID_MATCH_ID);
-    }
-
-    match.updateStatus(MatchStatus.ACCEPTED);
-
-    userStatisticsCommandService.incrementAcceptedCount(from.getId());
-    userStatisticsCommandService.incrementAcceptedCount(to.getId());
-
-    matchRepository.save(match);
-  }
 }

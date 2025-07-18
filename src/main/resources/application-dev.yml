@@ -19,7 +19,7 @@ server:
 
 logging:
   level:
-    com.UMC: INFO
+    com.lunchchat: INFO
     org.springframework.security: WARN
     org.flywaydb: INFO
     org.hibernate.SQL: WARN
