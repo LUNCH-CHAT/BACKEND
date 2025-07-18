@@ -23,8 +23,10 @@ public class SecurityConfig {
 
   private final CorsConfigurationSource corsConfigurationSource;
   private final JwtFilterConfig jwtFilterConfig;
+  private final AuthHandler authHandler;
 
-  public SecurityConfig(CorsConfigurationSource corsConfigurationSource,JwtFilterConfig jwtFilterConfig) {
+  public SecurityConfig(CorsConfigurationSource corsConfigurationSource,JwtFilterConfig jwtFilterConfig,AuthHandler authHandler) {
+    this.authHandler = authHandler;
     this.corsConfigurationSource = corsConfigurationSource;
     this.jwtFilterConfig = jwtFilterConfig;
   }
@@ -57,6 +59,10 @@ public class SecurityConfig {
             .anyRequest().authenticated()
         );
 
+//    http
+//        .oauth2Login(oauth2 -> oauth2
+//            .failureHandler(authHandler)
+//        );
 
     // CORS 설정
     http.cors(cors -> cors.configurationSource(corsConfigurationSource));

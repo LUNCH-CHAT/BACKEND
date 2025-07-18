@@ -12,6 +12,7 @@ import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.GeneralException;
 
+import com.lunchchat.global.apiPayLoad.exception.handler.MemberHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,7 @@ public class MatchRestController {
 
     // TODO: 현재는 테스트용으로 하드코딩된 사용자 ID를 사용합니다.
     Member fakeUser = memberRepository.findById(1L)
-        .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+        .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
 
     return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, fakeUser.getId()));
   }
