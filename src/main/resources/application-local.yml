@@ -30,7 +30,7 @@ server:
 
 logging:
   level:
-    com.UMC: DEBUG
+    com.lunchchat: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.flywaydb: DEBUG
