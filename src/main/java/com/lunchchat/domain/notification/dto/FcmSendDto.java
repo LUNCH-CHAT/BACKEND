@@ -1,18 +1,22 @@
 package com.lunchchat.domain.notification.dto;
 
+import java.util.Map;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 public class FcmSendDto {
-    private String token;
-    private String title;
-    private String body;
 
-    public FcmSendDto(String token, String title, String body) {
-        this.token = token;
+    private final Long userId;
+    private final String title;
+    private final String body;
+    private final Map<String, String> data;
+
+    @Builder
+    public FcmSendDto(Long userId, String title, String body, Map<String, String> data) {
+        this.userId = userId;
         this.title = title;
         this.body = body;
+        this.data = data;
     }
 }
