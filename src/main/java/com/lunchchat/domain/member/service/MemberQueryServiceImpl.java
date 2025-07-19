@@ -2,20 +2,21 @@ package com.lunchchat.domain.member.service;
 
 import com.lunchchat.domain.member.converter.MemberConverter;
 import com.lunchchat.domain.member.converter.MemberRecommendationConverter;
-import com.lunchchat.domain.member.dto.MemberDetailResponseDTO;
-import com.lunchchat.domain.member.dto.MemberRecommendationResponseDTO;
+import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.time_table.entity.TimeTable;
-import com.lunchchat.domain.time_table.repository.TimeTableRepository;
 import com.lunchchat.domain.time_table.service.TimeTableQueryService;
+import com.lunchchat.domain.user_interests.repository.UserInterestsRepository;
+import com.lunchchat.domain.user_keywords.repository.UserKeywordsRepository;
+import com.lunchchat.domain.user_statistics.entity.UserStatistics;
+import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,10 +27,13 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     private final MemberRepository memberRepository;
     private final MemberConverter memberConverter;
     private final TimeTableQueryService timeTableQueryService;
+    private final UserStatisticsRepository userStatisticsRepository;
+    private final UserKeywordsRepository userKeywordsRepository;
+    private final UserInterestsRepository userInterestsRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public MemberDetailResponseDTO getMemberDetail(Long memberId) {
+    public MemberResponseDTO.MemberDetailResponseDTO getMemberDetail(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
         return memberConverter.toMemberDetailResponse(member);
@@ -37,7 +41,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId) {
+    public List<MemberResponseDTO.MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId) {
 
         Member currentMember = memberRepository.findById(currentMemberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
@@ -82,5 +86,26 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                         .anyMatch(ui2 -> ui1.getInterests().getId().equals(ui2.getInterests().getId())))
                 .count();
     }
+
+  @Override
+  public MemberResponseDTO.MyPageResponseDTO getMyPage(Long memberId) {
+    Member member = memberRepository.findById(memberId)
+        .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+
+    UserStatistics userStatistics = userStatisticsRepository.findByMemberId(memberId)
+        .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
+
+    List<String> keywords = userKeywordsRepository.findTitlesByMemberId(memberId);
+    List<String> tags = userInterestsRepository.findInterestNamesByMemberId(memberId);
+
+    return MemberConverter.toMyPageDto(
+        member,
+        userStatistics.getMatchCompletedCount(),
+        userStatistics.getMatchRequestedCount(),
+        userStatistics.getMatchReceivedCount(),
+        keywords,
+        tags
+    );
+  }
 }
 
