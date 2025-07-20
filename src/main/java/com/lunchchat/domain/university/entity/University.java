@@ -18,7 +18,7 @@ public class University {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false)
   private String name;
 
   //이메일 도메인 ex: "ewha.ac.kr"
