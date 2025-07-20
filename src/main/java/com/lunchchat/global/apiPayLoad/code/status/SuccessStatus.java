@@ -12,7 +12,11 @@ import lombok.Getter;
 public enum SuccessStatus implements BaseCode {
 
     // 일반적인 응답
-    _OK(HttpStatus.OK, "COMMON200", "성공입니다.");
+    OK(HttpStatus.OK, "COMMON200", "성공입니다."),
+
+    // 로그인 응답
+    USER_LOGIN_OK(HttpStatus.OK, "USER200", "유저 로그인 성공"),
+    USER_SIGNUP_OK(HttpStatus.OK, "USER201","유저 회원가입 성공");
 
     private final HttpStatus httpStatus;
     private final String code;
