@@ -19,6 +19,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
   //User Error
   USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 유저를 찾을 수 없습니다"),
+  USER_STATISTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "유저 통계 정보를 찾을 수 없습니다."),
 
   // Match Error
   INVALID_MATCH_STATUS(HttpStatus.BAD_REQUEST, "MATCH_400", "유효하지 않은 매칭 상태입니다."),
