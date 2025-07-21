@@ -41,7 +41,7 @@ public class Member extends BaseEntity {
   private Long id;
 
   //실명
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false)
   private String membername;
 
   //이메일
