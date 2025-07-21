@@ -43,7 +43,7 @@ jobs:
       - name: Build application
         run: ./gradlew build -x test --no-daemon
 
-      - name: Debug - Check Docker Hub Secrets
+      - name: Debug - Check Docker Hub Variables
         run: |
           echo "=== 환경변수 디버깅 시작 ==="
           echo "DOCKERHUB_USERNAME 길이: ${#DOCKERHUB_USERNAME}"
@@ -64,13 +64,13 @@ jobs:
           fi
           echo "=== 환경변수 디버깅 완료 ==="
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ vars.DOCKERHUB_TOKEN }}
 
       - name: Login to Docker Hub
         run: |
           echo "Docker Hub 로그인 시도..."
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          echo "${{ vars.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
           echo "Docker Hub 로그인 완료!"
 
       - name: Set image tag
@@ -145,10 +145,15 @@ jobs:
             # GitHub Secrets에서 민감한 환경변수들 추가
             echo "" >> .env
             echo "# GitHub Secrets에서 추가된 환경변수들" >> .env
-            echo "FCM_SERVICE_ACCOUNT_JSON='${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}'" >> .env
-            echo "SECRET_KEY='${{ secrets.SECRET_KEY }}'" >> .env
-            echo "CLIENT_ID='${{ secrets.CLIENT_ID }}'" >> .env  
-            echo "CLIENT_SECRET='${{ secrets.CLIENT_SECRET }}'" >> .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+            echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
+            
+            # FCM JSON을 안전하게 처리 (줄바꿈 제거 + 이스케이프)
+            FCM_JSON='${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}'
+            # 줄바꿈과 탭 제거, 따옴표 이스케이프
+            FCM_SAFE=$(echo "$FCM_JSON" | tr -d '\n\r\t' | sed 's/"/\\"/g')
+            echo "FCM_SERVICE_ACCOUNT_JSON=\"$FCM_SAFE\"" >> .env
             
             # 환경 변수 설정
             export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
