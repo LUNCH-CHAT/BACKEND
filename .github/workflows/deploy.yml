@@ -13,6 +13,29 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # 데이터베이스 설정
+      DB_URL: ${{ secrets.DB_URL }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PW: ${{ secrets.DB_PW }}
+
+      # JWT 설정
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
+      # OAuth 설정
+      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+
+      # FCM 설정
+      FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+
+      # Redis 설정
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: dev
+
     steps:
       - uses: actions/checkout@v4
 
