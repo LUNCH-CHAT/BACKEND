@@ -39,6 +39,64 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug Environment Variables
+        run: |
+          echo "🔍 환경변수 디버깅..."
+          echo "=================================="
+          
+          # Spring Profile 확인
+          echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"
+          
+          # 데이터베이스 설정 확인 (민감하지 않은 정보만)
+          echo "DB_USER: $DB_USER"
+          if [ -n "$DB_URL" ]; then
+            echo "DB_URL: 설정됨 (${#DB_URL} 문자)"
+          else
+            echo "DB_URL: 설정되지 않음 ❌"
+          fi
+          if [ -n "$DB_PW" ]; then
+            echo "DB_PW: 설정됨 (${#DB_PW} 문자)"
+          else
+            echo "DB_PW: 설정되지 않음 ❌"
+          fi
+          
+          # JWT 설정 확인
+          if [ -n "$SECRET_KEY" ]; then
+            echo "SECRET_KEY: 설정됨 (${#SECRET_KEY} 문자)"
+          else
+            echo "SECRET_KEY: 설정되지 않음 ❌"
+          fi
+          
+          # OAuth 설정 확인
+          if [ -n "$CLIENT_ID" ]; then
+            echo "CLIENT_ID: 설정됨 (${#CLIENT_ID} 문자)"
+          else
+            echo "CLIENT_ID: 설정되지 않음 ❌"
+          fi
+          if [ -n "$CLIENT_SECRET" ]; then
+            echo "CLIENT_SECRET: 설정됨 (${#CLIENT_SECRET} 문자)"
+          else
+            echo "CLIENT_SECRET: 설정되지 않음 ❌"
+          fi
+          
+          # FCM 설정 확인
+          if [ -n "$FCM_SERVICE_ACCOUNT_JSON" ]; then
+            echo "FCM_SERVICE_ACCOUNT_JSON: 설정됨 (${#FCM_SERVICE_ACCOUNT_JSON} 문자)"
+          else
+            echo "FCM_SERVICE_ACCOUNT_JSON: 설정되지 않음 ❌"
+          fi
+          
+          # Redis 설정 확인
+          echo "REDIS_HOST: $REDIS_HOST"
+          if [ -n "$REDIS_PASSWORD" ]; then
+            echo "REDIS_PASSWORD: 설정됨 (${#REDIS_PASSWORD} 문자)"
+          else
+            echo "REDIS_PASSWORD: 설정되지 않음 (빈 값일 수 있음)"
+          fi
+          
+          echo "=================================="
+          echo "✅ 환경변수 디버깅 완료"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -57,6 +115,11 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
+      - name: Debug Gradle properties (if needed)
+        run: |
+          echo "🔍 Gradle 환경 확인..."
+          ./gradlew properties | grep -E "(profile|spring)" || echo "프로파일 관련 속성 없음"
 
       - name: Run tests
         run: ./gradlew test --no-daemon
