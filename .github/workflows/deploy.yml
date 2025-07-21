@@ -43,6 +43,13 @@ jobs:
       - name: Build application
         run: ./gradlew build -x test --no-daemon
 
+      - name: Clear AWS Environment
+        run: |
+          unset AWS_DEFAULT_REGION
+          unset AWS_REGION
+          unset AWS_ACCESS_KEY_ID
+          unset AWS_SECRET_ACCESS_KEY        
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -118,6 +125,14 @@ jobs:
             mv lunchchat-temp lunchchat-app
             
             cd lunchchat-app
+            
+            # GitHub Secrets에서 민감한 환경변수들 추가
+            echo "" >> .env
+            echo "# GitHub Secrets에서 추가된 환경변수들" >> .env
+            echo "FCM_SERVICE_ACCOUNT_JSON='${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}'" >> .env
+            echo "SECRET_KEY='${{ secrets.SECRET_KEY }}'" >> .env
+            echo "CLIENT_ID='${{ secrets.CLIENT_ID }}'" >> .env  
+            echo "CLIENT_SECRET='${{ secrets.CLIENT_SECRET }}'" >> .env
             
             # 환경 변수 설정
             export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
