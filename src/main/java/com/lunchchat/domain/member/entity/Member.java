@@ -3,6 +3,7 @@ package com.lunchchat.domain.member.entity;
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
 import com.lunchchat.domain.member.entity.enums.LoginType;
+import com.lunchchat.domain.member.entity.enums.MemberStatus;
 import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.domain.user_interests.entity.UserInterests;
@@ -47,6 +48,17 @@ public class Member extends BaseEntity {
   @Column(nullable = false,unique = true)
   private String email;
 
+  //닉네임
+  private String nickname;
+
+  //비밀번호
+  @Column(nullable = false)
+  private String password;
+
+  //role
+  @Column(nullable = false)
+  private String role;
+  
   //학번
   private String studentNo;
 
@@ -60,6 +72,10 @@ public class Member extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private LoginType loginType;
+
+  //로그인 상태
+  @Enumerated(EnumType.STRING)
+  private MemberStatus Status;
 
   //대학
   @ManyToOne(fetch = FetchType.LAZY)
@@ -86,9 +102,13 @@ public class Member extends BaseEntity {
   private List<TimeTable> timeTables = new ArrayList<>();
 
   //생성자
-  public Member(String email, LoginType loginType) {
+  public Member(String email, String membername,LoginType loginType,MemberStatus status, String password, String role) {
     this.email = email;
+    this.membername = membername;
     this.loginType = loginType;
+    this.Status = status;
+    this.password = password;
+    this.role = role;
   }
 
   //setter
