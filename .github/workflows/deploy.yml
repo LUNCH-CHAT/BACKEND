@@ -97,15 +97,24 @@ jobs:
     strategy:
       matrix:
         server: [
-          { host: "${{ secrets.SERVER1_HOST }}", name: "Server-1" },
-          { host: "${{ secrets.SERVER2_HOST }}", name: "Server-2" }
+          { id: "server1", name: "Server-1" },
+          { id: "server2", name: "Server-2" }
         ]
 
     steps:
+      - name: Set server host
+        id: set-host
+        run: |
+          if [ "${{ matrix.server.id }}" = "server1" ]; then
+            echo "host=${{ secrets.SERVER1_HOST }}" >> $GITHUB_OUTPUT
+          elif [ "${{ matrix.server.id }}" = "server2" ]; then
+            echo "host=${{ secrets.SERVER2_HOST }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to ${{ matrix.server.name }}
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ matrix.server.host }}
+          host: ${{ steps.set-host.outputs.host }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
