@@ -149,9 +149,6 @@ jobs:
             echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
             echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
             
-            # FCM JSON을 별도 파일로 저장하고 환경변수로 파일 경로 설정
-            echo '${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}' > firebase-service-account-key.json
-            
             # 절대 경로로 FCM JSON 파일 경로 설정
             FIREBASE_KEY_PATH=$(pwd)/firebase-service-account-key.json
             echo "FCM_SERVICE_ACCOUNT_FILE=$FIREBASE_KEY_PATH" >> .env
