@@ -43,9 +43,35 @@ jobs:
       - name: Build application
         run: ./gradlew build -x test --no-daemon
 
+      - name: Debug - Check Docker Hub Secrets
+        run: |
+          echo "=== 환경변수 디버깅 시작 ==="
+          echo "DOCKERHUB_USERNAME 길이: ${#DOCKERHUB_USERNAME}"
+          echo "DOCKERHUB_TOKEN 길이: ${#DOCKERHUB_TOKEN}"
+          echo "DOCKERHUB_USERNAME 첫 3글자: ${DOCKERHUB_USERNAME:0:3}***"
+          echo "DOCKERHUB_TOKEN 첫 8글자: ${DOCKERHUB_TOKEN:0:8}***"
+          
+          if [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "❌ DOCKERHUB_USERNAME이 비어있습니다!"
+          else
+            echo "✅ DOCKERHUB_USERNAME이 설정되어 있습니다"
+          fi
+          
+          if [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "❌ DOCKERHUB_TOKEN이 비어있습니다!"
+          else
+            echo "✅ DOCKERHUB_TOKEN이 설정되어 있습니다"
+          fi
+          echo "=== 환경변수 디버깅 완료 ==="
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Login to Docker Hub
         run: |
+          echo "Docker Hub 로그인 시도..."
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          echo "Docker Hub 로그인 완료!"
 
       - name: Set image tag
         id: set-tag
