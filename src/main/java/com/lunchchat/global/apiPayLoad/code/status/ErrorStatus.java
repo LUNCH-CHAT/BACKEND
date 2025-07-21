@@ -12,13 +12,13 @@ public enum ErrorStatus implements BaseErrorCode {
 
   //Common Error
   INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
-  BAD_REQUEST(HttpStatus.BAD_REQUEST,"COMMON400","잘못된 요청입니다."),
-  UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"COMMON401","인증이 필요합니다."),
+  BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
+  UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON401", "인증이 필요합니다."),
   FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
-  NOT_FOUND(HttpStatus.NOT_FOUND,"COMMON404","찾을 수 없는 요청입니다"),
+  NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON404", "찾을 수 없는 요청입니다"),
 
   //User Error
-  USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401","로그인 유저를 찾을 수 없습니다"),
+  USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401", "로그인 유저를 찾을 수 없습니다"),
   USER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "USER_403", "권한이 없습니다."),
 
   JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "유효하지 않은 JWT 토큰입니다."),
@@ -45,7 +45,11 @@ public enum ErrorStatus implements BaseErrorCode {
   CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT404", "해당 채팅방이 존재하지 않습니다."),
   CANNOT_CHAT_WITH_SELF(HttpStatus.BAD_REQUEST, "CHAT400", "자기 자신과는 채팅할 수 없습니다."),
   UNAUTHORIZED_CHATROOM_ACCESS(HttpStatus.FORBIDDEN, "CHAT403", "해당 채팅방에 접근할 수 있는 사용자가 아닙니다."),
-  NO_MESSAGES_IN_CHATROOM(HttpStatus.NOT_FOUND, "CHAT404_MSG", "해당 채팅방에 메시지가 존재하지 않습니다.");
+  NO_MESSAGES_IN_CHATROOM(HttpStatus.NOT_FOUND, "CHAT404_MSG", "해당 채팅방에 메시지가 존재하지 않습니다."),
+
+  // FCM Error
+  FCM_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FCM500", "FCM 메시지 전송에 실패했습니다."),
+  FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM404", "해당 사용자의 FCM 토큰을 찾을 수 없습니다.");
 
   private final HttpStatus httpStatus;
   private final String code;
@@ -67,7 +71,6 @@ public enum ErrorStatus implements BaseErrorCode {
             .code(code)
             .isSuccess(false)
             .httpStatus(httpStatus)
-            .build()
-            ;
+            .build();
   }
 }

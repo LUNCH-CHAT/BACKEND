@@ -65,6 +65,9 @@ public class Member extends BaseEntity {
   //프로필 사진
   private String profileImageUrl;
 
+  //FCM 토큰
+  private String fcmToken;
+
   //로그인 타입
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -116,4 +119,9 @@ public class Member extends BaseEntity {
   public void updateDepartment(Department department) {
     this.department = department;
   }
+
+  public void updateFcmToken(String fcmToken) {
+    this.fcmToken = fcmToken;
+  }
 }
+
