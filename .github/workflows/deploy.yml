@@ -149,11 +149,10 @@ jobs:
             echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
             echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
             
-            # FCM JSON을 안전하게 처리 (줄바꿈 제거 + 이스케이프)
+            # FCM JSON을 Base64로 인코딩하여 안전하게 저장
             FCM_JSON='${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}'
-            # 줄바꿈과 탭 제거, 따옴표 이스케이프
-            FCM_SAFE=$(echo "$FCM_JSON" | tr -d '\n\r\t' | sed 's/"/\\"/g')
-            echo "FCM_SERVICE_ACCOUNT_JSON=\"$FCM_SAFE\"" >> .env
+            FCM_BASE64=$(echo -n "$FCM_JSON" | base64 -w 0)
+            echo "FCM_SERVICE_ACCOUNT_JSON_BASE64=$FCM_BASE64" >> .env
             
             # 환경 변수 설정
             export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}

@@ -37,6 +37,11 @@ spring:
     redis:
       timeout: 30000ms
 
+# FCM 설정 (Base64 지원 추가)
+fcm:
+  service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
+  service-account-json-base64: ${FCM_SERVICE_ACCOUNT_JSON_BASE64:}
+
 server:
   port: 8080
 

@@ -16,13 +16,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Slf4j
 @Configuration
 public class FcmConfig {
 
-    @Value("${fcm.service-account-json}")
+    @Value("${fcm.service-account-json:}")
     private String serviceAccountJson;
+    
+    @Value("${fcm.service-account-json-base64:}")
+    private String serviceAccountJsonBase64;
 
     private String projectId;
     private String privateKey;
@@ -33,11 +37,26 @@ public class FcmConfig {
     @PostConstruct
     public void initialize() {
         try {
-            parseServiceAccountJson();
+            // Base64 인코딩된 JSON이 있으면 디코딩해서 사용
+            String actualServiceAccountJson = serviceAccountJson;
+            if (!serviceAccountJsonBase64.isEmpty()) {
+                actualServiceAccountJson = new String(
+                    Base64.getDecoder().decode(serviceAccountJsonBase64),
+                    StandardCharsets.UTF_8
+                );
+                log.info("FCM JSON Base64 디코딩 완료");
+            }
+            
+            if (actualServiceAccountJson == null || actualServiceAccountJson.trim().isEmpty()) {
+                log.warn("FCM 서비스 계정 JSON이 설정되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
+                return;
+            }
+            
+            parseServiceAccountJson(actualServiceAccountJson);
             validateConfiguration();
 
             InputStream serviceAccountStream = new ByteArrayInputStream(
-                serviceAccountJson.getBytes(StandardCharsets.UTF_8)
+                actualServiceAccountJson.getBytes(StandardCharsets.UTF_8)
             );
 
             FirebaseOptions options = FirebaseOptions.builder()
@@ -52,7 +71,7 @@ public class FcmConfig {
                 this.firebaseApp = FirebaseApp.getInstance();
                 log.info("기존 FirebaseApp 인스턴스 사용");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("FirebaseApp 초기화 실패", e);
             throw new RuntimeException("FCM 초기화 실패", e);
         }
@@ -60,13 +79,17 @@ public class FcmConfig {
 
     @Bean
     public FirebaseMessaging firebaseMessaging() {
+        if (firebaseApp == null) {
+            log.warn("FirebaseApp이 초기화되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
+            return null;
+        }
         return FirebaseMessaging.getInstance(firebaseApp);
     }
 
-    private void parseServiceAccountJson() {
+    private void parseServiceAccountJson(String json) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode rootNode = mapper.readTree(serviceAccountJson);
+            JsonNode rootNode = mapper.readTree(json);
 
             this.projectId = rootNode.path("project_id").asText();
             this.privateKey = rootNode.path("private_key").asText();
