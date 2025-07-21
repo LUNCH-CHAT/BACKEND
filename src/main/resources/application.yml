@@ -45,8 +45,11 @@ spring:
           max-idle: 8
           min-idle: 0
 
+# FCM 설정
 fcm:
-  service-account-json: ${FCM_SERVICE_ACCOUNT_JSON}
+  service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
+  service-account-json-base64: ${FCM_SERVICE_ACCOUNT_JSON_BASE64:}
+  service-account-file: ${FCM_SERVICE_ACCOUNT_FILE:}
 
 server:
   port: ${SERVER_PORT:8080}

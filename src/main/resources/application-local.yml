@@ -48,6 +48,10 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+# FCM 설정 (로컬 환경 - JSON 문자열 사용)
+fcm:
+  service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
+
 server:
   port: ${SERVER_PORT}
 

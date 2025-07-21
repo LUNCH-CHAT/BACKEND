@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 
 @Slf4j
@@ -27,6 +27,9 @@ public class FcmConfig {
     
     @Value("${fcm.service-account-json-base64:}")
     private String serviceAccountJsonBase64;
+    
+    @Value("${fcm.service-account-file:}")
+    private String serviceAccountFilePath;
 
     private String projectId;
     private String privateKey;
@@ -37,18 +40,10 @@ public class FcmConfig {
     @PostConstruct
     public void initialize() {
         try {
-            // Base64 인코딩된 JSON이 있으면 디코딩해서 사용
-            String actualServiceAccountJson = serviceAccountJson;
-            if (!serviceAccountJsonBase64.isEmpty()) {
-                actualServiceAccountJson = new String(
-                    Base64.getDecoder().decode(serviceAccountJsonBase64),
-                    StandardCharsets.UTF_8
-                );
-                log.info("FCM JSON Base64 디코딩 완료");
-            }
+            String actualServiceAccountJson = getServiceAccountJson();
             
             if (actualServiceAccountJson == null || actualServiceAccountJson.trim().isEmpty()) {
-                log.warn("FCM 서비스 계정 JSON이 설정되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
+                log.warn("FCM 서비스 계정 정보가 설정되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
                 return;
             }
             
@@ -66,7 +61,7 @@ public class FcmConfig {
 
             if (FirebaseApp.getApps().isEmpty()) {
                 this.firebaseApp = FirebaseApp.initializeApp(options);
-                log.info("FirebaseApp 초기화 성공");
+                log.info("FirebaseApp 초기화 성공 (project: {})", projectId);
             } else {
                 this.firebaseApp = FirebaseApp.getInstance();
                 log.info("기존 FirebaseApp 인스턴스 사용");
@@ -84,6 +79,42 @@ public class FcmConfig {
             return null;
         }
         return FirebaseMessaging.getInstance(firebaseApp);
+    }
+
+    private String getServiceAccountJson() {
+        // 1. 파일 경로에서 읽기 (EC2 환경)
+        if (!serviceAccountFilePath.isEmpty()) {
+            try {
+                String content = Files.readString(Paths.get(serviceAccountFilePath), StandardCharsets.UTF_8);
+                log.info("🖥️  FCM JSON을 EC2 파일에서 읽었습니다: {}", serviceAccountFilePath);
+                return content;
+            } catch (IOException e) {
+                log.error("❌ FCM JSON 파일을 읽을 수 없습니다: {}", serviceAccountFilePath, e);
+            }
+        }
+        
+        // 2. Base64 디코딩 (백업 방식)
+        if (!serviceAccountJsonBase64.isEmpty()) {
+            try {
+                String decoded = new String(
+                    Base64.getDecoder().decode(serviceAccountJsonBase64),
+                    StandardCharsets.UTF_8
+                );
+                log.info("🔓 FCM JSON Base64 디코딩 완료");
+                return decoded;
+            } catch (Exception e) {
+                log.error("❌ FCM JSON Base64 디코딩 실패", e);
+            }
+        }
+        
+        // 3. 직접 JSON 문자열 (로컬 환경)
+        if (!serviceAccountJson.isEmpty()) {
+            log.info("🏠 FCM JSON을 로컬 환경변수에서 읽었습니다");
+            return serviceAccountJson;
+        }
+        
+        log.warn("⚠️  FCM 서비스 계정 정보를 찾을 수 없습니다. 모든 방식을 확인했습니다.");
+        return null;
     }
 
     private void parseServiceAccountJson(String json) {

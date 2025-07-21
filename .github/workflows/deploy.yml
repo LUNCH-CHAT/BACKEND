@@ -149,10 +149,12 @@ jobs:
             echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
             echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
             
-            # FCM JSON을 Base64로 인코딩하여 안전하게 저장
-            FCM_JSON='${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}'
-            FCM_BASE64=$(echo -n "$FCM_JSON" | base64 -w 0)
-            echo "FCM_SERVICE_ACCOUNT_JSON_BASE64=$FCM_BASE64" >> .env
+            # FCM JSON을 별도 파일로 저장하고 환경변수로 파일 경로 설정
+            echo '${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}' > firebase-service-account-key.json
+            
+            # 절대 경로로 FCM JSON 파일 경로 설정
+            FIREBASE_KEY_PATH=$(pwd)/firebase-service-account-key.json
+            echo "FCM_SERVICE_ACCOUNT_FILE=$FIREBASE_KEY_PATH" >> .env
             
             # 환경 변수 설정
             export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
