@@ -14,6 +14,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 30
 
     outputs:
       image-tag: ${{ steps.set-tag.outputs.IMAGE_TAG }}
@@ -28,7 +29,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -41,37 +42,16 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build application
-        run: ./gradlew build -x test --no-daemon
+        run: ./gradlew build -x test --no-daemon --parallel
 
-      - name: Debug - Check Docker Hub Variables
-        run: |
-          echo "=== 환경변수 디버깅 시작 ==="
-          echo "DOCKERHUB_USERNAME 길이: ${#DOCKERHUB_USERNAME}"
-          echo "DOCKERHUB_TOKEN 길이: ${#DOCKERHUB_TOKEN}"
-          echo "DOCKERHUB_USERNAME 첫 3글자: ${DOCKERHUB_USERNAME:0:3}***"
-          echo "DOCKERHUB_TOKEN 첫 8글자: ${DOCKERHUB_TOKEN:0:8}***"
-          
-          if [ -z "$DOCKERHUB_USERNAME" ]; then
-            echo "❌ DOCKERHUB_USERNAME이 비어있습니다!"
-          else
-            echo "✅ DOCKERHUB_USERNAME이 설정되어 있습니다"
-          fi
-          
-          if [ -z "$DOCKERHUB_TOKEN" ]; then
-            echo "❌ DOCKERHUB_TOKEN이 비어있습니다!"
-          else
-            echo "✅ DOCKERHUB_TOKEN이 설정되어 있습니다"
-          fi
-          echo "=== 환경변수 디버깅 완료 ==="
-        env:
-          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ vars.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        run: |
-          echo "Docker Hub 로그인 시도..."
-          echo "${{ vars.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
-          echo "Docker Hub 로그인 완료!"
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ vars.DOCKERHUB_TOKEN }}
 
       - name: Set image tag
         id: set-tag
@@ -83,14 +63,21 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.set-tag.outputs.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
   deploy-production:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 20
 
     strategy:
+      fail-fast: false  # 한 서버 실패해도 다른 서버 계속 진행
       matrix:
         server: [
           { id: "server1", name: "Server-1" },
@@ -113,7 +100,13 @@ jobs:
           host: ${{ steps.set-host.outputs.host }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 15m
+          command_timeout: 10m
           script: |
+            set -e  # 에러 발생 시 즉시 중단
+            
+            echo "🚀 ${{ matrix.server.name }} 배포 시작..."
+            
             # 프로젝트 디렉토리 준비
             cd /home/ubuntu
             
@@ -124,90 +117,149 @@ jobs:
               cd ..
             fi
             
-            # 최신 코드 클론
+            # 최신 코드 클론 (shallow clone으로 속도 향상)
             rm -rf lunchchat-temp
-            git clone ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
+            git clone --depth 1 ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
             
-            # 환경 변수 복사 (기존에 설정한 .env 파일)
-            if [ -f "lunchchat/.env" ]; then
-              cp lunchchat/.env lunchchat-temp/
+            # 환경 변수 복사
+            if [ -f "lunchchat-app/.env" ]; then
+              cp lunchchat-app/.env lunchchat-temp/
             else
-              echo "⚠️ .env 파일이 없습니다. 수동으로 생성해주세요."
+              echo "⚠️ .env 파일이 없습니다."
               exit 1
             fi
             
             # 기존 프로젝트 교체
             rm -rf lunchchat-app
             mv lunchchat-temp lunchchat-app
-            
             cd lunchchat-app
             
-            # GitHub Secrets에서 민감한 환경변수들 추가
-            echo "" >> .env
-            echo "# GitHub Secrets에서 추가된 환경변수들" >> .env
-            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-            echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
-            echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
+            # FCM JSON 생성
+            cat > firebase-service-account-key.json << 'FCMEOF'
+            ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+            FCMEOF
+            chmod 600 firebase-service-account-key.json
             
-            # 절대 경로로 FCM JSON 파일 경로 설정
-            FIREBASE_KEY_PATH=$(pwd)/firebase-service-account-key.json
-            echo "FCM_SERVICE_ACCOUNT_FILE=$FIREBASE_KEY_PATH" >> .env
+            # GitHub Secrets 환경변수 추가
+            cat >> .env << 'ENVEOF'
             
-            # 환경 변수 설정
-            export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
-            export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
-            export DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
-            export SPRING_PROFILES_ACTIVE=dev
+            # GitHub Secrets에서 추가된 환경변수들
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            CLIENT_ID=${{ secrets.CLIENT_ID }}
+            CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
+            FCM_SERVICE_ACCOUNT_FILE=$(pwd)/firebase-service-account-key.json
+            IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
+            DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
+            DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
+            SPRING_PROFILES_ACTIVE=dev
+            JPA_DDL_AUTO=create-drop
+            ENVEOF
             
             # 로그 디렉토리 생성
             mkdir -p logs
             
-            # 새 이미지 풀 및 실행
-            docker-compose pull backend
-            docker-compose up -d backend
+            echo "📦 Docker 이미지 다운로드 중..."
             
-            # 애플리케이션 시작 대기
-            echo "애플리케이션 시작 대기 중..."
-            sleep 45
+            # Docker 이미지 미리 다운로드 (백그라운드에서 진행)
+            docker pull ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }} &
+            PULL_PID=$!
             
-            # 헬스 체크
-            for i in {1..10}; do
-              if curl -f http://localhost:8080/health >/dev/null 2>&1; then
-                echo "✅ ${{ matrix.server.name }} 배포 성공!"
+            # 다운로드 진행 상황 모니터링
+            for i in {1..60}; do
+              if kill -0 $PULL_PID 2>/dev/null; then
+                echo "이미지 다운로드 진행 중... ($i/60)"
+                sleep 5
+              else
+                wait $PULL_PID
+                PULL_EXIT_CODE=$?
+                if [ $PULL_EXIT_CODE -eq 0 ]; then
+                  echo "✅ 이미지 다운로드 완료!"
+                  break
+                else
+                  echo "❌ 이미지 다운로드 실패 (exit code: $PULL_EXIT_CODE)"
+                  exit 1
+                fi
+              fi
+            done
+            
+            # 타임아웃 처리
+            if kill -0 $PULL_PID 2>/dev/null; then
+              kill $PULL_PID
+              echo "❌ 이미지 다운로드 타임아웃 (5분)"
+              exit 1
+            fi
+            
+            echo "🚀 컨테이너 시작 중..."
+            
+            # 환경변수 내보내기
+            export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
+            export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
+            export DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
+            
+            # 컨테이너 시작 (pull 건너뛰기)
+            docker-compose up -d backend --no-build
+            
+            echo "⏳ 애플리케이션 시작 대기 중..."
+            sleep 30
+            
+            # 헬스 체크 (재시도 로직 개선)
+            HEALTH_CHECK_SUCCESS=false
+            for i in {1..15}; do
+              if curl -f -m 10 http://localhost:8080/health >/dev/null 2>&1; then
+                echo "✅ ${{ matrix.server.name }} 헬스 체크 성공!"
+                HEALTH_CHECK_SUCCESS=true
                 break
               fi
-              if [ $i -eq 10 ]; then
-                echo "❌ ${{ matrix.server.name }} 헬스 체크 실패"
-                docker-compose logs backend
+            
+              if [ $i -eq 15 ]; then
+                echo "❌ ${{ matrix.server.name }} 헬스 체크 최종 실패"
+                echo "=== 컨테이너 상태 ==="
+                docker ps
+                echo "=== 애플리케이션 로그 ==="
+                docker-compose logs --tail 50 backend
                 exit 1
               fi
-              echo "헬스 체크 재시도 ($i/10)..."
+            
+              echo "헬스 체크 재시도 ($i/15) - 10초 후 재시도..."
               sleep 10
             done
             
-            # 구 이미지 정리
-            docker image prune -f
-            
-            echo "🎉 ${{ matrix.server.name }} 배포 완료!"
+            if [ "$HEALTH_CHECK_SUCCESS" = true ]; then
+              # 구 이미지 정리
+              docker image prune -f
+              echo "🎉 ${{ matrix.server.name }} 배포 완료!"
+            fi
 
   verify-deployment:
     needs: deploy-production
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Verify Load Balancer
         run: |
           echo "🔍 로드밸런서 확인 중..."
           
-          # 로드밸런서를 통한 헬스 체크
-          for i in {1..5}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.LOAD_BALANCER_IP }}/health || echo "000")
+          SUCCESS_COUNT=0
+          TOTAL_CHECKS=10
+          
+          for i in $(seq 1 $TOTAL_CHECKS); do
+            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 http://${{ secrets.LOAD_BALANCER_IP }}/health || echo "000")
             if [ "$response" = "200" ]; then
-              echo "✅ 로드밸런서 헬스 체크 성공 ($i/5)"
+              SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+              echo "✅ 로드밸런서 헬스 체크 성공 ($i/$TOTAL_CHECKS) - 성공률: $SUCCESS_COUNT/$i"
             else
-              echo "⚠️ 로드밸런서 헬스 체크 실패: $response ($i/5)"
+              echo "⚠️ 로드밸런서 헬스 체크 실패: $response ($i/$TOTAL_CHECKS)"
             fi
-            sleep 5
+            sleep 3
           done
           
-          echo "🎉 전체 배포 및 검증 완료!"
+          SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_CHECKS))
+          echo "📊 최종 성공률: $SUCCESS_RATE% ($SUCCESS_COUNT/$TOTAL_CHECKS)"
+          
+          if [ $SUCCESS_RATE -ge 80 ]; then
+            echo "🎉 배포 검증 성공! (성공률 80% 이상)"
+          else
+            echo "❌ 배포 검증 실패! (성공률 80% 미만)"
+            exit 1
+          fi
