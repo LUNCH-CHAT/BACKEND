@@ -116,4 +116,6 @@ public class Member extends BaseEntity {
   public void updateDepartment(Department department) {
     this.department = department;
   }
+
+  public void setUniversity(University university) {this.university = university;}
 }

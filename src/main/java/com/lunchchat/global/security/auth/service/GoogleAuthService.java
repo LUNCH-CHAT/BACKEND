@@ -4,6 +4,8 @@ import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.entity.enums.LoginType;
 import com.lunchchat.domain.member.entity.enums.MemberStatus;
 import com.lunchchat.domain.member.repository.MemberRepository;
+import com.lunchchat.domain.university.entity.University;
+import com.lunchchat.domain.university.repository.UniversityRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.AuthException;
 import com.lunchchat.global.config.security.JwtConfig;
@@ -20,13 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class GoogleAuthService {
 
   private final MemberRepository memberRepository;
+  private final UniversityRepository universityRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleUtil googleUtil;
 
-  public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil) {
+  public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil, UniversityRepository universityRepository) {
     this.memberRepository = memberRepository;
     this.jwtTokenProvider = jwtTokenProvider;
     this.googleUtil = googleUtil;
+    this.universityRepository = universityRepository;
   }
 
   //구글 로그인
@@ -64,6 +68,10 @@ public class GoogleAuthService {
   private Member createNewUser(String email, String name) {
     log.info("🆕 신규 구글 회원 등록: email={}, name={}", email, name);
 
+    String domain = extractDomainFromEmail(email);
+    University university = universityRepository.findByDomain(domain)
+        .orElseThrow(() -> new AuthException(ErrorStatus.UNIVERSITY_NOT_FOUND));
+
     Member newUser = new Member(
         email,
         name,
@@ -72,8 +80,16 @@ public class GoogleAuthService {
         "NO_PASSWORD",
         "ROLE_USER"
     );
+    newUser.setUniversity(university);
 
     return memberRepository.save(newUser);
+  }
+
+  private String extractDomainFromEmail(String email) {
+    if (email == null || !email.contains("@")) {
+      throw new AuthException(ErrorStatus.INVALID_EMAIL_FORMAT);
+    }
+    return email.substring(email.indexOf("@") + 1).toLowerCase(); // e.g., "ewhain.net"
   }
 
 }

@@ -29,6 +29,8 @@ public enum ErrorStatus implements BaseErrorCode {
   EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "AUTH_403_EMAIL_UNVERIFIED", "이메일이 인증되지 않았습니다."),
   EMAIL_EXISTS(HttpStatus.CONFLICT, "AUTH_409", "이미 사용 중인 이메일입니다."),
 
+  UNIVERSITY_NOT_FOUND(HttpStatus.BAD_REQUEST,"AUTH_401_UNIVERSITY","대학교를 찾을 수 없습니다"),
+
   TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_401_ACCESS_EXPIRED", "인증 토큰이 만료되었습니다."),
   TOKEN_MALFORMED(HttpStatus.UNAUTHORIZED, "TOKEN_401_ACCESS_MALFORMED", "잘못된 형식의 인증 토큰입니다."),
   USER_STATISTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "유저 통계 정보를 찾을 수 없습니다."),
