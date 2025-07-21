@@ -44,10 +44,12 @@ jobs:
         run: ./gradlew build -x test --no-daemon
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
+          registry: docker.io
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          ecr: false
 
       - name: Set image tag
         id: set-tag
