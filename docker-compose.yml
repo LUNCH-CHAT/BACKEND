@@ -1,20 +1,28 @@
+# docker-compose.yml (GitHub에서 수정)
+version: '3.8'
+
 services:
   backend:
-    build: .
+    # 로컬: build 사용, 프로덕션: 이미지 사용
+    image: ${DOCKER_REGISTRY:-xoo1228}/${DOCKER_IMAGE_NAME:-lunchchat-backend}:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    depends_on:
-      - db
-      - redis
     environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/lunchchatdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      - SPRING_DATASOURCE_USERNAME=user
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PW=${DB_PW}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - SERVER_PORT=8080
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/lunchchat
 
+  # 로컬 개발용 서비스들 (프로덕션에서는 사용 안 함)
   db:
     image: mysql:8.0
     environment:
@@ -27,9 +35,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
+    profiles: [ "local" ]  # 로컬에서만 실행
 
   redis:
     image: redis:7-alpine
@@ -37,6 +43,7 @@ services:
       - "6380:6379"
     volumes:
       - redis_data:/data
+    profiles: [ "local" ]  # 로컬에서만 실행
 
 volumes:
   mysql_data:
