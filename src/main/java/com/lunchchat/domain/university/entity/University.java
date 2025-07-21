@@ -22,7 +22,7 @@ public class University {
   private String name;
 
   //이메일 도메인 ex: "ewha.ac.kr"
-  @Column(nullable = false, unique = true)
+  @Column(unique = true)
   private String domain;
 
 

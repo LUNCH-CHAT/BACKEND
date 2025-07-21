@@ -70,7 +70,7 @@ public class GoogleAuthService {
 
     String domain = extractDomainFromEmail(email);
     University university = universityRepository.findByDomain(domain)
-        .orElseThrow(() -> new AuthException(ErrorStatus.UNIVERSITY_NOT_FOUND));
+        .orElseGet(this::getFallbackUniversity);
 
     Member newUser = new Member(
         email,
@@ -85,11 +85,18 @@ public class GoogleAuthService {
     return memberRepository.save(newUser);
   }
 
+  //학교 도메인 별 이메일 분류
   private String extractDomainFromEmail(String email) {
     if (email == null || !email.contains("@")) {
       throw new AuthException(ErrorStatus.INVALID_EMAIL_FORMAT);
     }
     return email.substring(email.indexOf("@") + 1).toLowerCase(); // e.g., "ewhain.net"
+  }
+
+  //기본 대학 = UMC대
+  private University getFallbackUniversity() {
+    return universityRepository.findByName("UMC대")
+        .orElseThrow(() -> new IllegalStateException("기본 대학 'UMC대'가 DB에 존재하지 않습니다."));
   }
 
 }

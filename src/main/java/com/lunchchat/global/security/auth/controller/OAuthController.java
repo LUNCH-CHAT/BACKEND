@@ -2,6 +2,8 @@ package com.lunchchat.global.security.auth.controller;
 
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.entity.enums.MemberStatus;
+import com.lunchchat.domain.member.repository.MemberRepository;
+import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.security.auth.dto.GoogleUserDTO;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,12 +36,14 @@ public class OAuthController {
   private final JwtUtil jwtUtil;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleAuthService googleAuthService;
+  private final MemberRepository memberRepository;
 
-  public OAuthController(JwtConfig jwtConfig, JwtUtil jwtUtil, JwtTokenProvider jwtTokenProvider, GoogleAuthService googleAuthService) {
+  public OAuthController(JwtConfig jwtConfig, JwtUtil jwtUtil, JwtTokenProvider jwtTokenProvider, GoogleAuthService googleAuthService, MemberRepository memberRepository) {
     this.jwtConfig = jwtConfig;
     this.jwtUtil = jwtUtil;
     this.jwtTokenProvider = jwtTokenProvider;
     this.googleAuthService = googleAuthService;
+    this.memberRepository = memberRepository;
   }
 
 //  // 콜백
@@ -91,5 +96,20 @@ public class OAuthController {
 
 
   // 로그아웃
+
+
+  // 대학 간단 조회
+  @GetMapping("/uniName")
+  public ResponseEntity<String> getUniversityName(Authentication authentication) {
+    String email = authentication.getName();
+    Member member = memberRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+    University university = member.getUniversity();
+    if (university == null) {
+      return ResponseEntity.ok("대학 정보 없음");
+    }
+    return ResponseEntity.ok(university.getName());
+  }
 
 }
