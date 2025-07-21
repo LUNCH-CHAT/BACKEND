@@ -13,36 +13,37 @@ import lombok.Getter;
 @AllArgsConstructor
 @JsonPropertyOrder({"isSuccess", "code", "message", "result"})
 public class ApiResponse<T> {
-  @JsonProperty("isSuccess")
-  private final Boolean isSuccess;
-  private final String code;
-  private final String message;
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private T result;
 
-  // 성공한 경우 응답 생성
+    @JsonProperty("isSuccess")
+    private final Boolean isSuccess;
+    private final String code;
+    private final String message;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private T result;
 
-  public static <T> ApiResponse<T> onSuccess(T result) {
-    return new ApiResponse<>(true, SuccessStatus.OK.getCode(), SuccessStatus.OK.getMessage(),
-        result);
-  }
+    // 성공한 경우 응답 생성
 
-  public static <T> ApiResponse<T> of(BaseCode code, T result) {
-    return new ApiResponse<>(true, code.getReasonHttpStatus().getCode(),
-        code.getReasonHttpStatus().getMessage(), result);
-  }
+    public static <T> ApiResponse<T> onSuccess(T result) {
+        return new ApiResponse<>(true, SuccessStatus._OK.getCode(), SuccessStatus._OK.getMessage(),
+            result);
+    }
 
-  // 실패한 경우 응답 생성
-  public static <T> ApiResponse<T> onFailure(String code, String message, T data) {
-    return new ApiResponse<>(false, code, message, data);
-  }
+    public static <T> ApiResponse<T> of(BaseCode code, T result) {
+        return new ApiResponse<>(true, code.getReasonHttpStatus().getCode(),
+            code.getReasonHttpStatus().getMessage(), result);
+    }
 
-  public static ApiResponse<Void> error(ErrorStatus error) {
-    return new ApiResponse<>(false, error.getCode(), error.getMessage(), null);
-  }
+    // 실패한 경우 응답 생성
+    public static <T> ApiResponse<T> onFailure(String code, String message, T data) {
+        return new ApiResponse<>(false, code, message, data);
+    }
 
-  public static ApiResponse<Void> error(ErrorStatus error, String customMessage) {
-    return new ApiResponse<>(false, error.getCode(), customMessage, null);
-  }
+    public static ApiResponse<Void> error(ErrorStatus error) {
+        return new ApiResponse<>(false, error.getCode(), error.getMessage(), null);
+    }
+
+    public static ApiResponse<Void> error(ErrorStatus error, String customMessage) {
+        return new ApiResponse<>(false, error.getCode(), customMessage, null);
+    }
 
 }
