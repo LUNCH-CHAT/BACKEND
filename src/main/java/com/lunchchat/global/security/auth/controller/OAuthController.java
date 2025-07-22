@@ -97,6 +97,9 @@ public class OAuthController {
 
   // 로그아웃
 
+  //RefreshToken
+
+
 
   // 대학 간단 조회
   @GetMapping("/uniName")

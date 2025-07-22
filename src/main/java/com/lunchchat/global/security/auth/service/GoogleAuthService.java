@@ -8,14 +8,16 @@ import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.domain.university.repository.UniversityRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.AuthException;
-import com.lunchchat.global.config.security.JwtConfig;
 import com.lunchchat.global.security.auth.dto.GoogleUserDTO;
+import com.lunchchat.global.security.auth.infra.CookieUtil;
 import com.lunchchat.global.security.auth.infra.GoogleUtil;
 import com.lunchchat.global.security.jwt.JwtTokenProvider;
+import com.lunchchat.global.security.jwt.redis.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -23,14 +25,16 @@ public class GoogleAuthService {
 
   private final MemberRepository memberRepository;
   private final UniversityRepository universityRepository;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleUtil googleUtil;
 
-  public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil, UniversityRepository universityRepository) {
+  public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil, UniversityRepository universityRepository, RefreshTokenRepository refreshTokenRepository) {
     this.memberRepository = memberRepository;
     this.jwtTokenProvider = jwtTokenProvider;
     this.googleUtil = googleUtil;
     this.universityRepository = universityRepository;
+    this.refreshTokenRepository = refreshTokenRepository;
   }
 
   //구글 로그인
@@ -53,12 +57,31 @@ public class GoogleAuthService {
       throw new AuthException(ErrorStatus.ACCOUNT_DISABLED);
     }
 
-    // 5. JWT 발급 및 응답 헤더에 설정
+    // 5. JWT 발급 (Access + RefreshToken)
     String accessToken = jwtTokenProvider.generateAccessToken(email);
+    String refreshToken = jwtTokenProvider.generateRefreshToken(email);
+
+    // 6. RefreshToken Redis 저장
+    refreshTokenRepository.save(email, refreshToken, Duration.ofDays(30));
+
+    // 7. RT 쿠키 설정
+    ResponseCookie refreshCookie = ResponseCookie.from("refresh", refreshToken)
+        .httpOnly(true)
+        .secure(true)
+        .path("/")
+        .maxAge(Duration.ofDays(14))
+        .sameSite("Strict")
+        .build();
+
+    // 8. 응답 헤더 & 쿠키 세팅
     response.setHeader("access", accessToken);
+    response.setHeader("Set-Cookie", CookieUtil.createCookie(refreshToken,Duration.ofDays(30)).toString());
+
 
     log.info("✅ [구글 로그인] email={}, name={}, access={}", email, name, accessToken);
+    log.info("✅ [Redis에 저장된 RT] RT={}", refreshToken);
 
+    // 9. 신규 가입 여부 전달
     boolean isNewUser = user.getStatus()==MemberStatus.PENDING;
     response.setHeader("isNewUser", String.valueOf(isNewUser));
 
