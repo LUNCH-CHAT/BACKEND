@@ -39,12 +39,27 @@ public class FcmConfig {
 
     @PostConstruct
     public void initialize() {
+        // 디버깅을 위한 환경 정보 로깅
+        log.info("🔧 FCM 초기화 시작 - 환경 변수 디버깅");
+        log.info("   fcm.service-account-json: {}", serviceAccountJson.isEmpty() ? "비어있음" : "설정됨 (길이: " + serviceAccountJson.length() + ")");
+        log.info("   fcm.service-account-json-base64: {}", serviceAccountJsonBase64.isEmpty() ? "비어있음" : "설정됨 (길이: " + serviceAccountJsonBase64.length() + ")");
+        log.info("   fcm.service-account-file: {}", serviceAccountFilePath.isEmpty() ? "비어있음" : serviceAccountFilePath);
+        
+        // 파일 경로가 설정된 경우, 파일 존재 여부 확인
+        if (!serviceAccountFilePath.isEmpty()) {
+            File file = new File(serviceAccountFilePath);
+            log.info("   파일 존재 여부: {}", file.exists());
+            log.info("   파일 읽기 권한: {}", file.canRead());
+            log.info("   파일 절대 경로: {}", file.getAbsolutePath());
+        }
+        
         try {
             String actualServiceAccountJson = getServiceAccountJson();
             
             if (actualServiceAccountJson == null || actualServiceAccountJson.trim().isEmpty()) {
-                log.warn("FCM 서비스 계정 정보가 설정되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
-                return;
+                log.warn("⚠️  FCM 서비스 계정 정보가 설정되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
+                log.warn("💡 개발 환경에서는 정상적인 상황입니다. FCM이 필요한 경우 나중에 설정하세요.");
+                return; // 예외를 던지지 않고 조용히 종료
             }
             
             parseServiceAccountJson(actualServiceAccountJson);
@@ -61,14 +76,16 @@ public class FcmConfig {
 
             if (FirebaseApp.getApps().isEmpty()) {
                 this.firebaseApp = FirebaseApp.initializeApp(options);
-                log.info("FirebaseApp 초기화 성공 (project: {})", projectId);
+                log.info("✅ FirebaseApp 초기화 성공 (project: {})", projectId);
             } else {
                 this.firebaseApp = FirebaseApp.getInstance();
-                log.info("기존 FirebaseApp 인스턴스 사용");
+                log.info("✅ 기존 FirebaseApp 인스턴스 사용");
             }
         } catch (Exception e) {
-            log.error("FirebaseApp 초기화 실패", e);
-            throw new RuntimeException("FCM 초기화 실패", e);
+            log.warn("⚠️  FirebaseApp 초기화 실패 - FCM 기능이 비활성화됩니다: {}", e.getMessage());
+            log.debug("FCM 초기화 실패 상세 정보:", e);
+            this.firebaseApp = null;
+            // 예외를 던지지 않고 계속 진행 - 이것이 핵심!
         }
     }
 
