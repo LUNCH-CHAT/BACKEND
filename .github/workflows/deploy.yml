@@ -205,7 +205,7 @@ jobs:
             # 헬스 체크 (재시도 로직 개선)
             HEALTH_CHECK_SUCCESS=false
             for i in {1..15}; do
-              if curl -f -m 10 http://localhost:8080/health >/dev/null 2>&1; then
+              if curl -f -m 10 http://localhost:8080/actuator/health >/dev/null 2>&1; then
                 echo "✅ ${{ matrix.server.name }} 헬스 체크 성공!"
                 HEALTH_CHECK_SUCCESS=true
                 break
@@ -244,7 +244,7 @@ jobs:
           TOTAL_CHECKS=10
           
           for i in $(seq 1 $TOTAL_CHECKS); do
-            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 http://${{ secrets.LOAD_BALANCER_IP }}/health || echo "000")
+            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 http://${{ secrets.LOAD_BALANCER_IP }}/actuator/health || echo "000")
             if [ "$response" = "200" ]; then
               SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
               echo "✅ 로드밸런서 헬스 체크 성공 ($i/$TOTAL_CHECKS) - 성공률: $SUCCESS_COUNT/$i"
