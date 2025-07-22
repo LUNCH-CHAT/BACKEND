@@ -48,6 +48,8 @@ services:
 
     volumes:
       - ./logs:/var/log/lunchchat
+      # FCM 설정 파일 매핑 추가
+      - /home/ubuntu/lunchchat-app/firebase-service-account-key.json:/app/firebase-service-account-key.json:ro
 
     deploy:
       resources:
