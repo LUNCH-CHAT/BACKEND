@@ -45,12 +45,18 @@ spring:
           max-idle: 8
           min-idle: 0
 
+# FCM 설정
+fcm:
+  service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
+  service-account-json-base64: ${FCM_SERVICE_ACCOUNT_JSON_BASE64:}
+  service-account-file: ${FCM_SERVICE_ACCOUNT_FILE:}
+
 server:
   port: ${SERVER_PORT:8080}
 
 logging:
   level:
-    com.UMC: ${LOG_LEVEL:INFO}
+    com.lunchchat: ${LOG_LEVEL:INFO}
     org.springframework.security: ${LOG_LEVEL:INFO}
     org.flywaydb: ${LOG_LEVEL:INFO}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}

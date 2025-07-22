@@ -1,20 +1,69 @@
+version: '3.8'
+
 services:
   backend:
-    build: .
+    # 프로덕션: GitHub Actions에서 빌드한 이미지 사용
+    image: ${DOCKER_REGISTRY:-xoo1228}/${DOCKER_IMAGE_NAME:-lunchchat-backend}:${IMAGE_TAG:-latest}
+
+    # 로컬 개발: Dockerfile로 빌드
+    build:
+      context: .
+      dockerfile: Dockerfile
+
     ports:
       - "8080:8080"
-    depends_on:
-      - db
-      - redis
-    environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/lunchchatdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      - SPRING_DATASOURCE_USERNAME=user
-      - SPRING_DATASOURCE_PASSWORD=password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
 
+    environment:
+      # 기본 Spring Boot 설정
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev}
+      - SERVER_PORT=8080
+
+      # 데이터베이스 설정
+      - DB_URL=${DB_URL}
+      - DB_USER=${DB_USER}
+      - DB_PW=${DB_PW}
+
+      # Redis 설정 (캐시 + pub/sub)
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+
+      # JPA 설정
+      - JPA_DDL_AUTO=${JPA_DDL_AUTO:-validate}
+      - JPA_SHOW_SQL=${JPA_SHOW_SQL:-false}
+
+      # Flyway 설정
+      - FLYWAY_BASELINE_ON_MIGRATE=${FLYWAY_BASELINE_ON_MIGRATE:-true}
+      - FLYWAY_CLEAN_DISABLED=${FLYWAY_CLEAN_DISABLED:-true}
+
+      # 로깅 설정
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SQL_LOG_LEVEL=${SQL_LOG_LEVEL:-WARN}
+
+      # WebSocket & Chat 설정
+      - WEBSOCKET_ALLOWED_ORIGINS=${WEBSOCKET_ALLOWED_ORIGINS:-*}
+      - CHAT_REDIS_CHANNEL=${CHAT_REDIS_CHANNEL:-lunchchat}
+
+    restart: unless-stopped
+
+    volumes:
+      - ./logs:/var/log/lunchchat
+
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # 로컬 개발용 서비스들 (프로덕션에서는 AWS 관리형 서비스 사용)
   db:
     image: mysql:8.0
     environment:
@@ -30,6 +79,7 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+    profiles: [ "local" ]
 
   redis:
     image: redis:7-alpine
@@ -37,6 +87,7 @@ services:
       - "6380:6379"
     volumes:
       - redis_data:/data
+    profiles: [ "local" ]
 
 volumes:
   mysql_data:

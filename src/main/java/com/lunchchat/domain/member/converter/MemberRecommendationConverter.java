@@ -1,6 +1,6 @@
 package com.lunchchat.domain.member.converter;
 
-import com.lunchchat.domain.member.dto.MemberRecommendationResponseDTO;
+import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class MemberRecommendationConverter {
 
-    public static MemberRecommendationResponseDTO toRecommendationResponse(
+    public static MemberResponseDTO.MemberRecommendationResponseDTO toRecommendationResponse(
             Member member) {
 
         List<UserInterestDTO> interests = member.getUserInterests() != null
@@ -27,7 +27,7 @@ public class MemberRecommendationConverter {
                 .collect(Collectors.toList())
                 : Collections.emptyList();
 
-        return MemberRecommendationResponseDTO.builder()
+        return MemberResponseDTO.MemberRecommendationResponseDTO.builder()
                 .memberId(member.getId())
                 .memberName(member.getMembername())
                 .profileImageUrl(member.getProfileImageUrl())
