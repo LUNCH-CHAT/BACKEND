@@ -44,6 +44,16 @@ services:
       - WEBSOCKET_ALLOWED_ORIGINS=${WEBSOCKET_ALLOWED_ORIGINS:-*}
       - CHAT_REDIS_CHANNEL=${CHAT_REDIS_CHANNEL:-lunchchat}
 
+
+      # JWT/OAuth 설정
+      - SECRET_KEY=${SECRET_KEY}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+
+      # FCM 설정
+      - FCM_SERVICE_ACCOUNT_JSON=${FCM_SERVICE_ACCOUNT_JSON:-}
+      - FCM_SERVICE_ACCOUNT_FILE=${FCM_SERVICE_ACCOUNT_FILE:-}
+
     restart: unless-stopped
 
     volumes:
