@@ -147,7 +147,7 @@ jobs:
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             CLIENT_ID=${{ secrets.CLIENT_ID }}
             CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
-            FCM_SERVICE_ACCOUNT_FILE=$(pwd)/firebase-service-account-key.json
+            FCM_SERVICE_ACCOUNT_FILE=/home/ubuntu/lunchchat-app/firebase-service-account-key.json
             IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
             DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
             DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
