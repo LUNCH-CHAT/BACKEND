@@ -1,7 +1,6 @@
-version: '3.8'
-
 services:
   backend:
+    container_name: lunchchat-backend
     # 프로덕션: GitHub Actions에서 빌드한 이미지 사용
     image: ${DOCKER_REGISTRY:-xoo1228}/${DOCKER_IMAGE_NAME:-lunchchat-backend}:${IMAGE_TAG:-latest}
 
@@ -58,8 +57,7 @@ services:
 
     volumes:
       - ./logs:/var/log/lunchchat
-      # FCM 설정 파일 매핑 추가
-      - /home/ubuntu/lunchchat-app/firebase-service-account-key.json:/app/firebase-service-account-key.json:ro
+      - ./firebase-service-account-key.json:/app/firebase-service-account-key.json:ro
 
     deploy:
       resources:
