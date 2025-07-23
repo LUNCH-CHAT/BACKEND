@@ -43,7 +43,6 @@ services:
       - WEBSOCKET_ALLOWED_ORIGINS=${WEBSOCKET_ALLOWED_ORIGINS:-*}
       - CHAT_REDIS_CHANNEL=${CHAT_REDIS_CHANNEL:-lunchchat}
 
-
       # JWT/OAuth 설정
       - SECRET_KEY=${SECRET_KEY}
       - CLIENT_ID=${CLIENT_ID}
@@ -67,13 +66,13 @@ services:
           memory: 512M
 
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "https://lunchchat.kro.kr/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
-  # 로컬 개발용 서비스들 (프로덕션에서는 AWS 관리형 서비스 사용)
+  # 로컬 개발용 서비스들
   db:
     image: mysql:8.0
     environment:
