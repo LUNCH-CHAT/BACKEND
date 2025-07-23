@@ -2,21 +2,23 @@ package com.lunchchat.global.apiPayLoad.code.status;
 
 import com.lunchchat.global.apiPayLoad.code.BaseCode;
 import com.lunchchat.global.apiPayLoad.code.ReasonDTO;
-import org.springframework.http.HttpStatus;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
 public enum SuccessStatus implements BaseCode {
 
     // 일반적인 응답
-    OK(HttpStatus.OK, "COMMON200", "성공입니다."),
+    _OK(HttpStatus.OK, "COMMON200", "성공입니다."),
+
+    // FCM 관련 응답
+    FCM_TOKEN_UPDATE_SUCCESS(HttpStatus.OK, "FCM200", "FCM 토큰이 성공적으로 업데이트되었습니다."),
 
     // 로그인 응답
     USER_LOGIN_OK(HttpStatus.OK, "USER200", "유저 로그인 성공"),
-    USER_SIGNUP_OK(HttpStatus.OK, "USER201","유저 회원가입 성공");
+    USER_SIGNUP_OK(HttpStatus.OK, "USER201", "유저 회원가입 성공");
 
     private final HttpStatus httpStatus;
     private final String code;
@@ -25,20 +27,20 @@ public enum SuccessStatus implements BaseCode {
     @Override
     public ReasonDTO getReason() {
         return ReasonDTO.builder()
-                .message(message)
-                .code(code)
-                .isSuccess(true)
-                .build();
+            .message(message)
+            .code(code)
+            .isSuccess(true)
+            .build();
     }
 
     @Override
     public ReasonDTO getReasonHttpStatus() {
         return ReasonDTO.builder()
-                .message(message)
-                .code(code)
-                .isSuccess(true)
-                .httpStatus(httpStatus)
-                .build()
-                ;
+            .message(message)
+            .code(code)
+            .isSuccess(true)
+            .httpStatus(httpStatus)
+            .build()
+            ;
     }
 }

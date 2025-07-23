@@ -64,6 +64,9 @@ public class Member extends BaseEntity {
   //프로필 사진
   private String profileImageUrl;
 
+  //FCM 토큰
+  private String fcmToken;
+
   //로그인 타입
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -131,6 +134,7 @@ public class Member extends BaseEntity {
     this.department = department;
   }
 
+
   public void setUniversity(University university) {this.university = university;}
 
   public void setInterests(Set<Interest> interests) {this.interests = interests;}
@@ -142,8 +146,13 @@ public class Member extends BaseEntity {
 
   public void addTimeTables(List<TimeTable> timeTables) {
     for (TimeTable tt : timeTables) {
-      this.addTimeTable(tt); // 이미 정의된 단일 추가 메서드 재사용
+      this.addTimeTable(tt);
     }
   }
 
+  public void updateFcmToken(String fcmToken) {
+    this.fcmToken = fcmToken;
+  }
+
 }
+

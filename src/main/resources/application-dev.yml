@@ -4,6 +4,29 @@ spring:
       ddl-auto: validate
     show-sql: false
 
+  jwt:
+    header: authorization
+    secret: ${SECRET_KEY}
+    access-token-validity-in-seconds: 3600
+    refresh-token-validity-in-seconds: 604800
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            redirect-uri: "http://localhost:8080/auth/callback/google"
+            scope:
+              - profile
+              - email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -14,12 +37,16 @@ spring:
     redis:
       timeout: 30000ms
 
+# FCM 설정 (EC2 환경 - JSON 파일 사용)
+fcm:
+  service-account-file: ${FCM_SERVICE_ACCOUNT_FILE:}
+
 server:
   port: 8080
 
 logging:
   level:
-    com.UMC: INFO
+    com.lunchchat: INFO
     org.springframework.security: WARN
     org.flywaydb: INFO
     org.hibernate.SQL: WARN
