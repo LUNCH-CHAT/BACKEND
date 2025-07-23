@@ -18,6 +18,7 @@ public enum ErrorStatus implements BaseErrorCode {
   NOT_FOUND(HttpStatus.NOT_FOUND,"COMMON404","찾을 수 없는 요청입니다"),
 
   //User Error
+  INTEREST_MAX_THREE(HttpStatus.BAD_REQUEST,"USER_400_INTEREST","관심사 정보는 최대 3개입니다"),
   USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401","로그인 유저를 찾을 수 없습니다"),
   USER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "USER_403", "권한이 없습니다."),
   USER_STATISTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "유저 통계 정보를 찾을 수 없습니다."),

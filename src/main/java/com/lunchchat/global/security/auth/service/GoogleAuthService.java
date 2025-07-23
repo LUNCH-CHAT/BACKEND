@@ -195,6 +195,10 @@ public class GoogleAuthService {
       throw new AuthException(ErrorStatus.DUPLICATE_STUDENTNO);
     }
 
+    if (dto.interests().size() > 3) {
+      throw new AuthException(ErrorStatus.INTEREST_MAX_THREE);
+    }
+
     // 연관 엔티티 조회
     College college = collegeRepository.findById(dto.collegeId())
         .orElseThrow(() -> new AuthException(ErrorStatus.COLLEGE_NOT_FOUND));
@@ -207,7 +211,7 @@ public class GoogleAuthService {
             .orElseThrow(() -> new AuthException(ErrorStatus.INTEREST_NOT_FOUND)))
         .collect(Collectors.toSet());
 
-    // 도메인 메서드로 member 업데이트
+    // member 업데이트
     member.signUp(
         dto.membername(),
         dto.studentNo(),
