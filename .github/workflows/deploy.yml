@@ -244,7 +244,7 @@ jobs:
           TOTAL_CHECKS=10
           
           for i in $(seq 1 $TOTAL_CHECKS); do
-            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 http://${{ secrets.LOAD_BALANCER_IP }}/actuator/health || echo "000")
+            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 https://${{ secrets.LOAD_BALANCER_IP }}/actuator/health || echo "000")
             if [ "$response" = "200" ]; then
               SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
               echo "✅ 로드밸런서 헬스 체크 성공 ($i/$TOTAL_CHECKS) - 성공률: $SUCCESS_COUNT/$i"
