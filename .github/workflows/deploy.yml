@@ -50,8 +50,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ vars.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set image tag
         id: set-tag
@@ -140,27 +140,19 @@ jobs:
             FCMEOF
             chmod 600 firebase-service-account-key.json
             
-            # GitHub Secrets 환경변수 추가
-            cat >> .env << 'ENVEOF'
-            
-            # GitHub Secrets에서 추가된 환경변수들
-            SECRET_KEY=${{ secrets.SECRET_KEY }}
-            CLIENT_ID=${{ secrets.CLIENT_ID }}
-            CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}
-            FCM_SERVICE_ACCOUNT_FILE=/app/firebase-service-account-key.json
-            IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
-            DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
-            DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
-            SPRING_PROFILES_ACTIVE=dev
-            JPA_DDL_AUTO=create-drop
-            ENVEOF
+            # IMAGE_TAG만 업데이트
+            if grep -q "^IMAGE_TAG=" .env; then
+            sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}/" .env
+            else
+            echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}" >> .env
+            fi
             
             # 로그 디렉토리 생성
             mkdir -p logs
             
             echo "📦 Docker 이미지 다운로드 중..."
             
-            # Docker 이미지 미리 다운로드 (백그라운드에서 진행)
+            # Docker 이미지 미리 다운로드
             docker pull ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }} &
             PULL_PID=$!
             
@@ -202,7 +194,7 @@ jobs:
             echo "⏳ 애플리케이션 시작 대기 중..."
             sleep 30
             
-            # 헬스 체크 (재시도 로직 개선)
+            # 헬스 체크
             HEALTH_CHECK_SUCCESS=false
             for i in {1..15}; do
               if curl -f -m 10 http://localhost:8080/actuator/health >/dev/null 2>&1; then
