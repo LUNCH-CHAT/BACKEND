@@ -23,7 +23,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import jakarta.persistence.*;
 import java.util.Set;
@@ -114,6 +113,16 @@ public class Member extends BaseEntity {
   }
 
   //setter
+
+  public void signUp(String memberName, String studentNo, College college, Department department, Set<Interest> interests ){
+    this.membername = memberName;
+    this.studentNo = studentNo;
+    this.college = college;
+    this.department = department;
+    this.interests = interests;
+    this.Status = MemberStatus.ACTIVE;
+  }
+
   public void updateCollege(College college) {
     this.college = college;
   }
@@ -125,4 +134,9 @@ public class Member extends BaseEntity {
   public void setUniversity(University university) {this.university = university;}
 
   public void setInterests(Set<Interest> interests) {this.interests = interests;}
+
+  public void addTimeTable(TimeTable timeTable) {
+    this.timeTables.add(timeTable);
+    timeTable.setMember(this);
+  }
 }
