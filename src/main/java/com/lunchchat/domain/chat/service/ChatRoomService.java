@@ -127,7 +127,7 @@ public class ChatRoomService {
     }
 
     // 채팅방 내 채팅 메시지 조회(단일 채팅방 조회)
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ChatMessageRes> getChatMessages(Long roomId, Long userId) {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
@@ -141,6 +141,10 @@ public class ChatRoomService {
         }
 
         //채팅방 퇴장 여부 확인
+        if ((room.isExitedByStarter() && room.getStarter().getId().equals(userId)) ||
+                (room.isExitedByFriend() && room.getFriend().getId().equals(userId))) {
+            throw new ChatException(ErrorStatus.CHATROOM_EXITED);
+        }
 
         List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomOrderBySentAtAsc(room);
 
