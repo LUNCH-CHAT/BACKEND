@@ -7,16 +7,17 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import jakarta.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Base64;
 
 @Slf4j
 @Configuration
@@ -24,10 +25,7 @@ public class FcmConfig {
 
     @Value("${fcm.service-account-json:}")
     private String serviceAccountJson;
-    
-    @Value("${fcm.service-account-json-base64:}")
-    private String serviceAccountJsonBase64;
-    
+
     @Value("${fcm.service-account-file:}")
     private String serviceAccountFilePath;
 
@@ -41,10 +39,11 @@ public class FcmConfig {
     public void initialize() {
         // 디버깅을 위한 환경 정보 로깅
         log.info("🔧 FCM 초기화 시작 - 환경 변수 디버깅");
-        log.info("   fcm.service-account-json: {}", serviceAccountJson.isEmpty() ? "비어있음" : "설정됨 (길이: " + serviceAccountJson.length() + ")");
-        log.info("   fcm.service-account-json-base64: {}", serviceAccountJsonBase64.isEmpty() ? "비어있음" : "설정됨 (길이: " + serviceAccountJsonBase64.length() + ")");
-        log.info("   fcm.service-account-file: {}", serviceAccountFilePath.isEmpty() ? "비어있음" : serviceAccountFilePath);
-        
+        log.info("   fcm.service-account-json: {}", serviceAccountJson.isEmpty() ? "비어있음"
+            : "설정됨 (길이: " + serviceAccountJson.length() + ")");
+        log.info("   fcm.service-account-file: {}",
+            serviceAccountFilePath.isEmpty() ? "비어있음" : serviceAccountFilePath);
+
         // 파일 경로가 설정된 경우, 파일 존재 여부 확인
         if (!serviceAccountFilePath.isEmpty()) {
             File file = new File(serviceAccountFilePath);
@@ -52,16 +51,16 @@ public class FcmConfig {
             log.info("   파일 읽기 권한: {}", file.canRead());
             log.info("   파일 절대 경로: {}", file.getAbsolutePath());
         }
-        
+
         try {
             String actualServiceAccountJson = getServiceAccountJson();
-            
+
             if (actualServiceAccountJson == null || actualServiceAccountJson.trim().isEmpty()) {
                 log.warn("⚠️  FCM 서비스 계정 정보가 설정되지 않았습니다. FCM 기능을 사용할 수 없습니다.");
                 log.warn("💡 개발 환경에서는 정상적인 상황입니다. FCM이 필요한 경우 나중에 설정하세요.");
                 return; // 예외를 던지지 않고 조용히 종료
             }
-            
+
             parseServiceAccountJson(actualServiceAccountJson);
             validateConfiguration();
 
@@ -85,7 +84,6 @@ public class FcmConfig {
             log.warn("⚠️  FirebaseApp 초기화 실패 - FCM 기능이 비활성화됩니다: {}", e.getMessage());
             log.debug("FCM 초기화 실패 상세 정보:", e);
             this.firebaseApp = null;
-            // 예외를 던지지 않고 계속 진행 - 이것이 핵심!
         }
     }
 
@@ -99,37 +97,24 @@ public class FcmConfig {
     }
 
     private String getServiceAccountJson() {
-        // 1. 파일 경로에서 읽기 (EC2 환경)
+        // 1. 파일 경로에서 읽기
         if (!serviceAccountFilePath.isEmpty()) {
             try {
-                String content = Files.readString(Paths.get(serviceAccountFilePath), StandardCharsets.UTF_8);
+                String content = Files.readString(Paths.get(serviceAccountFilePath),
+                    StandardCharsets.UTF_8);
                 log.info("🖥️  FCM JSON을 EC2 파일에서 읽었습니다: {}", serviceAccountFilePath);
                 return content;
             } catch (IOException e) {
                 log.error("❌ FCM JSON 파일을 읽을 수 없습니다: {}", serviceAccountFilePath, e);
             }
         }
-        
-        // 2. Base64 디코딩 (백업 방식)
-        if (!serviceAccountJsonBase64.isEmpty()) {
-            try {
-                String decoded = new String(
-                    Base64.getDecoder().decode(serviceAccountJsonBase64),
-                    StandardCharsets.UTF_8
-                );
-                log.info("🔓 FCM JSON Base64 디코딩 완료");
-                return decoded;
-            } catch (Exception e) {
-                log.error("❌ FCM JSON Base64 디코딩 실패", e);
-            }
-        }
-        
-        // 3. 직접 JSON 문자열 (로컬 환경)
+
+        // 2. 직접 JSON 문자열
         if (!serviceAccountJson.isEmpty()) {
             log.info("🏠 FCM JSON을 로컬 환경변수에서 읽었습니다");
             return serviceAccountJson;
         }
-        
+
         log.warn("⚠️  FCM 서비스 계정 정보를 찾을 수 없습니다. 모든 방식을 확인했습니다.");
         return null;
     }
