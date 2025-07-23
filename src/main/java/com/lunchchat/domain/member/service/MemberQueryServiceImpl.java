@@ -17,7 +17,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,15 +74,29 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     }
 
     private int calculateTimeTableOverlap(List<TimeTable> tts1, List<TimeTable> tts2) {
-        return (int) tts1.stream()
-                .filter(tt1 -> tts2.stream()
-                        .anyMatch(tt2 ->
-                                tt1.getDayOfWeek().equals(tt2.getDayOfWeek()) &&
-                                        !(tt1.getEndTime().isBefore(tt2.getStartTime()) ||
-                                                tt1.getStartTime().isAfter(tt2.getEndTime()))
-                        )
-                ).count();
+        Set<String> timeBlocks1 = toTimeBlocks(tts1);
+        Set<String> timeBlocks2 = toTimeBlocks(tts2);
+
+        timeBlocks1.retainAll(timeBlocks2); // 겹치는 시간 블럭만 남김
+
+        return timeBlocks1.size();
     }
+
+    private Set<String> toTimeBlocks(List<TimeTable> timeTables) {
+        Set<String> blocks = new HashSet<>();
+        for (TimeTable tt : timeTables) {
+            LocalTime start = tt.getStartTime();
+            LocalTime end = tt.getEndTime();
+            while (start.isBefore(end)) {
+                // 예: MON_10, MON_11 등으로 구성
+                String block = tt.getDayOfWeek().name() + "_" + start.getHour();
+                blocks.add(block);
+                start = start.plusHours(1);
+            }
+        }
+        return blocks;
+    }
+
 
     private int calculateInterestsOverlap(Member m1, Member m2) {
         return (int) m1.getUserInterests().stream()
