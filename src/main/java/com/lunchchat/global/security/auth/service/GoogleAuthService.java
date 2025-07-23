@@ -9,10 +9,14 @@ import com.lunchchat.domain.university.repository.UniversityRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.AuthException;
 import com.lunchchat.global.security.auth.dto.GoogleUserDTO;
+import com.lunchchat.global.security.auth.dto.TokenDTO;
+import com.lunchchat.global.security.auth.dto.TokenDTO.Response;
 import com.lunchchat.global.security.auth.infra.CookieUtil;
 import com.lunchchat.global.security.auth.infra.GoogleUtil;
 import com.lunchchat.global.security.jwt.JwtTokenProvider;
+import com.lunchchat.global.security.jwt.JwtUtil;
 import com.lunchchat.global.security.jwt.redis.RefreshTokenRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +32,16 @@ public class GoogleAuthService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleUtil googleUtil;
+  private final JwtUtil jwtUtil;
 
-  public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil, UniversityRepository universityRepository, RefreshTokenRepository refreshTokenRepository) {
+  public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil, UniversityRepository universityRepository, RefreshTokenRepository refreshTokenRepository,
+      JwtUtil jwtUtil) {
     this.memberRepository = memberRepository;
     this.jwtTokenProvider = jwtTokenProvider;
     this.googleUtil = googleUtil;
     this.universityRepository = universityRepository;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.jwtUtil = jwtUtil;
   }
 
   //구글 로그인
@@ -88,6 +95,7 @@ public class GoogleAuthService {
     return user;
   }
 
+  // 회원 생성 메서드
   private Member createNewUser(String email, String name) {
     log.info("🆕 신규 구글 회원 등록: email={}, name={}", email, name);
 
@@ -106,6 +114,45 @@ public class GoogleAuthService {
     newUser.setUniversity(university);
 
     return memberRepository.save(newUser);
+  }
+
+  // Reissue
+  public Response reissueAccessToken(String refreshToken, HttpServletResponse response) {
+
+    // 1. 리프레시 토큰 검사
+    if (refreshToken == null || refreshToken.trim().isEmpty()) {
+      throw new AuthException(ErrorStatus.REFRESH_TOKEN_MISSING);
+    }
+
+    // 2. 유효성 검사
+    if (!jwtUtil.validateToken(refreshToken)) {
+      throw new AuthException(ErrorStatus.INVALID_REFRESH_TOKEN);
+    }
+
+    // 3. 파싱 후 이메일 추출
+    Claims claims = jwtUtil.parseJwt(refreshToken);
+    String email = jwtUtil.getEmail(claims);
+
+    // 4. Redis RT와 비교
+    if (!refreshTokenRepository.isValid(email, refreshToken)) {
+      refreshTokenRepository.delete(email);
+      throw new AuthException(ErrorStatus.REUSED_REFRESH_TOKEN);
+    }
+
+    log.info("✅Rotate 이전 RT 값 : {}", refreshToken);
+    // 5. 토큰 생성
+    String newAccessToken = jwtTokenProvider.generateAccessToken(email);
+    String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
+
+    // 6. 토큰 rotate
+    refreshTokenRepository.rotate(email, newRefreshToken, Duration.ofDays(30));
+
+    // 7. RT 전송
+    ResponseCookie refreshCookie = CookieUtil.createCookie(newRefreshToken, Duration.ofDays(30));
+    response.setHeader("Set-Cookie", refreshCookie.toString());
+    log.info("🚨Rotate 이후 RT 값 : {}", newRefreshToken);
+
+    return new TokenDTO.Response(newAccessToken, newRefreshToken);
   }
 
   //학교 도메인 별 이메일 분류

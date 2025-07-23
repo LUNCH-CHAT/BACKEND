@@ -20,9 +20,7 @@ public enum ErrorStatus implements BaseErrorCode {
   //User Error
   USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401","로그인 유저를 찾을 수 없습니다"),
   USER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "USER_403", "권한이 없습니다."),
-
-  JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "유효하지 않은 JWT 토큰입니다."),
-  JWT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "JWT_500", "JWT 생성에 실패했습니다."),
+  USER_STATISTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "유저 통계 정보를 찾을 수 없습니다."),
 
   INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "AUTH_400_EMAIL", "이메일 형식이 올바르지 않습니다."),
   ACCOUNT_DISABLED(HttpStatus.FORBIDDEN, "AUTH_403_DISABLED", "계정이 비활성화 상태입니다."),
@@ -33,7 +31,13 @@ public enum ErrorStatus implements BaseErrorCode {
 
   TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_401_ACCESS_EXPIRED", "인증 토큰이 만료되었습니다."),
   TOKEN_MALFORMED(HttpStatus.UNAUTHORIZED, "TOKEN_401_ACCESS_MALFORMED", "잘못된 형식의 인증 토큰입니다."),
-  USER_STATISTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "유저 통계 정보를 찾을 수 없습니다."),
+
+  JWT_INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "JWT_401", "유효하지 않은 JWT 토큰입니다."),
+  JWT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "JWT_500", "JWT 생성에 실패했습니다."),
+
+  REFRESH_TOKEN_MISSING(HttpStatus.BAD_REQUEST,"REFRESH_400","리프레시 토큰이 쿠키에 없습니다"),
+  INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED,"REFRESH_401","리프레시 토큰이 유효하지 않습니다"),
+  REUSED_REFRESH_TOKEN(HttpStatus.FORBIDDEN,"REFRESH_403","이미 사용된 리프레시토큰입니다"),
 
   // Match Error
   INVALID_MATCH_STATUS(HttpStatus.BAD_REQUEST, "MATCH_400", "유효하지 않은 매칭 상태입니다."),
