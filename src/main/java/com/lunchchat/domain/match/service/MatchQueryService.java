@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface MatchQueryService {
     List<Matches> getMatchesByStatus(MatchStatusType status, Long memberId);
-    List<MatchListDto> getMatchListDtosByStatus(MatchStatusType status, Long memberId);
+    //List<MatchListDto> getMatchListDtosByStatus(MatchStatusType status, Long memberId);
 }

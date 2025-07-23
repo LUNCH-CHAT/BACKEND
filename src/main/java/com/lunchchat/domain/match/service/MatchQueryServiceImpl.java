@@ -16,46 +16,46 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class MatchQueryServiceImpl implements MatchQueryService {
+public abstract class MatchQueryServiceImpl implements MatchQueryService {
   private final MatchRepository matchRepository;
 
-  @Override
-  public List<Matches> getMatchesByStatus(MatchStatusType status, Long memberId) {
-    List<Matches> matches;
-
-    switch (status) {
-      case ACCEPTED ->
-          matches = matchRepository.findByStatusAndMemberId(MatchStatus.ACCEPTED, memberId);
-
-      case REQUESTED ->
-          matches = matchRepository.findByStatusAndFromMemberId(MatchStatus.REQUESTED, memberId);
-
-      case RECEIVED ->
-          matches = matchRepository.findByStatusAndToMemberId(MatchStatus.REQUESTED, memberId);
-
-      default -> throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
-    }
-
-    return matches;
-  }
-
-  @Override
-  public List<MatchListDto> getMatchListDtosByStatus(MatchStatusType status, Long memberId) {
-    List<Matches> matchList = getMatchesByStatus(status, memberId);
-
-    return matchList.stream()
-        .map(match -> {
-          Member opponent = getOpponent(memberId, match);
-          return MatchConverter.toMatchListDto(match, opponent);
-        })
-        .collect(Collectors.toList());
-  }
-
-  private Member getOpponent(Long currentUserId, Matches match) {
-    if (match.getFromMember().getId().equals(currentUserId)) {
-      return match.getToMember();
-    } else {
-      return match.getFromMember();
-    }
-  }
+//  @Override
+//  public List<Matches> getMatchesByStatus(MatchStatusType status, Long memberId) {
+//    List<Matches> matches;
+//
+//    switch (status) {
+//      case ACCEPTED ->
+//          matches = matchRepository.findByStatusAndMemberId(MatchStatus.ACCEPTED, memberId);
+//
+//      case REQUESTED ->
+//          matches = matchRepository.findByStatusAndFromMemberId(MatchStatus.REQUESTED, memberId);
+//
+//      case RECEIVED ->
+//          matches = matchRepository.findByStatusAndToMemberId(MatchStatus.REQUESTED, memberId);
+//
+//      default -> throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
+//    }
+//
+//    return matches;
+//  }
+//
+//  @Override
+//  public List<MatchListDto> getMatchListDtosByStatus(MatchStatusType status, Long memberId) {
+//    List<Matches> matchList = getMatchesByStatus(status, memberId);
+//
+//    return matchList.stream()
+//        .map(match -> {
+//          Member opponent = getOpponent(memberId, match);
+//          return MatchConverter.toMatchListDto(match, opponent);
+//        })
+//        .collect(Collectors.toList());
+//  }
+//
+//  private Member getOpponent(Long currentUserId, Matches match) {
+//    if (match.getFromMember().getId().equals(currentUserId)) {
+//      return match.getToMember();
+//    } else {
+//      return match.getFromMember();
+//    }
+//  }
 }

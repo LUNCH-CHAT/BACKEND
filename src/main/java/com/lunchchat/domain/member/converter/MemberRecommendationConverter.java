@@ -11,30 +11,30 @@ import java.util.stream.Collectors;
 
 public class MemberRecommendationConverter {
 
-    public static MemberResponseDTO.MemberRecommendationResponseDTO toRecommendationResponse(
-            Member member) {
-
-        List<UserInterestDTO> interests = member.getUserInterests() != null
-                ? member.getUserInterests().stream()
-                .filter(ui -> ui.getInterests() != null)
-                .map(UserInterestDTO::from)
-                .collect(Collectors.toList())
-                : Collections.emptyList();
-
-        List<UserKeywordDTO> keywords = member.getUserKeywords() != null
-                ? member.getUserKeywords().stream()
-                .map(UserKeywordDTO::from)
-                .collect(Collectors.toList())
-                : Collections.emptyList();
-
-        return MemberResponseDTO.MemberRecommendationResponseDTO.builder()
-                .memberId(member.getId())
-                .memberName(member.getMembername())
-                .profileImageUrl(member.getProfileImageUrl())
-                .studentNo(member.getStudentNo())
-                .department(member.getDepartment() != null ? member.getDepartment().getName() : null)
-                .userInterests(interests)
-                .userKeywords(keywords)
-                .build();
-    }
+//    public static MemberResponseDTO.MemberRecommendationResponseDTO toRecommendationResponse(
+//            Member member) {
+//
+//        List<UserInterestDTO> interests = member.getUserInterests() != null
+//                ? member.getUserInterests().stream()
+//                .filter(ui -> ui.getInterests() != null)
+//                .map(UserInterestDTO::from)
+//                .collect(Collectors.toList())
+//                : Collections.emptyList();
+//
+//        List<UserKeywordDTO> keywords = member.getUserKeywords() != null
+//                ? member.getUserKeywords().stream()
+//                .map(UserKeywordDTO::from)
+//                .collect(Collectors.toList())
+//                : Collections.emptyList();
+//
+//        return MemberResponseDTO.MemberRecommendationResponseDTO.builder()
+//                .memberId(member.getId())
+//                .memberName(member.getMembername())
+//                .profileImageUrl(member.getProfileImageUrl())
+//                .studentNo(member.getStudentNo())
+//                .department(member.getDepartment() != null ? member.getDepartment().getName() : null)
+//                .userInterests(interests)
+//                .userKeywords(keywords)
+//                .build();
+//    }
 }
