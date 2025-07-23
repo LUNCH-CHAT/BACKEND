@@ -1,24 +1,13 @@
 package com.lunchchat.domain.member.service;
 
 import com.lunchchat.domain.member.converter.MemberConverter;
-import com.lunchchat.domain.member.converter.MemberRecommendationConverter;
-import com.lunchchat.domain.member.dto.MemberResponseDTO;
-import com.lunchchat.domain.member.entity.Member;
-import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
-import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.time_table.service.TimeTableQueryService;
-import com.lunchchat.domain.user_interests.repository.UserInterestsRepository;
+import com.lunchchat.domain.user_interests.repository.InterestRepository;
 import com.lunchchat.domain.user_keywords.repository.UserKeywordsRepository;
-import com.lunchchat.domain.user_statistics.entity.UserStatistics;
 import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
-import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +18,7 @@ public abstract class MemberQueryServiceImpl implements MemberQueryService {
     private final TimeTableQueryService timeTableQueryService;
     private final UserStatisticsRepository userStatisticsRepository;
     private final UserKeywordsRepository userKeywordsRepository;
-    private final UserInterestsRepository userInterestsRepository;
+    private final InterestRepository userInterestsRepository;
 
 //    @Override
 //    @Transactional(readOnly = true)

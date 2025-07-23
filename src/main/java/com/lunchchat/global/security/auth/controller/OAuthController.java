@@ -14,6 +14,7 @@ import com.lunchchat.global.config.security.JwtConfig;
 import com.lunchchat.global.security.jwt.JwtTokenProvider;
 import com.lunchchat.global.security.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -95,8 +97,9 @@ public class OAuthController {
 
   // 추가 로그인
   @PatchMapping("/signUp/lunchChat")
-  public ApiResponse<?> completeSignup (@AuthenticationPrincipal CustomUserDetails userDetails){
-
+  public ApiResponse<?> Signup (@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid GoogleUserDTO.SingUpRequest dto){
+    String email = userDetails.getUsername();
+    googleAuthService.signup(email, dto);
 
     return ApiResponse.onSuccess("추가 회원정보 등록 완료");
   }

@@ -139,4 +139,11 @@ public class Member extends BaseEntity {
     this.timeTables.add(timeTable);
     timeTable.setMember(this);
   }
+
+  public void addTimeTables(List<TimeTable> timeTables) {
+    for (TimeTable tt : timeTables) {
+      this.addTimeTable(tt); // 이미 정의된 단일 추가 메서드 재사용
+    }
+  }
+
 }

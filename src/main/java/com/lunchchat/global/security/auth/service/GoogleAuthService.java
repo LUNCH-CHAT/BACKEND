@@ -1,11 +1,18 @@
 package com.lunchchat.global.security.auth.service;
 
+import com.lunchchat.domain.college.entity.College;
+import com.lunchchat.domain.college.repository.CollegeRepository;
+import com.lunchchat.domain.department.entity.Department;
+import com.lunchchat.domain.department.repository.DepartmentRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.entity.enums.LoginType;
 import com.lunchchat.domain.member.entity.enums.MemberStatus;
 import com.lunchchat.domain.member.repository.MemberRepository;
+import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.domain.university.repository.UniversityRepository;
+import com.lunchchat.domain.user_interests.entity.Interest;
+import com.lunchchat.domain.user_interests.repository.InterestRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.AuthException;
 import com.lunchchat.global.security.auth.dto.GoogleUserDTO;
@@ -19,6 +26,9 @@ import com.lunchchat.global.security.jwt.redis.RefreshTokenRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
@@ -29,19 +39,25 @@ public class GoogleAuthService {
 
   private final MemberRepository memberRepository;
   private final UniversityRepository universityRepository;
+  private final CollegeRepository collegeRepository;
+  private final DepartmentRepository departmentRepository;
+  private final InterestRepository interestRepository;
   private final RefreshTokenRepository refreshTokenRepository;
   private final JwtTokenProvider jwtTokenProvider;
   private final GoogleUtil googleUtil;
   private final JwtUtil jwtUtil;
 
   public GoogleAuthService(MemberRepository memberRepository,JwtTokenProvider jwtTokenProvider, GoogleUtil googleUtil, UniversityRepository universityRepository, RefreshTokenRepository refreshTokenRepository,
-      JwtUtil jwtUtil) {
+      JwtUtil jwtUtil,CollegeRepository collegeRepository, DepartmentRepository departmentRepository, InterestRepository interestRepository) {
     this.memberRepository = memberRepository;
     this.jwtTokenProvider = jwtTokenProvider;
     this.googleUtil = googleUtil;
     this.universityRepository = universityRepository;
     this.refreshTokenRepository = refreshTokenRepository;
     this.jwtUtil = jwtUtil;
+    this.collegeRepository = collegeRepository;
+    this.departmentRepository = departmentRepository;
+    this.interestRepository = interestRepository;
   }
 
   //구글 로그인
@@ -167,6 +183,52 @@ public class GoogleAuthService {
   private University getFallbackUniversity() {
     return universityRepository.findByName("UMC대")
         .orElseThrow(() -> new IllegalStateException("기본 대학 'UMC대'가 DB에 존재하지 않습니다."));
+  }
+
+  //회원가입
+  public void signup(String email, GoogleUserDTO.SingUpRequest dto) {
+
+    Member member = memberRepository.findByEmail(email)
+        .orElseThrow(() -> new AuthException(ErrorStatus.USER_NOT_FOUND));
+
+    if (memberRepository.existsByStudentNo(dto.studentNo())) {
+      throw new AuthException(ErrorStatus.DUPLICATE_STUDENTNO);
+    }
+
+    // 연관 엔티티 조회
+    College college = collegeRepository.findById(dto.collegeId())
+        .orElseThrow(() -> new AuthException(ErrorStatus.COLLEGE_NOT_FOUND));
+
+    Department department = departmentRepository.findById(dto.departmentId())
+        .orElseThrow(() -> new AuthException(ErrorStatus.DEPARTMENT_NOT_FOUND));
+
+    Set<Interest> interests = dto.interests().stream()
+        .map(type -> interestRepository.findByType(type)
+            .orElseThrow(() -> new AuthException(ErrorStatus.INTEREST_NOT_FOUND)))
+        .collect(Collectors.toSet());
+
+    // 도메인 메서드로 member 업데이트
+    member.signUp(
+        dto.membername(),
+        dto.studentNo(),
+        college,
+        department,
+        interests
+    );
+
+    // 시간표 처리
+    List<TimeTable> timeTables = dto.timeTables().stream()
+        .map(ttDto -> TimeTable.create(
+            ttDto.dayOfWeek(),
+            ttDto.startTime(),
+            ttDto.endTime(),
+            ttDto.subjectName()
+        ))
+        .collect(Collectors.toList());
+
+    member.addTimeTables(timeTables);
+
+    memberRepository.save(member);
   }
 
 }

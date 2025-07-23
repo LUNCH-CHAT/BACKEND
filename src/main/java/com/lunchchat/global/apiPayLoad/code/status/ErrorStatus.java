@@ -21,7 +21,12 @@ public enum ErrorStatus implements BaseErrorCode {
   USER_NOT_FOUND(HttpStatus.UNAUTHORIZED, "USER_401","로그인 유저를 찾을 수 없습니다"),
   USER_NOT_AUTHORIZED(HttpStatus.FORBIDDEN, "USER_403", "권한이 없습니다."),
   USER_STATISTICS_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404", "유저 통계 정보를 찾을 수 없습니다."),
+  COLLEGE_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404_COLLEGE", "단과대학 정보를 찾을 수 없습니다."),
+  DEPARTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_404_DEPT", "학과 정보를 찾을 수 없습니다."),
+  INTEREST_NOT_FOUND(HttpStatus.NOT_FOUND,"USER_404_INTEREST","관심사 정보를 찾을 수 없습니다."),
+  DUPLICATE_STUDENTNO(HttpStatus.CONFLICT, "USER_409", "이미 등록된 학번입니다."),
 
+  //SignUp Error
   INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "AUTH_400_EMAIL", "이메일 형식이 올바르지 않습니다."),
   ACCOUNT_DISABLED(HttpStatus.FORBIDDEN, "AUTH_403_DISABLED", "계정이 비활성화 상태입니다."),
   EMAIL_NOT_VERIFIED(HttpStatus.FORBIDDEN, "AUTH_403_EMAIL_UNVERIFIED", "이메일이 인증되지 않았습니다."),
@@ -29,6 +34,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
   UNIVERSITY_NOT_FOUND(HttpStatus.BAD_REQUEST,"AUTH_401_UNIVERSITY","대학교를 찾을 수 없습니다"),
 
+
+  ////Token Error
   TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "TOKEN_401_ACCESS_EXPIRED", "인증 토큰이 만료되었습니다."),
   TOKEN_MALFORMED(HttpStatus.UNAUTHORIZED, "TOKEN_401_ACCESS_MALFORMED", "잘못된 형식의 인증 토큰입니다."),
 
