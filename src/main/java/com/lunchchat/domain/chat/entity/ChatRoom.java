@@ -1,4 +1,4 @@
-package com.lunchchat.domain.chat.chat_room.entity;
+package com.lunchchat.domain.chat.entity;
 
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.global.common.BaseEntity;

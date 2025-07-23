@@ -1,7 +1,7 @@
 package com.lunchchat.domain.chat.service;
 
-import com.lunchchat.domain.chat.chat_message.entity.ChatMessage;
-import com.lunchchat.domain.chat.chat_room.entity.ChatRoom;
+import com.lunchchat.domain.chat.entity.ChatMessage;
+import com.lunchchat.domain.chat.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.request.CreateChatRoomReq;
 import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;

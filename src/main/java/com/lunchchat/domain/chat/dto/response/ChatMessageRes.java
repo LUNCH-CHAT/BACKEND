@@ -1,7 +1,7 @@
 package com.lunchchat.domain.chat.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.lunchchat.domain.chat.chat_message.entity.ChatMessage;
+import com.lunchchat.domain.chat.entity.ChatMessage;
 import java.time.LocalDateTime;
 
 public record ChatMessageRes(
