@@ -60,7 +60,7 @@ jobs:
       - name: Set image tag
         id: set-tag
         run: |
-          echo "IMAGE_TAG=main-${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "IMAGE_TAG=${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -130,7 +130,9 @@ jobs:
             
             # 업데이트
             rm -rf lunchchat-temp
-            git clone --depth 1 ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
+            BRANCH_NAME="${{ github.ref_name }}"
+            git clone --depth 1 --branch "$BRANCH_NAME" \
+              ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
             
             if [ -f "lunchchat-app/.env" ]; then
               cp lunchchat-app/.env lunchchat-temp/
