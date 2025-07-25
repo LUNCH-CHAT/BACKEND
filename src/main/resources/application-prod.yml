@@ -37,7 +37,6 @@ spring:
     redis:
       timeout: 30000ms
 
-# FCM 설정 (EC2 환경 - JSON 파일 사용)
 fcm:
   service-account-file: ${FCM_SERVICE_ACCOUNT_FILE:}
 
