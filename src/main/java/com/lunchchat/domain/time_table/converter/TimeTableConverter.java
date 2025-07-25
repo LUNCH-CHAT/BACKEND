@@ -8,11 +8,11 @@ import org.springframework.stereotype.Component;
 public class TimeTableConverter {
 
     public TimeTableDTO toTimeTableDTO(TimeTable timeTable) {
-        return TimeTableDTO.builder()
-                .dayOfWeek(timeTable.getDayOfWeek().name())
-                .startTime(timeTable.getStartTime())
-                .endTime(timeTable.getEndTime())
-                .subjectName(timeTable.getSubjectName())
-                .build();
+        return new TimeTableDTO(
+            timeTable.getDayOfWeek(),
+            timeTable.getStartTime(),
+            timeTable.getEndTime(),
+            timeTable.getSubjectName()
+        );
     }
 }

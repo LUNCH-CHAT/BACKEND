@@ -30,4 +30,20 @@ public class TimeTable extends BaseEntity {
 
     private String subjectName;
 
+    //setter
+
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
+    //builder
+    public static TimeTable create(DayOfWeek day, LocalTime start, LocalTime end, String subject) {
+        TimeTable tt = new TimeTable();
+        tt.dayOfWeek = day;
+        tt.startTime = start;
+        tt.endTime = end;
+        tt.subjectName = subject;
+        return tt;
+    }
+
 }

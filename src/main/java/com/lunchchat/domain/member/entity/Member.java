@@ -2,11 +2,12 @@ package com.lunchchat.domain.member.entity;
 
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
+import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.member.entity.enums.LoginType;
 import com.lunchchat.domain.member.entity.enums.MemberStatus;
 import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.university.entity.University;
-import com.lunchchat.domain.user_interests.entity.UserInterests;
+import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_keywords.entity.UserKeyword;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.CascadeType;
@@ -24,12 +25,10 @@ import jakarta.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.*;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -41,7 +40,7 @@ public class Member extends BaseEntity {
   private Long id;
 
   //실명
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false)
   private String membername;
 
   //이메일
@@ -92,11 +91,16 @@ public class Member extends BaseEntity {
   @JoinColumn(name = "department_id")
   private Department department;
 
+  //관심사
+  @ManyToMany
+  @JoinTable(
+    name = "member_interest",
+    joinColumns = @JoinColumn(name = "member_id"),
+    inverseJoinColumns = @JoinColumn(name = "interest_id"))
+  private Set<Interest> interests;
+
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<UserKeyword> userKeywords = new ArrayList<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<UserInterests> userInterests = new ArrayList<>();
 
   @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TimeTable> timeTables = new ArrayList<>();
@@ -112,6 +116,16 @@ public class Member extends BaseEntity {
   }
 
   //setter
+
+  public void signUp(String memberName, String studentNo, College college, Department department, Set<Interest> interests ){
+    this.membername = memberName;
+    this.studentNo = studentNo;
+    this.college = college;
+    this.department = department;
+    this.interests = interests;
+    this.Status = MemberStatus.ACTIVE;
+  }
+
   public void updateCollege(College college) {
     this.college = college;
   }
@@ -120,8 +134,25 @@ public class Member extends BaseEntity {
     this.department = department;
   }
 
+
+  public void setUniversity(University university) {this.university = university;}
+
+  public void setInterests(Set<Interest> interests) {this.interests = interests;}
+
+  public void addTimeTable(TimeTable timeTable) {
+    this.timeTables.add(timeTable);
+    timeTable.setMember(this);
+  }
+
+  public void addTimeTables(List<TimeTable> timeTables) {
+    for (TimeTable tt : timeTables) {
+      this.addTimeTable(tt);
+    }
+  }
+
   public void updateFcmToken(String fcmToken) {
     this.fcmToken = fcmToken;
   }
+
 }
 

@@ -29,20 +29,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class MatchRestController {
 
   private final MatchCommandService matchCommandService;
-  private final MatchQueryService matchQueryService;
-  private final MemberRepository memberRepository;
+  //private final MatchQueryService matchQueryService;
+  //private final MemberRepository memberRepository;
 
-  @GetMapping
-  @Operation(summary = "매치 목록 조회", description = "사용자의 매치 목록을 상태에 따라 조회합니다. 현재는 테스트용으로 하드코딩된 사용자 ID를 사용합니다.")
-  public ApiResponse<List<MatchResponseDto.MatchListDto>> getMatchList(
-      @RequestParam(name = "status") MatchStatusType status) {
-
-    // TODO: 현재는 테스트용으로 하드코딩된 사용자 ID를 사용합니다.
-    Member fakeUser = memberRepository.findById(1L)
-        .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
-
-    return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, fakeUser.getId()));
-  }
+//  @GetMapping
+//  @Operation(summary = "매치 목록 조회", description = "사용자의 매치 목록을 상태에 따라 조회합니다. 현재는 테스트용으로 하드코딩된 사용자 ID를 사용합니다.")
+//  public ApiResponse<List<MatchResponseDto.MatchListDto>> getMatchList(
+//      @RequestParam(name = "status") MatchStatusType status) {
+//
+//    // TODO: 현재는 테스트용으로 하드코딩된 사용자 ID를 사용합니다.
+//    Member fakeUser = memberRepository.findById(1L)
+//        .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
+//
+//    return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, fakeUser.getId()));
+//  }
 
   @PostMapping
   @Operation(summary = "매치 요청", description = "매치 요청을 생성합니다.")

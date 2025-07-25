@@ -1,6 +1,6 @@
-package com.lunchchat.domain.interests.entity;
+package com.lunchchat.domain.member.entity.enums;
 
-public enum InterestName {
+public enum InterestType {
     EXCHANGE_STUDENT, // 교환학생
     EMPLOYMENT_CAREER, // 취업/진로
     EXAM_PREPARATION, // 고시준비
