@@ -169,14 +169,14 @@ jobs:
             
             # 헬스체크
             HEALTH_CHECK_SUCCESS=false
-            for i in {1..10}; do
+            for i in {1..20}; do
               if curl -f -m 5 http://localhost:8080/actuator/health >/dev/null 2>&1; then
                 echo "✅ 헬스체크 성공"
                 HEALTH_CHECK_SUCCESS=true
                 break
               fi
             
-              if [ $i -eq 10 ]; then
+              if [ $i -eq 20 ]; then
                 echo "❌ 헬스체크 실패"
                 break
               fi
