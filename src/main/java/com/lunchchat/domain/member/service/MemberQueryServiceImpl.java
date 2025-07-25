@@ -1,17 +1,21 @@
 package com.lunchchat.domain.member.service;
 
 import com.lunchchat.domain.member.converter.MemberConverter;
+import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberDetailResponseDTO;
+import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberRecommendationResponseDTO;
+import com.lunchchat.domain.member.dto.MemberResponseDTO.MyPageResponseDTO;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.time_table.service.TimeTableQueryService;
 import com.lunchchat.domain.user_interests.repository.InterestRepository;
 import com.lunchchat.domain.user_keywords.repository.UserKeywordsRepository;
 import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public abstract class MemberQueryServiceImpl implements MemberQueryService {
+public class MemberQueryServiceImpl implements MemberQueryService {
 
     private final MemberRepository memberRepository;
     private final MemberConverter memberConverter;
@@ -19,6 +23,21 @@ public abstract class MemberQueryServiceImpl implements MemberQueryService {
     private final UserStatisticsRepository userStatisticsRepository;
     private final UserKeywordsRepository userKeywordsRepository;
     private final InterestRepository userInterestsRepository;
+
+    @Override
+    public MemberDetailResponseDTO getMemberDetail(Long memberId) {
+        return null;
+    }
+
+    @Override
+    public List<MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId) {
+        return List.of();
+    }
+
+    @Override
+    public MyPageResponseDTO getMyPage(Long memberId) {
+        return null;
+    }
 
 //    @Override
 //    @Transactional(readOnly = true)
