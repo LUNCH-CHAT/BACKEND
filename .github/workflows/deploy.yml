@@ -60,7 +60,8 @@ jobs:
       - name: Set image tag
         id: set-tag
         run: |
-          echo "IMAGE_TAG=${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+          SAFE_REF_NAME=$(echo "${{ github.ref_name }}" | tr '/\' '-' )
+          echo "IMAGE_TAG=${SAFE_REF_NAME}-${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
