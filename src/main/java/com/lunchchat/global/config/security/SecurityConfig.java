@@ -58,6 +58,7 @@ public class SecurityConfig {
             .requestMatchers("/swagger", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll() // Swagger 허용
             .requestMatchers("/actuator/**").permitAll()
             //TODO: 경로별 인가 잠시 허용
+            //.anyRequest().authenticated()
             .anyRequest().permitAll()
         );
 
