@@ -1,6 +1,7 @@
 package com.lunchchat.domain.member.dto;
 
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
+import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.time_table.dto.TimeTableDTO;
 import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
@@ -25,7 +26,7 @@ public class MemberResponseDTO {
         private String profileImageUrl;
         private String studentNo;
         private String department;
-        private List<UserInterestDTO> userInterests;
+        private List<InterestType> userInterests;
         private List<UserKeywordDTO> userKeywords;
     }
 
@@ -43,7 +44,7 @@ public class MemberResponseDTO {
         private String profileImageUrl;
 
         private List<UserKeywordDTO> userKeywords;
-        private List<UserInterestDTO> userInterests;
+        private List<InterestType> userInterests;
         private List<TimeTableDTO> timeTables;
 
         private LocalDateTime createdAt;
