@@ -25,6 +25,18 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
     SELECT m FROM Matches m
     WHERE ((m.fromMember.id = :memberId AND m.toMember.id = :toMemberId)
         OR (m.fromMember.id = :toMemberId AND m.toMember.id = :memberId))
-""")
+    """)
     Optional<Matches> findActiveMatchBetween(@Param("memberId") Long memberId, @Param("toMemberId") Long toMemberId);
+
+    @Query("SELECT m FROM Matches m WHERE " +
+            "(m.fromMember.id = :viewerId AND m.toMember.id = :memberId) OR " +
+            "(m.fromMember.id = :memberId AND m.toMember.id = :viewerId)")
+    Optional<Matches> findMatchStatusBetween(Long viewerId, Long memberId);
+
+    @Query("""
+    SELECT COUNT(m) FROM Matches m
+    WHERE (m.fromMember.id = :memberId OR m.toMember.id = :memberId)
+    """)
+    long countMatchesByMember(@Param("memberId") Long memberId);
+
 }

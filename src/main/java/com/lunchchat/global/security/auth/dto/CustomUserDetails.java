@@ -32,4 +32,8 @@ public class CustomUserDetails implements UserDetails {
     return member.getEmail();
   }
 
+  public Long getId() {
+    return member.getId();
+  }
+
 }
