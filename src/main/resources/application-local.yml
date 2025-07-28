@@ -19,7 +19,7 @@ spring:
           google:
             client-id: ${CLIENT_ID}
             client-secret: ${CLIENT_SECRET}
-            redirect-uri: "http://localhost:8080/auth/callback/google"
+            redirect-uri: "https://lunchchat.kro.kr/callback/google"
             scope:
               - profile
               - email
@@ -48,7 +48,6 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
-# FCM 설정 (로컬 환경 - JSON 문자열 사용)
 fcm:
   service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
 

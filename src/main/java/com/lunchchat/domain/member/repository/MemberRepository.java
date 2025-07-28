@@ -10,4 +10,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
   // 이메일 기준 조회
   Optional<Member> findByEmail (String email);
+
+  // 학번 중복 조회
+  boolean existsByStudentNo (String studentNo);
 }
