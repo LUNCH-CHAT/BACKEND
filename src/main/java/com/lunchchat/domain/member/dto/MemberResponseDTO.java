@@ -1,9 +1,12 @@
 package com.lunchchat.domain.member.dto;
 
+import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.time_table.dto.TimeTableDTO;
 import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import java.time.LocalDateTime;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -45,6 +48,9 @@ public class MemberResponseDTO {
 
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+
+        @Schema(description = "상대 사용자와의 매칭 상태 (ACCEPTED, REQUESTED, RECEIVED, NONE)")
+        private MatchStatusType matchStatus;
     }
 
     @Getter
