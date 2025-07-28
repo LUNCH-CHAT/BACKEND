@@ -48,11 +48,14 @@ public class StompHandler implements ChannelInterceptor {
             // 토큰 유효성 검증 성공 시, 사용자 정보 설정 (선택)
 //            Claims claims = jwtUtil.parseJwt(token);
 //            accessor.setUser(() -> claims.getSubject());  // principal 설정 (ex: email 또는 userId)
+
+            log.info("stomp 연결 성공");
+        } else if (StompCommand.DISCONNECT.equals(command)) {
+            // 연결 해제 시 로그
+            log.info("stomp 연결 해제");
         }
 
         //subscribe 로직
-
-        log.info("stomp 인증 성공");
 
         return message;
     }

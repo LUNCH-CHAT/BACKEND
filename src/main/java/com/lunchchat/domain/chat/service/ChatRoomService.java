@@ -160,17 +160,18 @@ public class ChatRoomService {
 
     //채팅방 접근 권한 확인(채팅방에 속한 사용자인지)
     @Transactional(readOnly = true)
-    public boolean hasAccess(Long userId, Long chatRoomId) {
+    public boolean hasAccess(String email, Long chatRoomId) {
         ChatRoom room = chatRoomRepository.findById(chatRoomId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
 
         // 사용자가 채팅방의 starter나 friend인지 확인
-        boolean isMember = room.getStarter().getId().equals(userId) || room.getFriend().getId().equals(userId);
+        boolean isMember = room.getStarter().getEmail().equals(email)
+                || room.getFriend().getEmail().equals(email);
 
         // 퇴장한 경우 접근 불가
         boolean hasExited =
-                (room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
-                        (room.getFriend().getId().equals(userId) && room.isExitedByFriend());
+                (room.getStarter().getEmail().equals(email) && room.isExitedByStarter()) ||
+                        (room.getFriend().getEmail().equals(email) && room.isExitedByFriend());
 
         return isMember && !hasExited;
     }
