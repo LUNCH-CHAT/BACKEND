@@ -1,5 +1,6 @@
 package com.lunchchat.domain.member.service;
 
+import com.google.api.client.util.SecurityUtils;
 import com.lunchchat.domain.member.converter.MemberConverter;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberDetailResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberRecommendationResponseDTO;
@@ -9,8 +10,13 @@ import com.lunchchat.domain.time_table.service.TimeTableQueryService;
 import com.lunchchat.domain.user_interests.repository.InterestRepository;
 import com.lunchchat.domain.user_keywords.repository.UserKeywordsRepository;
 import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
+import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
+import com.lunchchat.global.security.jwt.JwtTokenProvider;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.security.SecurityUtil;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
