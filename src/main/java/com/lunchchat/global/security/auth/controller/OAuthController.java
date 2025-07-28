@@ -16,7 +16,10 @@ import com.lunchchat.global.security.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,40 +52,19 @@ public class OAuthController {
     this.memberRepository = memberRepository;
   }
 
-//  // 콜백
-//  @GetMapping("/callback/google")
-//  public ResponseEntity<Void> googleCallback(@RequestParam("code") String code) {
-//    HttpHeaders headers = new HttpHeaders();
-//
-//    String redirectUri = "프론트 리다이렉트 주소" + code;
-//
-//    headers.setLocation(URI.create(redirectUri));
-//    return new ResponseEntity<>(headers, HttpStatus.FOUND);
-//  }
-
   @GetMapping("/callback/google")
   public void redirectTo(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
-    response.sendRedirect("http://localhost:8080/auth/login?code=" + code);
+    String redirectUri = "https://lunchchat.kro.kr/auth/login/google?code=" + code;
+    response.sendRedirect(redirectUri);;
   }
 
 
-  @GetMapping("/login")
+  @GetMapping("/login/google")
   public ApiResponse<?> googleLogin(@RequestParam("code") String accessCode, HttpServletResponse response) {
     try {
-      // 1. 로그인 처리
-      GoogleUserDTO.Request request = new GoogleUserDTO.Request(accessCode);
-      Member user = googleAuthService.googleAuthLogin(request, response);
-      String email = user.getEmail();
+      Member user = googleAuthService.googleAuthLogin(new GoogleUserDTO.Request(accessCode), response);
 
-      // 2. Access + Refresh Token 발급
-      String accessToken = jwtTokenProvider.generateAccessToken(email);
-      String refreshToken = jwtTokenProvider.generateRefreshToken(email);
-
-      // 3. 응답 헤더에 담기
-      response.setHeader("access", accessToken);
-      response.setHeader("refresh", refreshToken);
-
-      // 4. 상태별 응답
+      // 상태별 응답
       if (user.getStatus() == MemberStatus.PENDING) {
         return ApiResponse.onSuccess("isNewUser");
       } else {
