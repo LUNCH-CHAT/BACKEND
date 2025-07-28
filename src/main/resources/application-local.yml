@@ -19,7 +19,7 @@ spring:
           google:
             client-id: ${CLIENT_ID}
             client-secret: ${CLIENT_SECRET}
-            redirect-uri: "http://localhost:8080/auth/callback/google"
+            redirect-uri: "https://lunchchat.kro.kr/callback/google"
             scope:
               - profile
               - email
