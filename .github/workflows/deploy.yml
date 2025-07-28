@@ -115,11 +115,11 @@ jobs:
             
             # 브랜치별 환경 파일 결정
             if [[ "${{ github.ref_name }}" == "main" ]]; then
-              ENV_FILE=".env"
-              echo "📋 main 브랜치: .env 파일 사용"
+              ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.production"
+              echo "📋 main 브랜치: prod 환경 사용"
             elif [[ "${{ github.ref_name }}" == dev* ]]; then
-              ENV_FILE=".dev_env"
-              echo "📋 dev 브랜치: .dev_env 파일 사용"
+              ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.development"
+              echo "📋 dev 브랜치: dev 환경 사용"
             else
               echo "❌ 지원하지 않는 브랜치입니다."
               exit 1
@@ -130,14 +130,14 @@ jobs:
               cd lunchchat-app
               docker-compose down || true
             
-              # 현재 버전 백업 (환경별로)
-              if [ -f "$ENV_FILE" ]; then
-                CURRENT_IMAGE_TAG=$(grep "^IMAGE_TAG=" "$ENV_FILE" | cut -d'=' -f2 2>/dev/null || echo "")
+              # 현재 버전 백업
+              if [ -f ".env" ]; then
+                CURRENT_IMAGE_TAG=$(grep "^IMAGE_TAG=" ".env" | cut -d'=' -f2 2>/dev/null || echo "")
                 if [ ! -z "$CURRENT_IMAGE_TAG" ]; then
                   echo "BACKUP_IMAGE_TAG=$CURRENT_IMAGE_TAG" > /tmp/backup_info.env
-                  echo "BACKUP_ENV_FILE=$ENV_FILE" >> /tmp/backup_info.env
-                  cp "$ENV_FILE" /tmp/backup.env
-                  echo "✅ $ENV_FILE 백업 완료"
+                  echo "BACKUP_ENV_FILE=$ENV_CONFIG_FILE" >> /tmp/backup_info.env
+                  cp ".env" /tmp/backup.env
+                  echo "✅ 현재 .env 백업 완료"
                 fi
               fi
               cd ..
@@ -149,17 +149,9 @@ jobs:
             git clone --depth 1 --branch "$BRANCH_NAME" \
               ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
             
-            # 환경 파일 복사 (브랜치별로)
-            if [ -f "lunchchat-app/$ENV_FILE" ]; then
-              if [[ "${{ github.ref_name }}" == "main" ]]; then
-                cp lunchchat-app/.env lunchchat-temp/
-              elif [[ "${{ github.ref_name }}" == dev* ]]; then
-                cp lunchchat-app/.dev_env lunchchat-temp/.env
-              fi
-            else
-              echo "⚠️ $ENV_FILE 파일이 없습니다."
-              exit 1
-            fi
+            # 환경 파일을 외부에서 복사
+            cp "$ENV_CONFIG_FILE" lunchchat-temp/.env
+            echo "✅ 환경 설정 파일 복사 완료: $ENV_CONFIG_FILE → .env"
             
             rm -rf lunchchat-app
             mv lunchchat-temp lunchchat-app
@@ -238,11 +230,7 @@ jobs:
                 source /tmp/backup_info.env
             
                 # 복원
-                if [[ "${{ github.ref_name }}" == "main" ]]; then
-                  cp /tmp/backup.env .env
-                elif [[ "${{ github.ref_name }}" == dev* ]]; then
-                  cp /tmp/backup.env .env
-                fi
+                cp /tmp/backup.env .env
             
                 export IMAGE_TAG=$BACKUP_IMAGE_TAG
                 docker-compose up -d backend --no-build
