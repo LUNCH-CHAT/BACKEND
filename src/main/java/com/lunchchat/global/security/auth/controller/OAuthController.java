@@ -54,7 +54,7 @@ public class OAuthController {
 
   @GetMapping("/callback/google")
   public void redirectTo(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
-    String redirectUri = "https://lunchchat.kro.kr/auth/login/google?code=" + code;
+    String redirectUri = "http://localhost:5173/auth/callback/google?code=" + code;
     response.sendRedirect(redirectUri);;
   }
 
