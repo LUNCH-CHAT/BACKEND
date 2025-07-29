@@ -10,16 +10,10 @@ import com.lunchchat.global.security.auth.dto.CustomUserDetails;
 import com.lunchchat.global.security.auth.dto.GoogleUserDTO;
 import com.lunchchat.global.security.auth.dto.TokenDTO;
 import com.lunchchat.global.security.auth.service.GoogleAuthService;
-import com.lunchchat.global.config.security.JwtConfig;
-import com.lunchchat.global.security.jwt.JwtTokenProvider;
-import com.lunchchat.global.security.jwt.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,23 +32,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class OAuthController {
 
-  private final JwtConfig jwtConfig;
-  private final JwtUtil jwtUtil;
-  private final JwtTokenProvider jwtTokenProvider;
   private final GoogleAuthService googleAuthService;
   private final MemberRepository memberRepository;
 
-  public OAuthController(JwtConfig jwtConfig, JwtUtil jwtUtil, JwtTokenProvider jwtTokenProvider, GoogleAuthService googleAuthService, MemberRepository memberRepository) {
-    this.jwtConfig = jwtConfig;
-    this.jwtUtil = jwtUtil;
-    this.jwtTokenProvider = jwtTokenProvider;
+  public OAuthController(GoogleAuthService googleAuthService, MemberRepository memberRepository) {
     this.googleAuthService = googleAuthService;
     this.memberRepository = memberRepository;
   }
 
   @GetMapping("/callback/google")
   public void redirectTo(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
-    String redirectUri = "http://localhost:5173/auth/callback/google?code=" + code;
+    String redirectUri = "http://localhost:5173/auth/login/google?code=" + code;
     response.sendRedirect(redirectUri);;
   }
 
