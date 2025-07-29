@@ -19,21 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationCommandServiceImpl implements NotificationCommandService {
 
     private final NotificationRepository notificationRepository;
-    private final FcmService fcmService;
+    private final NotificationQueueService notificationQueueService;
+    private final NotificationDuplicationService notificationDuplicationService;
 
     @Override
     @Transactional
     public void createMatchRequestNotification(Member toMember, Member fromMember) {
         String content = String.format("%s님이 런치챗을 요청했어요!", fromMember.getMembername());
 
-        // 1. DB에 알림 저장
         Notification notification = new Notification(toMember, fromMember,
             NotificationType.MATCH_REQUEST, content);
         notificationRepository.save(notification);
 
-        log.info("매칭 요청 알림 DB 저장 완료 - 요청자: {}, 수신자: {}", fromMember.getId(), toMember.getId());
-
-        // 2. FCM 푸시 알림 발송 (비동기)
         sendFcmNotificationAsync(toMember, "런치챗 요청", content, NotificationType.MATCH_REQUEST,
             fromMember);
     }
@@ -43,14 +40,10 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     public void createMatchAcceptedNotification(Member toMember, Member fromMember) {
         String content = String.format("%s님이 런치챗을 수락했어요!", fromMember.getMembername());
 
-        // 1. DB에 알림 저장
         Notification notification = new Notification(toMember, fromMember,
             NotificationType.MATCH_ACCEPTED, content);
         notificationRepository.save(notification);
 
-        log.info("매칭 수락 알림 DB 저장 완료 - 수락자: {}, 수신자: {}", fromMember.getId(), toMember.getId());
-
-        // 2. FCM 푸시 알림 발송 (비동기)
         sendFcmNotificationAsync(toMember, "런치챗 수락", content, NotificationType.MATCH_ACCEPTED,
             fromMember);
     }
@@ -58,6 +51,10 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     @Async("fcmTaskExecutor")
     public void sendFcmNotificationAsync(Member toMember, String title, String body, String type,
         Member sender) {
+        if (notificationDuplicationService.isDuplicate(toMember.getId(), type, sender.getId())) {
+            return;
+        }
+
         Map<String, String> data = new HashMap<>();
         data.put("type", type);
         data.put("senderId", sender.getId().toString());
@@ -70,6 +67,6 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
             .data(data)
             .build();
 
-        fcmService.sendNotification(fcmDto);
+        notificationQueueService.enqueue(fcmDto);
     }
 }
