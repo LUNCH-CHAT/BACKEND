@@ -72,7 +72,8 @@ public class StompHandler implements ChannelInterceptor {
             Long chatRoomId = extractRoomIdFromDestination(destination);
             if (!chatRoomService.hasAccess(email, chatRoomId)) {
                 log.warn("채팅방 접근 권한 없음 - userEmail: {}, roomId: {}", email, chatRoomId);
-                throw new AccessDeniedException("채팅방 접근 권한 없음");
+                //throw new AccessDeniedException("채팅방 접근 권한 없음");
+                return null;  //예외 반환시 웹소켓 연결 해제되는 현상 방지위해 null 반환
             }
 
             log.info("채팅방 구독 허용 - userEmail: {}, roomId: {}", email, chatRoomId);
