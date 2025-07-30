@@ -53,14 +53,14 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    public MemberDetailResponseDTO getMemberDetail(Long memberId, Long viewerId) {
+    public MemberDetailResponseDTO getMemberDetail(Long memberId, String viewerEmail) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-        MatchStatusType matchStatus = matchRepository.findMatchStatusBetween(viewerId, memberId)
+        MatchStatusType matchStatus = matchRepository.findMatchStatusBetween(viewerEmail, member.getEmail())
                 .map(match -> {
                     if (match.getStatus() == MatchStatus.ACCEPTED) return MatchStatusType.ACCEPTED;
-                    else if (match.getFromMember().getId().equals(viewerId)) return MatchStatusType.REQUESTED;
+                    else if (match.getFromMember().getEmail().equals(viewerEmail)) return MatchStatusType.REQUESTED;
                     else return MatchStatusType.RECEIVED;
                 })
                 .orElse(MatchStatusType.NONE);
@@ -135,16 +135,16 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     }
 
     @Transactional(readOnly = true)
-    public List<MemberRecommendationResponseDTO> getFilteredRecommendations(Long currentMemberId, MemberFilterRequestDTO req) {
+    public List<MemberRecommendationResponseDTO> getFilteredRecommendations(String currentMemberEmail, MemberFilterRequestDTO req) {
 
-        Member currentMember = memberRepository.findById(currentMemberId)
+        Member currentMember = memberRepository.findByEmail(currentMemberEmail)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
         return memberRepository.findAll().stream()
-                .filter(member -> !member.getId().equals(currentMemberId))
+                .filter(member -> !member.getEmail().equals(currentMemberEmail))
                 .filter(member -> isFilterMatched(member, req))
                 .map(member -> {
-                    long matchCount = matchRepository.countMatchesByMember(member.getId());
+                    long matchCount = matchRepository.countMatchesByMember(member.getEmail());
                     return new Object[]{member, matchCount, member.getUpdatedAt()};
                 })
                 .sorted((a, b) -> {
