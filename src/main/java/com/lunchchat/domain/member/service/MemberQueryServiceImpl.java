@@ -11,6 +11,7 @@ import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberDetailResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberRecommendationResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MyPageResponseDTO;
+import com.lunchchat.domain.member.dto.MemberScoreWrapper;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
@@ -24,19 +25,21 @@ import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.security.jwt.JwtTokenProvider;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.security.SecurityUtil;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,31 +73,39 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
     @Transactional(readOnly = true)
     public List<MemberResponseDTO.MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId) {
-
         Member currentMember = memberRepository.findById(currentMemberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
         List<TimeTable> currentMemberTimeTables = timeTableQueryService.findByMemberId(currentMemberId);
+        List<MemberScoreWrapper> scoreList = new ArrayList<>();
 
-        return memberRepository.findAll().stream()
-                .filter(member -> !member.getId().equals(currentMemberId))
-                .map(member -> {
-                    List<TimeTable> memberTimeTables = timeTableQueryService.findByMemberId(member.getId());
-                    int matchedTimeTableCount = calculateTimeTableOverlap(currentMemberTimeTables, memberTimeTables);
-                    int matchedInterestsCount = calculateInterestsOverlap(currentMember, member);
+        int page = 0;
+        int batchSize = 50;
 
-                    double matchingScore = (matchedTimeTableCount * 0.6) + (matchedInterestsCount * 0.4);
+        while (true) {
+            Pageable pageable = PageRequest.of(page, batchSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+            Page<Member> memberPage = memberRepository.findByIdNot(currentMemberId, pageable);
 
-                    return new Object[]{member, matchedTimeTableCount, matchedInterestsCount, matchingScore};
-                })
-                .filter(arr -> (int) arr[1] > 0 && (int) arr[2] > 0) // 시간표/관심사 겹침 ≥ 1
-                .sorted((arr1, arr2) -> {
-                    double score1 = (double) arr1[3];
-                    double score2 = (double) arr2[3];
-                    return Double.compare(score2, score1); // 높은 점수 순
-                })
+            if (memberPage.isEmpty()) break;
+
+            for (Member member : memberPage) {
+                List<TimeTable> memberTimeTables = timeTableQueryService.findByMemberId(member.getId());
+                int matchedTimeTableCount = calculateTimeTableOverlap(currentMemberTimeTables, memberTimeTables);
+                int matchedInterestsCount = calculateInterestsOverlap(currentMember, member);
+
+                if (matchedTimeTableCount > 0 && matchedInterestsCount > 0) {
+                    double score = (matchedTimeTableCount * 0.6) + (matchedInterestsCount * 0.4);
+                    scoreList.add(new MemberScoreWrapper(member, score));
+                }
+            }
+
+            page++;
+        }
+
+        return scoreList.stream()
+                .sorted(Comparator.comparingDouble(MemberScoreWrapper::score).reversed())
                 .limit(10)
-                .map(arr -> MemberRecommendationConverter.toRecommendationResponse((Member) arr[0]))
+                .map(wrapper -> MemberRecommendationConverter.toRecommendationResponse(wrapper.member()))
                 .collect(Collectors.toList());
     }
 
