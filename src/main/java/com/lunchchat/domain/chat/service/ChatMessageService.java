@@ -33,6 +33,11 @@ public class ChatMessageService {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
+        //채팅방 구독 여부 검증
+        if (!room.isParticipant(senderId)) {
+            throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
+        }
+
         ChatMessage message = chatMessageRepository.save(handleMessage(senderId, room, messageReq.content()));
 
         ChatMessageRes chatMessageRes = ChatMessageRes.of(roomId, message);
