@@ -183,11 +183,11 @@ jobs:
             
             # 환경별 헬스체크 설정
             if [[ "${{ github.ref_name }}" == "main" ]]; then
-              HEALTH_CHECK_RETRIES=20
+              HEALTH_CHECK_RETRIES=30
               HEALTH_CHECK_DELAY=15
             else
-              HEALTH_CHECK_RETRIES=20
-              HEALTH_CHECK_DELAY=10
+              HEALTH_CHECK_RETRIES=30
+              HEALTH_CHECK_DELAY=13
             fi
             
             # 헬스체크
