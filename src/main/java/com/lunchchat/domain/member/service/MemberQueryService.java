@@ -6,8 +6,8 @@ import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import java.util.List;
 
 public interface MemberQueryService {
-    MemberResponseDTO.MemberDetailResponseDTO getMemberDetail(Long memberId, Long viewerId);
+    MemberResponseDTO.MemberDetailResponseDTO getMemberDetail(Long memberId, String viewerEmail);
     List<MemberResponseDTO.MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId);
     MemberResponseDTO.MyPageResponseDTO getMyPage(Long memberId);
-    List<MemberResponseDTO.MemberRecommendationResponseDTO> getFilteredRecommendations(Long currentMemberId, MemberFilterRequestDTO req);
+    List<MemberResponseDTO.MemberRecommendationResponseDTO> getFilteredRecommendations(String email, MemberFilterRequestDTO req);
 }
