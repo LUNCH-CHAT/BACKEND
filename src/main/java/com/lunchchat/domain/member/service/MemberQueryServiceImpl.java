@@ -162,14 +162,23 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
 
     private boolean isFilterMatched(Member member, MemberFilterRequestDTO req) {
-        if (req.getCollege() != null && !req.getCollege().equals(member.getCollege().getName())) return false;
-        if (req.getDepartment() != null && !req.getDepartment().equals(member.getDepartment().getName())) return false;
+        if (req.getCollege() != null) {
+            if (member.getCollege() == null || !req.getCollege().equals(member.getCollege().getName())) return false;
+        }
 
-        if (req.getInterest() != null && member.getInterests().stream()
-                .noneMatch(i -> i.getType().name().equals(req.getInterest()))) return false;
+        if (req.getDepartment() != null) {
+            if (member.getDepartment() == null || !req.getDepartment().equals(member.getDepartment().getName())) return false;
+        }
+
+        if (req.getInterest() != null) {
+            if (member.getInterests() == null || member.getInterests().stream()
+                    .noneMatch(i -> i.getType().name().equals(req.getInterest()))) return false;
+        }
 
         if (req.getStudentNo() != null) {
-            String target = member.getStudentNo(); // 예: "21학번"
+            String target = member.getStudentNo();
+            if (target == null) return false;
+
             if ("20학번이상".equals(req.getStudentNo())) {
                 if (Integer.parseInt(target.substring(0, 2)) > 20) return false;
             } else {
@@ -179,6 +188,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
         return true;
     }
+
 
 
     @Override
