@@ -82,7 +82,7 @@ jobs:
     timeout-minutes: 20
 
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         server: [
           { id: "server1", name: "Server-1" },
@@ -110,139 +110,122 @@ jobs:
           script: |
             set -e
             
-            echo "🚀 ${{ matrix.server.name }} 배포 시작"
+            # 함수 정의
+            ensure_image() {
+              local img="$1"
+              if ! docker image inspect "$img" >/dev/null 2>&1; then
+                docker pull "$img" || return 1
+              fi
+            }
+            
+            start_services() {
+              local tag="$1"
+              export IMAGE_TAG="$tag"
+              export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
+              export DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
+              docker-compose up -d backend --no-build
+              sleep 10
+            }
+            
+            health_check() {
+              local max_attempts=25
+              for i in $(seq 1 $max_attempts); do
+                if curl -sf -m 5 http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+                  curl -sf -m 3 http://localhost:8080/actuator/health/db >/dev/null 2>&1 && return 0
+                fi
+                [ $i -eq $max_attempts ] && return 1
+                sleep 12
+              done
+            }
+            
+            cleanup() {
+              docker-compose down || true
+              docker container prune -f >/dev/null 2>&1 || true
+            }
+            
+            # 메인 로직
             cd /home/ubuntu
             
-            # 브랜치별 환경 파일 결정
+            # 환경 파일 설정
             if [[ "${{ github.ref_name }}" == "main" ]]; then
               ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.production"
-              echo "📋 main 브랜치: prod 환경 사용"
-            elif [[ "${{ github.ref_name }}" == dev* ]]; then
-              ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.development"
-              echo "📋 dev 브랜치: dev 환경 사용"
             else
-              echo "❌ 지원하지 않는 브랜치입니다."
-              exit 1
+              ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.development"
             fi
             
             # 백업 생성
             if [ -d "lunchchat-app" ]; then
               cd lunchchat-app
-              docker-compose down || true
+              cleanup
             
-              # 현재 버전 백업
               if [ -f ".env" ]; then
-                CURRENT_IMAGE_TAG=$(grep "^IMAGE_TAG=" ".env" | cut -d'=' -f2 2>/dev/null || echo "")
-                if [ ! -z "$CURRENT_IMAGE_TAG" ]; then
-                  echo "BACKUP_IMAGE_TAG=$CURRENT_IMAGE_TAG" > /tmp/backup_info.env
-                  echo "BACKUP_ENV_FILE=$ENV_CONFIG_FILE" >> /tmp/backup_info.env
-                  cp ".env" /tmp/backup.env
-                  echo "✅ 현재 .env 백업 완료"
+                CURRENT_TAG=$(grep "^IMAGE_TAG=" ".env" | cut -d'=' -f2)
+                if [ -n "$CURRENT_TAG" ]; then
+                  BACKUP_IMG="${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:$CURRENT_TAG"
+                  if ensure_image "$BACKUP_IMG"; then
+                    echo "BACKUP_IMAGE_TAG=$CURRENT_TAG" > /tmp/backup_info.env
+                    cp ".env" /tmp/backup.env
+                    echo "✅ 백업 생성 완료: $CURRENT_TAG"
+                  fi
                 fi
               fi
               cd ..
             fi
             
-            # 업데이트
-            rm -rf lunchchat-temp
-            BRANCH_NAME="${{ github.ref_name }}"
-            git clone --depth 1 --branch "$BRANCH_NAME" \
+            # 새 버전 배포
+            rm -rf lunchchat-temp lunchchat-app
+            git clone -q --depth 1 --branch "${{ github.ref_name }}" \
               ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
             
-            # 환경 파일을 외부에서 복사
-            cp "$ENV_CONFIG_FILE" lunchchat-temp/.env
-            echo "✅ 환경 설정 파일 복사 완료: $ENV_CONFIG_FILE → .env"
-            
-            rm -rf lunchchat-app
             mv lunchchat-temp lunchchat-app
             cd lunchchat-app
             
-            # FCM 설정
-            cat > firebase-service-account-key.json << 'FCMEOF'
+            # 설정 파일 준비
+            cp "$ENV_CONFIG_FILE" .env
+            cat > firebase-service-account-key.json << 'EOF'
             ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
-            FCMEOF
+            EOF
             chmod 600 firebase-service-account-key.json
-            
-            # IMAGE_TAG 업데이트
             sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}/" .env
             mkdir -p logs
             
-            # 이미지 준비
-            if ! docker image inspect "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}" >/dev/null 2>&1; then
-              echo "📦 이미지 다운로드 중..."
-              docker pull "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
-            fi
+            # 새 이미지 준비
+            NEW_IMG="${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
+            ensure_image "$NEW_IMG" || { echo "❌ 새 이미지 다운로드 실패"; exit 1; }
             
-            # 컨테이너 시작
-            export IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}
-            export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
-            export DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
+            # 서비스 시작 및 헬스체크
+            start_services "${{ needs.build-and-push.outputs.image-tag }}"
             
-            docker-compose up -d backend --no-build
-            sleep 15
-            
-            # 환경별 헬스체크 설정
-            if [[ "${{ github.ref_name }}" == "main" ]]; then
-              HEALTH_CHECK_RETRIES=20
-              HEALTH_CHECK_DELAY=8
-            else
-              HEALTH_CHECK_RETRIES=15
-              HEALTH_CHECK_DELAY=5
-            fi
-            
-            # 헬스체크
-            HEALTH_CHECK_SUCCESS=false
-            for i in $(seq 1 $HEALTH_CHECK_RETRIES); do
-              if curl -f -m 5 http://localhost:8080/actuator/health >/dev/null 2>&1; then
-                echo "✅ 헬스체크 성공"
-                HEALTH_CHECK_SUCCESS=true
-                break
-              fi
-            
-              if [ $i -eq $HEALTH_CHECK_RETRIES ]; then
-                echo "❌ 헬스체크 실패"
-                break
-              fi
-            
-              sleep $HEALTH_CHECK_DELAY
-            done
-            
-            # 결과 처리
-            if [ "$HEALTH_CHECK_SUCCESS" = true ]; then
+            if health_check; then
+              echo "🎉 배포 성공!"
               rm -f /tmp/backup*.env
             
-              OLD_IMAGES=$(docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | tail -n +4)
+              # 이전 이미지 정리
+              docker images "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}" --format "{{.Repository}}:{{.Tag}}" | \
+                tail -n +4 | xargs -r docker rmi 2>/dev/null || true
             
-              if [ ! -z "$OLD_IMAGES" ]; then
-                echo "$OLD_IMAGES" | xargs -r docker rmi 2>/dev/null || true
-              fi
-            
-              docker rmi $(docker images -f "dangling=true" -q) 2>/dev/null || true
-            
-              echo "🎉 배포 완료"
             else
-              echo "🔄 롤백 시작..."
+              echo "🔄 배포 실패, 롤백 시도 중..."
             
               if [ -f "/tmp/backup.env" ] && [ -f "/tmp/backup_info.env" ]; then
-                docker-compose down || true
-            
-                # 백업 정보 로드
+                cleanup
                 source /tmp/backup_info.env
             
-                # 복원
-                cp /tmp/backup.env .env
+                BACKUP_IMG="${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:$BACKUP_IMAGE_TAG"
+                if ensure_image "$BACKUP_IMG"; then
+                  cp /tmp/backup.env .env
+                  start_services "$BACKUP_IMAGE_TAG"
             
-                export IMAGE_TAG=$BACKUP_IMAGE_TAG
-                docker-compose up -d backend --no-build
-                sleep 15
-            
-                if curl -f -m 5 http://localhost:8080/actuator/health >/dev/null 2>&1; then
-                  echo "✅ 롤백 성공"
+                  if health_check; then
+                    echo "✅ 롤백 성공!"
+                  else
+                    echo "❌ 롤백 실패"
+                  fi
                 else
-                  echo "❌ 롤백 실패"
+                  echo "❌ 백업 이미지 사용 불가"
                 fi
               else
-                echo "❌ 백업 파일 없음"
+                echo "⚠️ 백업 없음, 수동 개입 필요"
               fi
             
               rm -f /tmp/backup*.env
@@ -258,10 +241,10 @@ jobs:
       - name: Verify Load Balancer
         run: |
           echo "🔍 로드밸런서 확인 중..."
-          
+
           SUCCESS_COUNT=0
           TOTAL_CHECKS=10
-          
+
           for i in $(seq 1 $TOTAL_CHECKS); do
             response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 https://${{ secrets.LOAD_BALANCER_IP }}/actuator/health || echo "000")
             if [ "$response" = "200" ]; then
@@ -269,9 +252,9 @@ jobs:
             fi
             sleep 3
           done
-          
+
           SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_CHECKS))
-          
+
           if [ $SUCCESS_RATE -ge 80 ]; then
             echo "🎉 배포 검증 성공 (성공률: $SUCCESS_RATE%)"
           else

@@ -1,56 +1,31 @@
 package com.lunchchat.domain.match.service;
 
 import com.lunchchat.domain.member.entity.Member;
-import com.lunchchat.domain.notification.dto.FcmSendDto;
-import com.lunchchat.domain.notification.service.FcmService;
+import com.lunchchat.domain.notification.service.NotificationCommandService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchNotificationServiceImpl implements MatchNotificationService {
 
-    private final FcmService fcmService;
+    private final NotificationCommandService notificationCommandService;
 
     @Override
     public void sendMatchRequestNotification(Member fromMember, Member toMember) {
-        String title = "새로운 매칭 요청";
-        String body = fromMember.getMembername() + "님이 매칭을 요청했습니다.";
-        Map<String, String> data = Map.of(
-                "type", "MATCH_REQUEST",
-                "senderId", String.valueOf(fromMember.getId()),
-                "senderName", fromMember.getMembername()
-        );
+        notificationCommandService.createMatchRequestNotification(toMember, fromMember);
 
-        FcmSendDto fcmSendDto = FcmSendDto.builder()
-                .userId(toMember.getId())
-                .title(title)
-                .body(body)
-                .data(data)
-                .build();
-
-        fcmService.sendNotification(fcmSendDto);
+        log.info("매칭 요청 알림 완료 - 요청자: {} → 수신자: {}",
+                fromMember.getId(), toMember.getId());
     }
 
     @Override
     public void sendMatchAcceptNotification(Member fromMember, Member toMember) {
-        String title = "매칭 수락";
-        String body = toMember.getMembername() + "님이 매칭을 수락했습니다.";
-        Map<String, String> data = Map.of(
-                "type", "MATCH_ACCEPT",
-                "accepterId", String.valueOf(toMember.getId()),
-                "accepterName", toMember.getMembername()
-        );
+        notificationCommandService.createMatchAcceptedNotification(fromMember, toMember);
 
-        FcmSendDto fcmSendDto = FcmSendDto.builder()
-                .userId(fromMember.getId())
-                .title(title)
-                .body(body)
-                .data(data)
-                .build();
-
-        fcmService.sendNotification(fcmSendDto);
+        log.info("매칭 수락 알림 완료 - 수락자: {} → 요청자: {}",
+                toMember.getId(), fromMember.getId());
     }
 }

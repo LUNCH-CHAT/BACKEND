@@ -5,6 +5,7 @@ import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_interests.repository.InterestRepository;
+import com.lunchchat.domain.notification.service.FcmTokenCacheService;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import java.util.HashSet;
 import java.util.List;
@@ -19,12 +20,15 @@ public class MemberCommandServiceImpl implements MemberCommandService {
 
     private final MemberRepository memberRepository;
     private final InterestRepository interestRepository;
+    private final FcmTokenCacheService fcmTokenCacheService;
 
     @Override
     public void updateFcmToken(Long memberId, String fcmToken) {
         Member member = memberRepository.findById(memberId)
             .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
         member.updateFcmToken(fcmToken);
+
+        fcmTokenCacheService.updateFcmTokenCache(memberId, fcmToken);
     }
 
     @Override
