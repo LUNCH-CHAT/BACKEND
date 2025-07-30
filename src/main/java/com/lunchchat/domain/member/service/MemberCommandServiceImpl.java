@@ -18,11 +18,11 @@ public class MemberCommandServiceImpl implements MemberCommandService {
     private final FcmTokenCacheService fcmTokenCacheService;
 
     @Override
-    public void updateFcmToken(Long memberId, String fcmToken) {
-        Member member = memberRepository.findById(memberId)
+    public void updateFcmToken(String email, String fcmToken) {
+        Member member = memberRepository.findByEmail(email)
             .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
         member.updateFcmToken(fcmToken);
 
-        fcmTokenCacheService.updateFcmTokenCache(memberId, fcmToken);
+        fcmTokenCacheService.updateFcmTokenCache(member.getId(), fcmToken);
     }
 }

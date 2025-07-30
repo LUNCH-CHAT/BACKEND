@@ -29,11 +29,12 @@ public class MemberController {
     private final MemberCommandService memberCommandService;
     private final MemberRepository memberRepository;
 
-    @PatchMapping("/{memberId}/fcm-token")
+    @PatchMapping("/fcm-token")
     @Operation(summary = "FCM 토큰 업데이트", description = "사용자의 FCM 토큰을 업데이트합니다.")
-    public ApiResponse<SuccessStatus> updateFcmToken(@PathVariable Long memberId,
-        @RequestBody FcmUpdateRequestDto request) {
-        memberCommandService.updateFcmToken(memberId, request.getFcmToken());
+    public ApiResponse<SuccessStatus> updateFcmToken(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody FcmUpdateRequestDto request) {
+        memberCommandService.updateFcmToken(userDetails.getUsername(), request.getFcmToken());
         return ApiResponse.of(SuccessStatus.FCM_TOKEN_UPDATE_SUCCESS, null);
     }
 
