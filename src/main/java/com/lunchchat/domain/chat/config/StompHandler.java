@@ -52,31 +52,31 @@ public class StompHandler implements ChannelInterceptor {
             log.info("stomp 연결 성공");
         }
 
-//        if (StompCommand.SUBSCRIBE.equals(command)) {
-//            String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
-//
-//            if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
-//                log.warn("SUBSCRIBE 요청에 JWT 누락 또는 오류");
-//                throw new AccessDeniedException("JWT 누락 또는 오류");
-//            }
-//
-//            token = token.substring(7);
-//            if (!jwtUtil.validateToken(token)) {
-//                throw new AccessDeniedException("유효하지 않은 JWT");
-//            }
-//
-//            Claims claims = jwtUtil.parseJwt(token);
-//            String email = claims.get("email", String.class);
-//            String destination = accessor.getDestination();  // 예: /sub/chat/room/3
-//
-//            Long chatRoomId = extractRoomIdFromDestination(destination);
-//            if (!chatRoomService.hasAccess(email, chatRoomId)) {
-//                log.warn("채팅방 접근 권한 없음 - userEmail: {}, roomId: {}", email, chatRoomId);
-//                throw new AccessDeniedException("채팅방 접근 권한 없음");
-//            }
-//
-//            log.info("채팅방 구독 허용 - userEmail: {}, roomId: {}", email, chatRoomId);
-//        }
+        if (StompCommand.SUBSCRIBE.equals(command)) {
+            String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
+
+            if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
+                log.warn("SUBSCRIBE 요청에 JWT 누락 또는 오류");
+                throw new AccessDeniedException("JWT 누락 또는 오류");
+            }
+
+            token = token.substring(7);
+            if (!jwtUtil.validateToken(token)) {
+                throw new AccessDeniedException("유효하지 않은 JWT");
+            }
+
+            Claims claims = jwtUtil.parseJwt(token);
+            String email = claims.get("email", String.class);
+            String destination = accessor.getDestination();  // 예: /sub/chat/room/3
+
+            Long chatRoomId = extractRoomIdFromDestination(destination);
+            if (!chatRoomService.hasAccess(email, chatRoomId)) {
+                log.warn("채팅방 접근 권한 없음 - userEmail: {}, roomId: {}", email, chatRoomId);
+                throw new AccessDeniedException("채팅방 접근 권한 없음");
+            }
+
+            log.info("채팅방 구독 허용 - userEmail: {}, roomId: {}", email, chatRoomId);
+        }
 
         if (StompCommand.DISCONNECT.equals(command)) {
             // 연결 해제 시 로그
