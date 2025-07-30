@@ -15,13 +15,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,7 +54,7 @@ public class MemberController {
     @GetMapping("/filters")
     @Operation(summary = "프로필 필터 조회")
     public ApiResponse<List<MemberResponseDTO.MemberRecommendationResponseDTO>> filterMembers(
-            @Valid MemberFilterRequestDTO request,
+            @Valid @ModelAttribute MemberFilterRequestDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         Long currentMemberId = userDetails.getId();
