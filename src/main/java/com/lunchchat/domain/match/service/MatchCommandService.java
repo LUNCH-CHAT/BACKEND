@@ -3,6 +3,6 @@ package com.lunchchat.domain.match.service;
 import com.lunchchat.domain.match.entity.Matches;
 
 public interface MatchCommandService {
-  Matches requestMatch(Long memberId, Long toMemberId);
+  Matches requestMatch(String senderEmail, Long toMemberId);
   void acceptMatch(Long matchId, Long memberId);
 }

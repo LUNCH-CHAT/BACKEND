@@ -26,25 +26,25 @@ public class MatchCommandServiceImpl implements MatchCommandService {
 
     @Override
     @Transactional
-    public Matches requestMatch(Long memberId, Long toMemberId) {
-        if (memberId.equals(toMemberId)) {
+    public Matches requestMatch(String senderEmail, Long toMemberId) {
+        Member fromMember = memberRepository.findByEmail(senderEmail)
+            .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
+
+        if (fromMember.getId().equals(toMemberId)) {
             throw new MatchException(ErrorStatus.SELF_MATCH_REQUEST);
         }
 
-        Optional<Matches> existingMatch = matchRepository.findActiveMatchBetween(memberId,
+        Optional<Matches> existingMatch = matchRepository.findActiveMatchBetween(fromMember.getId(),
             toMemberId);
         if (existingMatch.isPresent()) {
             throw new MatchException(ErrorStatus.ALREADY_MATCHED);
         }
 
-        Member fromMember = memberRepository.findById(memberId)
-            .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
-
         Member toMember = memberRepository.findById(toMemberId)
             .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
 
         Matches newMatch = MatchConverter.toMatchEntity(fromMember, toMember);
-        userStatisticsCommandService.incrementRequestedCount(memberId);
+        userStatisticsCommandService.incrementRequestedCount(fromMember.getId());
         userStatisticsCommandService.incrementReceivedCount(toMemberId);
 
         matchNotificationService.sendMatchRequestNotification(fromMember, toMember);
