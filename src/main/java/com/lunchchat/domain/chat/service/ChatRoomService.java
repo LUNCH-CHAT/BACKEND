@@ -109,6 +109,7 @@ public class ChatRoomService {
 
             //상대방 정보
             Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+            String department = friend.getDepartment().getName();
             String friendName = friend.getMembername();
 
             //안 읽은 메시지 수
@@ -117,6 +118,7 @@ public class ChatRoomService {
             result.add(new ChatRoomCardRes(
                     room.getId(),
                     friendName,
+                    department,
                     lastMessage.getContent(),
                     lastMessage.getCreatedAt(),
                     unreadCount
