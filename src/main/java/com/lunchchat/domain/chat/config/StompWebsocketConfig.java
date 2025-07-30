@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 //WebSocket 구성
 //클라이언트가 웹소켓을 연결하기 위한 엔드포인트와 핸들러를 등록
-public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
+public class StompWebsocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompHandler stompHandler;
 
