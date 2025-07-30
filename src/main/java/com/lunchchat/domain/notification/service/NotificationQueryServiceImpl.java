@@ -20,9 +20,9 @@ public class NotificationQueryServiceImpl implements NotificationQueryService {
     private final NotificationRepository notificationRepository;
     
     @Override
-    public List<NotificationResponseDTO> getNotifications(Long memberId) {
-        List<Notification> notifications = notificationRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
-        
+    public List<NotificationResponseDTO> getNotifications(String email) {
+        List<Notification> notifications = notificationRepository.findByUserEmailOrderByCreatedAtDesc(email);
+
         return notifications.stream()
                 .map(NotificationResponseDTO::new)
                 .collect(Collectors.toList());

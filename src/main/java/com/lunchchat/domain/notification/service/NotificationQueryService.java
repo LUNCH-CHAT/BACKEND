@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface NotificationQueryService {
     
-    List<NotificationResponseDTO> getNotifications(Long memberId);
+    List<NotificationResponseDTO> getNotifications(String email);
 }
