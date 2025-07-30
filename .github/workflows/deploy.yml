@@ -235,23 +235,29 @@ jobs:
   verify:
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    if: success()
+    timeout-minutes: 10
 
     steps:
-      - name: Verify deployment
+      - name: Verify Load Balancer
         run: |
-          success=0
-          for i in {1..5}; do
-            if curl -sf -m 8 https://${{ secrets.LOAD_BALANCER_IP }}/actuator/health >/dev/null; then
-              ((success++))
+          echo "🔍 로드밸런서 확인 중..."
+
+          SUCCESS_COUNT=0
+          TOTAL_CHECKS=10
+
+          for i in $(seq 1 $TOTAL_CHECKS); do
+            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 https://${{ secrets.LOAD_BALANCER_IP }}/actuator/health || echo "000")
+            if [ "$response" = "200" ]; then
+              SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
             fi
             sleep 3
           done
-          
-          if [ $success -ge 3 ]; then
-            echo "🎯 배포 검증 성공 ($success/5)"
+
+          SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_CHECKS))
+
+          if [ $SUCCESS_RATE -ge 80 ]; then
+            echo "🎉 배포 검증 성공 (성공률: $SUCCESS_RATE%)"
           else
-            echo "❌ 배포 검증 실패 ($success/5)"
+            echo "❌ 배포 검증 실패 (성공률: $SUCCESS_RATE%)"
             exit 1
           fi
