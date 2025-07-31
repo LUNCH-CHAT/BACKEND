@@ -2,74 +2,50 @@ package com.lunchchat.domain.match.dto;
 
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.member.entity.enums.InterestType;
-import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class MatchResponseDto {
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MatchListDto {
-        private Long id;
-        private LocalDateTime createdAt;
-        private MatchedUserDto matchedUser;
-    }
+    public record MatchListDto(
+        Long id,
+        LocalDateTime createdAt,
+        MatchedUserDto matchedUser
+    ) {}
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MatchedUserDto {
-        private Long id;
-        private String memberName;
-        private String studentNo;
-        private String department;
-        private String profileImageUrl;
-        private List<KeywordDto> userKeywords;
-        private List<InterestDto> userInterests;
-    }
+    public record MatchedUserDto(
+        Long id,
+        String memberName,
+        String studentNo,
+        String department,
+        String profileImageUrl,
+        List<KeywordDto> userKeywords,
+        List<InterestDto> userInterests
+    ) {}
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MatchListPageDto {
-        private List<MatchListDto> matchList;
-        private Integer listSize;
-        private Integer totalPage;
-        private Long totalElements;
-        private Boolean isFirst;
-        private Boolean isLast;
-    }
+    public record MatchListPageDto(
+        List<MatchListDto> matchList,
+        Integer listSize,
+        Integer totalPage,
+        Long totalElements,
+        Boolean isFirst,
+        Boolean hasNext
+    ) {}
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class KeywordDto {
-        private Long id;
-        private String keywordName;
-    }
+    public record KeywordDto(
+        Long id,
+        String keywordName
+    ) {}
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class InterestDto {
-        private Long id;
-        private InterestType interestName;
-    }
+    public record InterestDto(
+        Long id,
+        InterestType interestName
+    ) {}
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class MatchResultDto {
-        private Long id;
-        private MatchStatus status;
-        private LocalDateTime createdAt;
-    }
+    public record MatchResultDto(
+        Long id,
+        MatchStatus status,
+        LocalDateTime createdAt
+    ) {}
 }
