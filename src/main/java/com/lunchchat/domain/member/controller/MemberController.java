@@ -93,4 +93,3 @@ public class MemberController {
         return ApiResponse.onSuccess(SuccessStatus.INTERESTS_UPDATE_SUCCESS);
     }
 }
-

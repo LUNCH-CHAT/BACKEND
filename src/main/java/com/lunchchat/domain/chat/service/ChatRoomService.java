@@ -1,7 +1,7 @@
 package com.lunchchat.domain.chat.service;
 
-import com.lunchchat.domain.chat.chat_message.entity.ChatMessage;
-import com.lunchchat.domain.chat.chat_room.entity.ChatRoom;
+import com.lunchchat.domain.chat.entity.ChatMessage;
+import com.lunchchat.domain.chat.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.request.CreateChatRoomReq;
 import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
@@ -70,7 +70,7 @@ public class ChatRoomService {
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
         // 채팅방에 속한 사용자만 퇴장 가능
-        if (!chatRoom.getStarter().equals(member) && !chatRoom.getFriend().equals(member)) {
+        if (!chatRoom.getStarter().getId().equals(userId) && !chatRoom.getFriend().getId().equals(userId)) {
             throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
@@ -98,8 +98,8 @@ public class ChatRoomService {
 
         for (ChatRoom room : rooms) {
             // 나간 채팅방은 제외
-            if ((room.getStarter().equals(user) && room.isExitedByStarter()) ||
-                    (room.getFriend().equals(user) && room.isExitedByFriend())) {
+            if ((room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
+                    (room.getFriend().getId().equals(userId) && room.isExitedByFriend())) {
                 continue;
             }
 
@@ -109,6 +109,7 @@ public class ChatRoomService {
 
             //상대방 정보
             Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+            String department = friend.getDepartment().getName();
             String friendName = friend.getMembername();
 
             //안 읽은 메시지 수
@@ -117,6 +118,7 @@ public class ChatRoomService {
             result.add(new ChatRoomCardRes(
                     room.getId(),
                     friendName,
+                    department,
                     lastMessage.getContent(),
                     lastMessage.getCreatedAt(),
                     unreadCount
@@ -127,7 +129,7 @@ public class ChatRoomService {
     }
 
     // 채팅방 내 채팅 메시지 조회(단일 채팅방 조회)
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ChatMessageRes> getChatMessages(Long roomId, Long userId) {
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
@@ -136,22 +138,44 @@ public class ChatRoomService {
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
         // 해당 사용자가 채팅방에 속해있는지 확인
-        if (!room.getStarter().equals(user) && !room.getFriend().equals(user)) {
+        if (!room.getStarter().getId().equals(userId) && !room.getFriend().getId().equals(userId)) {
             throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
         //채팅방 퇴장 여부 확인
+        if ((room.isExitedByStarter() && room.getStarter().getId().equals(userId)) ||
+                (room.isExitedByFriend() && room.getFriend().getId().equals(userId))) {
+            throw new ChatException(ErrorStatus.CHATROOM_EXITED);
+        }
 
         List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomOrderBySentAtAsc(room);
 
         messages.stream()
-                .filter(msg -> !msg.getSender().equals(user)) // 상대방이 보낸 메시지
+                .filter(msg -> !msg.getSender().getId().equals(userId)) // 상대방이 보낸 메시지
                 .filter(msg -> !msg.getIsRead())              // 아직 읽지 않은 메시지
                 .forEach(msg -> msg.markAsRead());            // 읽음 처리
 
         return messages.stream()
                 .map(ChatMessageRes::from)
                 .toList();
+    }
+
+    //채팅방 접근 권한 확인(채팅방에 속한 사용자인지)
+    @Transactional(readOnly = true)
+    public boolean hasAccess(String email, Long chatRoomId) {
+        ChatRoom room = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new ChatException(ErrorStatus.CHATROOM_NOT_FOUND));
+
+        // 사용자가 채팅방의 starter나 friend인지 확인
+        boolean isMember = room.getStarter().getEmail().equals(email)
+                || room.getFriend().getEmail().equals(email);
+
+        // 퇴장한 경우 접근 불가
+        boolean hasExited =
+                (room.getStarter().getEmail().equals(email) && room.isExitedByStarter()) ||
+                        (room.getFriend().getEmail().equals(email) && room.isExitedByFriend());
+
+        return isMember && !hasExited;
     }
 
 }
