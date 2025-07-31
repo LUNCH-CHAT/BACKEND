@@ -44,8 +44,8 @@ public class MatchCommandServiceImpl implements MatchCommandService {
             .orElseThrow(() -> new MemberHandler(ErrorStatus.USER_NOT_FOUND));
 
         Matches newMatch = MatchConverter.toMatchEntity(fromMember, toMember);
-        userStatisticsCommandService.incrementRequestedCount(fromMember.getId());
-        userStatisticsCommandService.incrementReceivedCount(toMemberId);
+        userStatisticsCommandService.incrementRequestedCount(fromMember);
+        userStatisticsCommandService.incrementReceivedCount(toMember);
 
         matchNotificationService.sendMatchRequestNotification(fromMember, toMember);
 
@@ -71,8 +71,8 @@ public class MatchCommandServiceImpl implements MatchCommandService {
 
         match.updateStatus(MatchStatus.ACCEPTED);
 
-        userStatisticsCommandService.incrementAcceptedCount(from.getId());
-        userStatisticsCommandService.incrementAcceptedCount(to.getId());
+        userStatisticsCommandService.incrementAcceptedCount(from);
+        userStatisticsCommandService.incrementAcceptedCount(to);
 
         matchNotificationService.sendMatchAcceptNotification(from, to);
 
