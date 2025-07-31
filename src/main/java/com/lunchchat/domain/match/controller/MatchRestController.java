@@ -3,7 +3,6 @@ package com.lunchchat.domain.match.controller;
 import com.lunchchat.domain.match.converter.MatchConverter;
 import com.lunchchat.domain.match.dto.MatchRequestDto;
 import com.lunchchat.domain.match.dto.MatchResponseDto;
-import com.lunchchat.domain.match.dto.MatchResponseDto.MatchListDto;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.service.MatchCommandService;
@@ -12,7 +11,6 @@ import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,12 +25,13 @@ public class MatchRestController {
 
   @GetMapping
   @Operation(summary = "매치 목록 조회", description = "사용자의 매치 목록을 상태에 따라 조회합니다.")
-  public ApiResponse<List<MatchListDto>> getMatchList(
+  public ApiResponse<MatchResponseDto.MatchListPageDto> getMatchList(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @RequestParam(name = "status") MatchStatusType status) {
+      @RequestParam(name = "status") MatchStatusType status,
+      @RequestParam(name = "page", defaultValue = "0") int page) {
 
     String email = customUserDetails.getUsername();
-    return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, email));
+    return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, email, page));
   }
 
   @PostMapping

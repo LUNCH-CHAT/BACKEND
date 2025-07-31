@@ -1,7 +1,7 @@
 package com.lunchchat.domain.match.service;
 
 import com.lunchchat.domain.match.converter.MatchConverter;
-import com.lunchchat.domain.match.dto.MatchResponseDto.MatchListDto;
+import com.lunchchat.domain.match.dto.MatchResponseDto;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
@@ -10,9 +10,9 @@ import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.MatchException;
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +23,18 @@ public class MatchQueryServiceImpl implements MatchQueryService {
   private final MemberRepository memberRepository;
 
   @Override
-  public List<Matches> getMatchesByStatus(MatchStatusType status, Long memberId) {
-    List<Matches> matches;
+  public Page<Matches> getMatchesByStatus(MatchStatusType status, Long memberId, PageRequest pageable) {
+    Page<Matches> matches;
 
     switch (status) {
       case ACCEPTED ->
-          matches = matchRepository.findByStatusAndMemberId(MatchStatus.ACCEPTED, memberId);
+          matches = matchRepository.findByStatusAndMemberId(MatchStatus.ACCEPTED, memberId, pageable);
 
       case REQUESTED ->
-          matches = matchRepository.findByStatusAndFromMemberId(MatchStatus.REQUESTED, memberId);
+          matches = matchRepository.findByStatusAndFromMemberId(MatchStatus.REQUESTED, memberId, pageable);
 
       case RECEIVED ->
-          matches = matchRepository.findByStatusAndToMemberId(MatchStatus.REQUESTED, memberId);
+          matches = matchRepository.findByStatusAndToMemberId(MatchStatus.REQUESTED, memberId, pageable);
 
       default -> throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
     }
@@ -44,25 +44,13 @@ public class MatchQueryServiceImpl implements MatchQueryService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<MatchListDto> getMatchListDtosByStatus(MatchStatusType status, String email) {
+  public MatchResponseDto.MatchListPageDto getMatchListDtosByStatus(MatchStatusType status, String email, int page) {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new MatchException(ErrorStatus.USER_NOT_FOUND));
 
-    List<Matches> matchList = getMatchesByStatus(status, member.getId());
+    PageRequest pageable = PageRequest.of(page, 10);
+    Page<Matches> matchPage = getMatchesByStatus(status, member.getId(), pageable);
 
-    return matchList.stream()
-        .map(match -> {
-          Member opponent = getOpponent(member.getId(), match);
-          return MatchConverter.toMatchListDto(match, opponent);
-        })
-        .collect(Collectors.toList());
-  }
-
-  private Member getOpponent(Long currentUserId, Matches match) {
-    if (match.getFromMember().getId().equals(currentUserId)) {
-      return match.getToMember();
-    } else {
-      return match.getFromMember();
-    }
+    return MatchConverter.toMatchListPageDto(matchPage, member.getId());
   }
 }

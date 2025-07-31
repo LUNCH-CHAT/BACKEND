@@ -2,16 +2,17 @@ package com.lunchchat.domain.match.repository;
 
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
-import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface MatchRepository extends JpaRepository<Matches, Long> {
-    List<Matches> findByStatusAndFromMemberId(MatchStatus status, Long fromMemberId);
+    Page<Matches> findByStatusAndFromMemberId(MatchStatus status, Long fromMemberId, Pageable pageable);
 
-    List<Matches> findByStatusAndToMemberId(MatchStatus status, Long toMemberId);
+    Page<Matches> findByStatusAndToMemberId(MatchStatus status, Long toMemberId, Pageable pageable);
 
     @Query("""
         SELECT m FROM Matches m
@@ -19,7 +20,7 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
         AND (m.fromMember.id = :memberId OR m.toMember.id = :memberId)
         ORDER BY m.createdAt DESC
         """)
-    List<Matches> findByStatusAndMemberId(@Param("status") MatchStatus status, @Param("memberId") Long memberId);
+    Page<Matches> findByStatusAndMemberId(@Param("status") MatchStatus status, @Param("memberId") Long memberId, Pageable pageable);
 
     @Query("""
     SELECT m FROM Matches m

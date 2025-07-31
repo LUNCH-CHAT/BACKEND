@@ -36,6 +36,19 @@ public class MatchResponseDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class MatchListPageDto {
+        private List<MatchListDto> matchList;
+        private Integer listSize;
+        private Integer totalPage;
+        private Long totalElements;
+        private Boolean isFirst;
+        private Boolean isLast;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class KeywordDto {
         private Long id;
         private String keywordName;

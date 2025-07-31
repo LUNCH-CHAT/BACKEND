@@ -1,6 +1,8 @@
 package com.lunchchat.domain.match.converter;
 
 import com.lunchchat.domain.match.dto.MatchResponseDto;
+import com.lunchchat.domain.match.dto.MatchResponseDto.MatchListDto;
+import com.lunchchat.domain.match.dto.MatchResponseDto.MatchListPageDto;
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.member.entity.Member;
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
 
 public class MatchConverter {
 
@@ -22,7 +25,25 @@ public class MatchConverter {
         .build();
   }
 
-  public static MatchResponseDto.MatchedUserDto toMatchedUserDto(Member member) {
+  public static MatchResponseDto.MatchListPageDto toMatchListPageDto(Page<Matches> matchPage, Long currentUserId) {
+    List<MatchListDto> matchList = matchPage.stream()
+        .map(match -> {
+          Member opponent = getOpponent(currentUserId, match);
+          return toMatchListDto(match, opponent);
+        })
+        .collect(Collectors.toList());
+
+    return MatchListPageDto.builder()
+        .matchList(matchList)
+        .isFirst(matchPage.isFirst())
+        .isLast(matchPage.isLast())
+        .totalPage(matchPage.getTotalPages())
+        .totalElements(matchPage.getTotalElements())
+        .listSize(matchList.size())
+        .build();
+  }
+
+  private static MatchResponseDto.MatchedUserDto toMatchedUserDto(Member member) {
     return MatchResponseDto.MatchedUserDto.builder()
         .id(member.getId())
         .memberName(member.getMembername())
@@ -32,6 +53,12 @@ public class MatchConverter {
         .userKeywords(toKeywordDtoList(member.getUserKeywords()))
         .userInterests(toInterestDtoList(member.getInterests()))
         .build();
+  }
+
+  private static Member getOpponent(Long currentUserId, Matches match) {
+    return match.getFromMember().getId().equals(currentUserId)
+        ? match.getToMember()
+        : match.getFromMember();
   }
 
   private static List<MatchResponseDto.KeywordDto> toKeywordDtoList(List<UserKeyword> keywords) {
