@@ -5,18 +5,15 @@ import com.lunchchat.domain.user_interests.entity.Interest;
 import java.util.List;
 
 public class UserInterestConverter {
-  public static UserInterestResponseDTO.UserInterestListDTO toUserInterestPreviewDTO(
-      List<Interest> interests) {
+
+  public static UserInterestResponseDTO.UserInterestListDTO toUserInterestPreviewDTO(List<Interest> interests) {
     List<UserInterestResponseDTO.UserInterestPreviewDTO> previewList = interests.stream()
-        .map(interest -> UserInterestResponseDTO.UserInterestPreviewDTO.builder()
-            .id(interest.getId())
-            .interestType(interest.getType())
-            .build())
+        .map(interest -> new UserInterestResponseDTO.UserInterestPreviewDTO(
+            interest.getId(),
+            interest.getType()))
         .toList();
 
-    return UserInterestResponseDTO.UserInterestListDTO.builder()
-        .interests(previewList)
-        .build();
+    return new UserInterestResponseDTO.UserInterestListDTO(previewList);
   }
 
 }
