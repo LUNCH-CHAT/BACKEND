@@ -1,202 +1,46 @@
-language: ko
-chat:
-  auto_reply: false
-
-# 기본 리뷰 설정
 reviews:
-  profile: chill
-  request_changes_workflow: false
   high_level_summary: true
   review_status: true
-  collapse_empty_files: true
   auto_review:
     enabled: true
-    ignore_title_keywords:
-      - "WIP"
-      - "DO NOT MERGE"
-      - "DRAFT"
-      - "작업중"
-      - "진행중"
     drafts: false
     base_branches:
       - main
-      - master
-      - develop
+      - dev
 
-auto_summarize:
-  enabled: true
+path_instructions: [ ]
 
-# 프로젝트 구조별 검토 규칙
-path_instructions:
-  - path: "src/main/java/com/lunchchat/domain/member/**"
-    instructions: |
-      회원 도메인 검토 시 중점사항:
-      - 개인정보 보호 및 보안 검증
-      - 로그인 타입별 처리 로직 일관성
-      - 대학/학과 정보 연관관계 최적화
-
-  - path: "src/main/java/com/lunchchat/domain/chat_*/**"
-    instructions: |
-      채팅 관련 도메인 검토 시 중점사항:
-      - 메시지 처리 성능 및 동시성 이슈
-      - 실시간 통신 최적화 방안
-      - Redis 캐싱 전략 적절성
-
-  - path: "src/main/java/com/lunchchat/domain/match/**"
-    instructions: |
-      매칭 시스템 검토 시 중점사항:
-      - 매칭 알고리즘 효율성
-      - 동시 매칭 요청 처리
-      - 매칭 결과 데이터 일관성
-
-  - path: "src/main/java/com/lunchchat/global/apiPayLoad/**"
-    instructions: |
-      API 응답 구조 검토 시 중점사항:
-      - 에러 코드 체계 일관성
-      - 응답 형식 표준화 준수
-      - 예외 처리 완전성
-
-  - path: "src/main/java/com/lunchchat/global/config/**"
-    instructions: |
-      설정 클래스 검토 시 중점사항:
-      - Spring Boot 3.x 모범 사례 준수
-      - 보안 설정 강화 방안
-      - 성능 최적화 설정
-
-  - path: "src/main/resources/application*.yml"
-    instructions: |
-      설정 파일 검토 시 중점사항:
-      - 민감정보 외부화 확인
-      - JPA/Hibernate 설정 최적화
-      - Redis 연결 설정 검증
-
-  - path: "**.java"
-    instructions: |
-      Java 코드 전반적 검토사항:
-      - Lombok 적절한 활용
-      - Null Safety 보장
-      - Exception 처리 일관성
-      - 성능 최적화 기회
-
-# 무시할 파일들
-ignore:
-  - "**.md"
-  - "**.txt"
-  - "**/build/**"
-  - "**/target/**"
-  - "**/.gradle/**"
-  - "gradle/wrapper/**"
-  - ".gitignore"
-  - "gradlew*"
-  - "Dockerfile"
-  - "docker-compose.yml"
-
-# 프로젝트 특화 규칙들
 rules:
-  # Java 17 + Spring Boot 3.x
   java:
     enabled: true
     version: 17
     prefer_lombok: true
-    check_null_safety: true
-    suggest_stream_api: true
-    check_exception_handling: true
 
   spring:
     enabled: true
     version: "3.5.3"
-    check_transaction_usage: true
-    validate_rest_controllers: true
-    check_security_configurations: true
-    validate_jpa_relationships: true
 
-  jpa:
-    enabled: true
-    check_lazy_loading: true
-    validate_entity_relationships: true
-    check_query_optimization: true
-    detect_n_plus_one: true
+focus_areas:
+  - 보안
+  - 성능
 
-  # 채팅 앱 특화
-  websocket:
-    enabled: true
-    check_message_handling: true
-
-  redis:
-    enabled: true
-    check_caching_strategy: true
-
-# 커스텀 체크 (핵심만)
 custom_checks:
   - name: "한국어 주석 권장"
-    pattern: "//.*[a-zA-Z]{15,}"
-    message: "긴 영어 주석은 한국어로 작성하는 것을 권장합니다."
+    pattern: "//.*[a-zA-Z]{20,}"
+    message: "긴 영어 주석은 가능하면 한국어로 작성해 주세요."
     severity: "suggestion"
 
-  - name: "TODO 관리"
-    pattern: "TODO|FIXME|HACK"
-    message: "TODO 항목은 GitHub 이슈로 등록하여 추적 관리하세요."
-    severity: "warning"
-
-  - name: "API 응답 형식 확인"
-    pattern: "return\\s+(?!ApiResponse)"
-    message: "API 응답은 ApiResponse.onSuccess() 또는 ApiResponse.onFailure()를 사용하세요."
-    severity: "warning"
-    files: "**/controller/**/*.java"
-
-# 리뷰 중점 영역
-focus_areas:
-  - security          # 보안
-  - performance       # 성능
-  - maintainability   # 유지보수성
-  - consistency       # 일관성
-
-# 성능 임계값
-performance_thresholds:
-  max_method_lines: 30
-  max_class_lines: 300
-  max_cyclomatic_complexity: 10
-  max_parameters: 5
-
-# 팀 협업에 유용한 기능들
-# 메트릭 및 리포팅 - 팀 전체 코드 품질 관리
+# 꼭 필요한 경우에만 리포트 관리
 metrics:
-  track_review_time: true              # 리뷰 소요 시간 추적
-  track_comment_resolution: true       # 코멘트 해결률 추적  
-  generate_reports: true               # 주간/월간 리포트 생성
-  track_code_quality_trends: true      # 코드 품질 트렌드 분석
+  generate_reports: false
 
-# 학습 모드 - 팀 전체 코드 일관성 향상
-learning:
-  enabled: true                        # 프로젝트 패턴 학습
-  track_patterns: true                 # 코딩 패턴 추적
-  suggest_improvements: true           # 팀 전체 개선사항 제안
-  domain_specific_learning: true       # 도메인별 학습
-
-# 알림 설정 - 팀 커뮤니케이션 개선
-notifications:
-  email:
-    enabled: true                      # 중요한 리뷰 알림
-  slack:
-    enabled: false                     # 필요시 Slack 연동 가능
-
-# 다이어그램 및 시각화 기능 🎯
+# 다이어그램
 diagrams:
   sequence_diagrams:
-    enabled: true                      # 시퀀스 다이어그램 자동 생성
-    auto_generate: true                # PR 생성 시 자동 포함
-    focus_on_interactions: true        # 객체 간 상호작용 중점 표시
-    include_async_flows: true          # 비동기 흐름 포함 (채팅앱 특화)
-  
-  code_graph_analysis:
-    enabled: true                      # 코드 그래프 분석
-    show_dependencies: true            # 의존성 관계 표시
-    track_file_relationships: true     # 파일 간 관계 추적
-    highlight_domain_boundaries: true  # 도메인 경계 강조
+    enabled: true
+    auto_generate: false    # 자동생성 비활성화(기본)
+    generate_on_complexity: 10   # 복잡도 10 이상 function/method에서만 생성
+    focus_on_interactions: true
 
-# 시각화 개선 설정
 visualization:
-  include_architecture_insights: true  # 아키텍처 인사이트 포함
-  show_data_flow: true                # 데이터 흐름 표시
-  highlight_critical_paths: true      # 중요한 경로 강조 (채팅, 매칭)
-  domain_focused_diagrams: true       # 도메인별 다이어그램 최적화
+  include_architecture_insights: false
