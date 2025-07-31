@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface MemberCommandService {
 
-    void updateFcmToken(Long memberId, String fcmToken);
+    void updateFcmToken(String email, String fcmToken);
     void updateInterests(String email, List<Long> interestIds);
 }

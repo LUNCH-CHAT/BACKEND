@@ -1,10 +1,8 @@
 package com.lunchchat.domain.notification.service;
 
-import com.lunchchat.domain.notification.dto.response.NotificationResponseDTO;
-
-import java.util.List;
+import com.lunchchat.domain.notification.dto.response.NotificationCursorResponseDTO;
 
 public interface NotificationQueryService {
     
-    List<NotificationResponseDTO> getNotifications(Long memberId);
+    NotificationCursorResponseDTO getNotificationsWithCursor(String email, Long lastNotificationId, int size);
 }
