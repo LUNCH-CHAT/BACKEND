@@ -79,9 +79,8 @@ public class MemberController {
 
     @GetMapping("/mypage")
     @Operation(summary = "마이페이지 조회", description = "마이페이지를 조회합니다.")
-    public ApiResponse<MemberResponseDTO.MyPageResponseDTO> getMyPageInfo(Member member) {
-        // TODO: 현재는 하드코딩된 memberId를 사용하고 있습니다. 추후 인증 시스템이 구현되면 수정 필요.
-        MemberResponseDTO.MyPageResponseDTO myPage = memberQueryService.getMyPage(1L);
+    public ApiResponse<MemberResponseDTO.MyPageResponseDTO> getMyPageInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        MemberResponseDTO.MyPageResponseDTO myPage = memberQueryService.getMyPage(userDetails.getUsername());
         return ApiResponse.onSuccess(myPage);
     }
 
