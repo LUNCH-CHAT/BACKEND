@@ -1,3 +1,5 @@
+language: ko
+
 reviews:
   high_level_summary: true
   review_status: true
