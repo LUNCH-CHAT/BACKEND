@@ -10,6 +10,7 @@ import com.lunchchat.domain.member.service.MemberCommandService;
 import com.lunchchat.domain.member.service.MemberQueryService;
 import com.lunchchat.domain.notification.dto.FcmUpdateRequestDto;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
+import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.code.status.SuccessStatus;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
@@ -67,16 +68,28 @@ public class MemberController {
 
     @GetMapping("/filters")
     @Operation(summary = "프로필 필터 조회")
-    public ApiResponse<List<MemberResponseDTO.MemberRecommendationResponseDTO>> filterMembers(
+    public ApiResponse<PaginatedResponse<MemberResponseDTO.MemberRecommendationResponseDTO>> filterMembers(
             @Valid @ModelAttribute MemberFilterRequestDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         String email = userDetails.getUsername();
-        List<MemberResponseDTO.MemberRecommendationResponseDTO> results =
+        PaginatedResponse<MemberResponseDTO.MemberRecommendationResponseDTO> results =
                 memberQueryService.getFilteredRecommendations(email, request);
 
         return ApiResponse.onSuccess(results);
     }
+
+    @GetMapping("/popular")
+    @Operation(summary = "인기 멤버 조회", description = "점수 기준으로 인기 멤버를 조회합니다.")
+    public ApiResponse<List<MemberResponseDTO.MemberRecommendationResponseDTO>> getPopularMembers(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String email = userDetails.getUsername();
+        Member viewer = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+        List<MemberResponseDTO.MemberRecommendationResponseDTO> response = memberQueryService.getPopularMembers(viewer.getId());
+        return ApiResponse.onSuccess(response);
+    }
+
 
     @GetMapping("/mypage")
     @Operation(summary = "마이페이지 조회", description = "마이페이지를 조회합니다.")

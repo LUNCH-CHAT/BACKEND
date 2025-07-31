@@ -3,6 +3,8 @@ package com.lunchchat.domain.match.repository;
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
 import java.util.Optional;
+
+import com.lunchchat.domain.member.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +15,10 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
     Page<Matches> findByStatusAndFromMemberId(MatchStatus status, Long fromMemberId, Pageable pageable);
 
     Page<Matches> findByStatusAndToMemberId(MatchStatus status, Long toMemberId, Pageable pageable);
+
+    int countByToMemberAndStatus(Member toMember, MatchStatus status);
+
+    int countByFromMemberAndStatus(Member fromMember, MatchStatus status);
 
     @Query("""
         SELECT m FROM Matches m
