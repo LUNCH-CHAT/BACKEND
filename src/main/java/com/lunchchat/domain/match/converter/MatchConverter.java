@@ -47,7 +47,7 @@ public class MatchConverter {
         member.getId(),
         member.getMembername(),
         member.getStudentNo(),
-        member.getDepartment().getName(),
+        member.getDepartment() != null ? member.getDepartment().getName() : null,
         member.getProfileImageUrl(),
         toKeywordDtoList(member.getUserKeywords()),
         toInterestDtoList(member.getInterests())
