@@ -1,7 +1,6 @@
 package com.lunchchat.domain.user_statistics.service;
 
 import com.lunchchat.domain.member.entity.Member;
-import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.user_statistics.converter.UserStatisticsConverter;
 import com.lunchchat.domain.user_statistics.entity.UserStatistics;
 import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserStatisticsCommandServiceImpl implements UserStatisticsCommandService {
   private final UserStatisticsRepository userStatisticsRepository;
-  private final MemberRepository memberRepository;
 
   private UserStatistics getOrCreateUserStatistics(Member member) {
     return userStatisticsRepository.findByMemberId(member.getId())
