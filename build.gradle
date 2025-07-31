@@ -14,6 +14,10 @@ java {
     }
 }
 
+configurations.all {
+    exclude group: 'commons-logging', module: 'commons-logging'
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -74,7 +78,7 @@ dependencies {
 
     // FCM
     implementation 'com.google.firebase:firebase-admin:9.1.1'
-    
+
     //Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
 

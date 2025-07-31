@@ -1,5 +1,6 @@
 package com.lunchchat.domain.member.controller;
 
+import com.lunchchat.domain.member.dto.MemberRequestDTO;
 import com.lunchchat.domain.member.dto.MemberFilterRequestDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.entity.Member;
@@ -13,11 +14,17 @@ import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.code.status.SuccessStatus;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import java.util.List;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -78,5 +85,11 @@ public class MemberController {
         return ApiResponse.onSuccess(myPage);
     }
 
+    @PatchMapping("me/tags")
+    @Operation(summary = "사용자 관심사 태그 업데이트", description = "사용자의 관심사 태그를 업데이트합니다.")
+    public ApiResponse<SuccessStatus> updateUserInterest(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid MemberRequestDTO.UpdateInterestDTO request) {
+        String email = userDetails.getUsername();
+        memberCommandService.updateInterests(email, request.getInterestIds());
+        return ApiResponse.onSuccess(SuccessStatus.INTERESTS_UPDATE_SUCCESS);
+    }
 }
-
