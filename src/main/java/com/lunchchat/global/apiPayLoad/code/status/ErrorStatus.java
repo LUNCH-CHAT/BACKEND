@@ -55,11 +55,16 @@ public enum ErrorStatus implements BaseErrorCode {
   INVALID_MATCH_ID(HttpStatus.BAD_REQUEST, "MATCH_400", "유효하지 않은 매칭 ID입니다."),
   MATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "MATCH_404", "매칭을 찾을 수 없습니다."),
 
+  // Interest Error
+  INTERESTS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "INTEREST_400", "관심사는 최대 3개까지만 선택할 수 있습니다."),
+  INTERESTS_NOT_FOUND(HttpStatus.NOT_FOUND, "INTEREST_404", "선택한 관심사를 찾을 수 없습니다."),
+
   // Chat Error
-  CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT404", "해당 채팅방이 존재하지 않습니다."),
-  CANNOT_CHAT_WITH_SELF(HttpStatus.BAD_REQUEST, "CHAT400", "자기 자신과는 채팅할 수 없습니다."),
-  UNAUTHORIZED_CHATROOM_ACCESS(HttpStatus.FORBIDDEN, "CHAT403", "해당 채팅방에 접근할 수 있는 사용자가 아닙니다."),
+  CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_404", "해당 채팅방이 존재하지 않습니다."),
+  CANNOT_CHAT_WITH_SELF(HttpStatus.BAD_REQUEST, "CHAT_400", "자기 자신과는 채팅할 수 없습니다."),
+  UNAUTHORIZED_CHATROOM_ACCESS(HttpStatus.FORBIDDEN, "CHAT_403", "해당 채팅방에 접근할 수 있는 사용자가 아닙니다."),
   NO_MESSAGES_IN_CHATROOM(HttpStatus.NOT_FOUND, "CHAT404_MSG", "해당 채팅방에 메시지가 존재하지 않습니다."),
+  CHATROOM_EXITED(HttpStatus.OK, "CHAT200_", "퇴장한 채팅방입니다."),
 
   // FCM Error
   FCM_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FCM500", "FCM 메시지 전송에 실패했습니다."),

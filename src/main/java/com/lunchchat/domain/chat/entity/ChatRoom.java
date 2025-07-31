@@ -1,4 +1,4 @@
-package com.lunchchat.domain.chat.chat_room.entity;
+package com.lunchchat.domain.chat.entity;
 
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.global.common.BaseEntity;
@@ -49,5 +49,9 @@ public class ChatRoom extends BaseEntity {
             this.isExitedByFriend = true;
         else
             throw new IllegalArgumentException("채팅방에 속한 사용자가 아닙니다. ");
+    }
+
+    public boolean isParticipant(Long userId) {
+        return starter.getId().equals(userId) || friend.getId().equals(userId);
     }
 }

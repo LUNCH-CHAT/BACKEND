@@ -1,6 +1,8 @@
 package com.lunchchat.domain.chat.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -8,9 +10,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 //WebSocket 구성
 //클라이언트가 웹소켓을 연결하기 위한 엔드포인트와 핸들러를 등록
-public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
+public class StompWebsocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final StompHandler stompHandler;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -34,4 +39,9 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/pub");
     }
 
+    //웹소켓 연결시 jwt 토큰 검증을 위한 STOMP 핸들러 등록
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(stompHandler); // STOMP 핸들러 등록
+    }
 }
