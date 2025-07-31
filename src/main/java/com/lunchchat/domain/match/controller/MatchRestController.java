@@ -49,10 +49,10 @@ public class MatchRestController {
   @PatchMapping("/{matchId}/accept")
   @Operation(summary = "매칭 수락", description = "특정 매칭 요청을 수락합니다. 수락 알림이 자동으로 전송됩니다.")
   public ApiResponse<Void> acceptMatch(
-          @Parameter(description = "매칭 ID", required = true) @PathVariable Long matchId,
-          @Parameter(description = "수락하는 사용자 ID", required = true) @RequestParam Long memberId) {
+          @AuthenticationPrincipal CustomUserDetails customUserDetails,
+          @Parameter(description = "매칭 ID", required = true) @PathVariable Long matchId) {
 
-    matchCommandService.acceptMatch(matchId, memberId);
+    matchCommandService.acceptMatch(matchId, customUserDetails.getUsername());
     
     return ApiResponse.onSuccess(null);
   }

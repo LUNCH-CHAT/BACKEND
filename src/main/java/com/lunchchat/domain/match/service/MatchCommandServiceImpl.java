@@ -54,7 +54,7 @@ public class MatchCommandServiceImpl implements MatchCommandService {
 
     @Override
     @Transactional
-    public void acceptMatch(Long matchId, Long memberId) {
+    public void acceptMatch(Long matchId, String memberEmail) {
         Matches match = matchRepository.findById(matchId)
             .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
 
@@ -65,7 +65,7 @@ public class MatchCommandServiceImpl implements MatchCommandService {
             throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
         }
 
-        if (!to.getId().equals(memberId)) {
+        if (!to.getEmail().equals(memberEmail)) {
             throw new MatchException(ErrorStatus.INVALID_MATCH_ID);
         }
 
