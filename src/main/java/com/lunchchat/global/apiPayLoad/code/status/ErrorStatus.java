@@ -55,6 +55,10 @@ public enum ErrorStatus implements BaseErrorCode {
   INVALID_MATCH_ID(HttpStatus.BAD_REQUEST, "MATCH_400", "유효하지 않은 매칭 ID입니다."),
   MATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "MATCH_404", "매칭을 찾을 수 없습니다."),
 
+  // Interest Error
+  INTERESTS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "INTEREST_400", "관심사는 최대 3개까지만 선택할 수 있습니다."),
+  INTERESTS_NOT_FOUND(HttpStatus.NOT_FOUND, "INTEREST_404", "선택한 관심사를 찾을 수 없습니다."),
+
   // Chat Error
   CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_404", "해당 채팅방이 존재하지 않습니다."),
   CANNOT_CHAT_WITH_SELF(HttpStatus.BAD_REQUEST, "CHAT_400", "자기 자신과는 채팅할 수 없습니다."),

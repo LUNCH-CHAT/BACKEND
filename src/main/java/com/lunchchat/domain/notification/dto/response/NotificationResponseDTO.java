@@ -13,7 +13,7 @@ public class NotificationResponseDTO {
     private String type;
     private String content;
     private Boolean isRead;
-    private String senderMembername; // nickname → membername
+    private String senderMembername;
     private String senderProfileImageUrl;
     
     @JsonFormat(pattern = "M/d HH:mm")
@@ -26,10 +26,9 @@ public class NotificationResponseDTO {
         this.isRead = notification.getIsRead();
         this.createdAt = notification.getCreatedAt();
         
-        // 발신자 정보
         if (notification.getSender() != null) {
-            this.senderMembername = notification.getSender().getMembername(); // nickname → membername
-            this.senderProfileImageUrl = "/api/files/default-profile.png"; // TODO: 실제 프로필 이미지 URL
+            this.senderMembername = notification.getSender().getMembername();
+            this.senderProfileImageUrl = "/api/files/default-profile.png";
         } else {
             this.senderMembername = "시스템";
             this.senderProfileImageUrl = "/api/files/default-profile.png";
