@@ -11,7 +11,9 @@ RUN ./gradlew build -x test --no-daemon --parallel
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UnlockExperimentalVMOptions -XX:+UseZGC"
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Seoul
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UnlockExperimentalVMOptions -XX:+UseZGC -Duser.timezone=Asia/Seoul"
 
 COPY --from=build /home/gradle/project/build/libs/*.jar app.jar
 
