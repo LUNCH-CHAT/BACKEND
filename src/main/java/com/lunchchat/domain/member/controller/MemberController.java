@@ -9,6 +9,7 @@ import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.member.service.MemberCommandService;
 import com.lunchchat.domain.member.service.MemberQueryService;
 import com.lunchchat.domain.notification.dto.FcmUpdateRequestDto;
+import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.code.status.SuccessStatus;
@@ -101,5 +102,14 @@ public class MemberController {
         String email = userDetails.getUsername();
         memberCommandService.updateKeywords(email, request);
         return ApiResponse.onSuccess(SuccessStatus.KEYWORDS_UPDATE_SUCCESS);
+    }
+
+    @GetMapping("/keywords")
+    @Operation(summary = "내 키워드 조회", description = "현재 로그인한 사용자의 키워드를 조회합니다.")
+    public ApiResponse<List<UserKeywordDTO>> getMyKeywords(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String email = userDetails.getUsername();
+        List<UserKeywordDTO> keywords = memberQueryService.getUserKeywords(email);
+        return ApiResponse.onSuccess(keywords);
     }
 }
