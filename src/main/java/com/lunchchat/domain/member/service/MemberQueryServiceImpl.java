@@ -78,6 +78,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         return memberConverter.toMemberDetailResponse(member, matchStatus);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MemberResponseDTO.MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId) {
         Member currentMember = memberRepository.findById(currentMemberId)
@@ -152,6 +153,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         return intersection.size();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public PaginatedResponse<MemberRecommendationResponseDTO> getFilteredRecommendations(String currentMemberEmail, MemberFilterRequestDTO req) {
         Member currentMember = memberRepository.findByEmail(currentMemberEmail)
@@ -225,6 +227,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         return true;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public List<MemberResponseDTO.MemberRecommendationResponseDTO> getPopularMembers(Long currentMemberId) {
 
