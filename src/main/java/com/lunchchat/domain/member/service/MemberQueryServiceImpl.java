@@ -13,6 +13,7 @@ import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberRecommendationRes
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MyPageResponseDTO;
 import com.lunchchat.domain.member.dto.MemberScoreWrapper;
 import com.lunchchat.domain.member.entity.Member;
+import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.time_table.entity.TimeTable;
@@ -20,6 +21,7 @@ import com.lunchchat.domain.time_table.service.TimeTableQueryService;
 import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_interests.repository.InterestRepository;
 import com.lunchchat.domain.user_keywords.repository.UserKeywordsRepository;
+import com.lunchchat.domain.user_statistics.entity.UserStatistics;
 import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.security.jwt.JwtTokenProvider;
@@ -200,33 +202,26 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         return true;
     }
 
-
-
     @Override
-    public MyPageResponseDTO getMyPage(Long memberId) {
-        return null;
-    }
+    @Transactional(readOnly = true)
+    public MemberResponseDTO.MyPageResponseDTO getMyPage(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-//
-//  @Override
-//  public MemberResponseDTO.MyPageResponseDTO getMyPage(Long memberId) {
-//    Member member = memberRepository.findById(memberId)
-//        .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
-//
-//    UserStatistics userStatistics = userStatisticsRepository.findByMemberId(memberId)
-//        .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
-//
-//    List<String> keywords = userKeywordsRepository.findTitlesByMemberId(memberId);
-//    List<String> tags = userInterestsRepository.findInterestNamesByMemberId(memberId);
-//
-//    return MemberConverter.toMyPageDto(
-//        member,
-//        userStatistics.getMatchCompletedCount(),
-//        userStatistics.getMatchRequestedCount(),
-//        userStatistics.getMatchReceivedCount(),
-//        keywords,
-//        tags
-//    );
-//  }
+        UserStatistics userStatistics = userStatisticsRepository.findByMemberId(member.getId())
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
+
+        List<String> keywords = userKeywordsRepository.findTitlesByMemberId(member.getId());
+        List<InterestType> tags = userInterestsRepository.findInterestTypesByMemberId(member.getId());
+
+        return MemberConverter.toMyPageDto(
+            member,
+            userStatistics.getMatchCompletedCount(),
+            userStatistics.getMatchRequestedCount(),
+            userStatistics.getMatchReceivedCount(),
+            keywords,
+            tags
+        );
+      }
 }
 
