@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -186,6 +187,7 @@ public class GoogleAuthService {
   }
 
   //회원가입
+  @Transactional
   public void signup(String email, GoogleUserDTO.SingUpRequest dto) {
 
     Member member = memberRepository.findByEmail(email)
