@@ -59,6 +59,10 @@ public enum ErrorStatus implements BaseErrorCode {
   INTERESTS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "INTEREST_400", "관심사는 최대 3개까지만 선택할 수 있습니다."),
   INTERESTS_NOT_FOUND(HttpStatus.NOT_FOUND, "INTEREST_404", "선택한 관심사를 찾을 수 없습니다."),
 
+  // Keyword Error
+  KEYWORDS_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "KEYWORD_400", "키워드는 3개여야 합니다."),
+  DUPLICATE_KEYWORD_TYPE(HttpStatus.BAD_REQUEST, "KEYWORD_400_DUPLICATE", "키워드 타입이 중복되었습니다."),
+
   // Chat Error
   CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_404", "해당 채팅방이 존재하지 않습니다."),
   CANNOT_CHAT_WITH_SELF(HttpStatus.BAD_REQUEST, "CHAT_400", "자기 자신과는 채팅할 수 없습니다."),

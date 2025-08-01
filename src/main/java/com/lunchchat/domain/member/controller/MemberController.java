@@ -85,11 +85,21 @@ public class MemberController {
         return ApiResponse.onSuccess(myPage);
     }
 
-    @PatchMapping("me/tags")
+    @PatchMapping("/me/tags")
     @Operation(summary = "사용자 관심사 태그 업데이트", description = "사용자의 관심사 태그를 업데이트합니다.")
     public ApiResponse<SuccessStatus> updateUserInterest(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid MemberRequestDTO.UpdateInterestDTO request) {
         String email = userDetails.getUsername();
         memberCommandService.updateInterests(email, request.getInterestIds());
         return ApiResponse.onSuccess(SuccessStatus.INTERESTS_UPDATE_SUCCESS);
+    }
+
+    @PatchMapping("/keywords")
+    @Operation(summary = "사용자 키워드 등록", description = "사용자의 키워드를 등록 또는 업데이트합니다.")
+    public ApiResponse<SuccessStatus> updateUserKeywords(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody @Valid MemberRequestDTO.UpdateKeywordListDTO request) {
+        String email = userDetails.getUsername();
+        memberCommandService.updateKeywords(email, request);
+        return ApiResponse.onSuccess(SuccessStatus.KEYWORDS_UPDATE_SUCCESS);
     }
 }
