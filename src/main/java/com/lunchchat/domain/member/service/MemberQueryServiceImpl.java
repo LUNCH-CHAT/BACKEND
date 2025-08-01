@@ -200,20 +200,21 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     }
 
     private boolean isFilterMatched(Member member, MemberFilterRequestDTO req) {
-        if (req.getCollege() != null) {
+
+        if (StringUtils.hasText(req.getCollege())) {
             if (member.getCollege() == null || !req.getCollege().equals(member.getCollege().getName())) return false;
         }
 
-        if (req.getDepartment() != null) {
+        if (StringUtils.hasText(req.getDepartment())) {
             if (member.getDepartment() == null || !req.getDepartment().equals(member.getDepartment().getName())) return false;
         }
 
-        if (req.getInterest() != null) {
+        if (StringUtils.hasText(req.getInterest())) {
             if (member.getInterests() == null || member.getInterests().stream()
                     .noneMatch(i -> i.getType().name().equals(req.getInterest()))) return false;
         }
 
-        if (req.getStudentNo() != null) {
+        if (StringUtils.hasText(req.getStudentNo())) {
             String target = member.getStudentNo();
             if (target == null) return false;
 
