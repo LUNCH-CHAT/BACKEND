@@ -3,6 +3,7 @@ package com.lunchchat.domain.member.converter;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.entity.Member;
+import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.time_table.converter.TimeTableConverter;
 import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_interests.entity.Interest;
@@ -45,7 +46,7 @@ public class MemberConverter {
     }
 
     public static MemberResponseDTO.MyPageResponseDTO toMyPageDto(Member member,
-        int completed, int requested, int received, List<String> keywords, List<String> tags) {
+        int completed, int requested, int received, List<String> keywords, List<InterestType> tags) {
 
         return MemberResponseDTO.MyPageResponseDTO.builder()
             .profileImageUrl(member.getProfileImageUrl())

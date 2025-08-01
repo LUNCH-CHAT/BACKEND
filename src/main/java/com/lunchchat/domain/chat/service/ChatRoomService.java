@@ -28,9 +28,7 @@ public class ChatRoomService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public CreateChatRoomRes createRoom(CreateChatRoomReq req) {
-        Long starterId = req.starterId();
-        Long friendId = req.friendId();
+    public CreateChatRoomRes createRoom(Long starterId, Long friendId) {
 
         if (starterId.equals(friendId)) {
             throw new ChatException(ErrorStatus.CANNOT_CHAT_WITH_SELF);

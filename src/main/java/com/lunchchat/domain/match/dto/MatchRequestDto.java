@@ -16,9 +16,6 @@ public class MatchRequestDto {
   @Getter
   @NoArgsConstructor
   public static class CreateMatchRequest {
-    @Schema(description = "매칭 요청자 사용자 ID", required = true)
-    private Long fromMemberId;
-    
     @Schema(description = "매칭 대상 사용자 ID", required = true)
     private Long toMemberId;
   }

@@ -1,7 +1,9 @@
 package com.lunchchat.domain.user_statistics.service;
 
+import com.lunchchat.domain.member.entity.Member;
+
 public interface UserStatisticsCommandService {
-  void incrementRequestedCount(Long memberId);
-  void incrementReceivedCount(Long memberId);
-  void incrementAcceptedCount(Long memberId);
+  void incrementRequestedCount(Member member);
+  void incrementReceivedCount(Member member);
+  void incrementAcceptedCount(Member member);
 }

@@ -67,7 +67,7 @@ public class MemberResponseDTO {
         private int requested;
         private int received;
         private List<String> keywords;
-        private List<String> tags;
+        private List<InterestType> tags;
 
     }
 }

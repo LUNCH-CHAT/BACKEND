@@ -8,6 +8,6 @@ import java.util.List;
 public interface MemberQueryService {
     MemberResponseDTO.MemberDetailResponseDTO getMemberDetail(Long memberId, String viewerEmail);
     List<MemberResponseDTO.MemberRecommendationResponseDTO> getRecommendedMembers(Long currentMemberId);
-    MemberResponseDTO.MyPageResponseDTO getMyPage(Long memberId);
+    MemberResponseDTO.MyPageResponseDTO getMyPage(String email);
     List<MemberResponseDTO.MemberRecommendationResponseDTO> getFilteredRecommendations(String email, MemberFilterRequestDTO req);
 }
