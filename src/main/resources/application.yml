@@ -15,7 +15,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:validate}
-    open-in-view: false
+    open-in-view: true  # LazyInitializationException 방지
     show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
