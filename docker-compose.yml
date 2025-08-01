@@ -16,6 +16,7 @@ services:
       # 기본 Spring Boot 설정
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=8080
+      - TZ=Asia/Seoul
 
       # 데이터베이스 설정
       - DB_URL=${DB_URL}
