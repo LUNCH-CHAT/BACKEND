@@ -50,27 +50,13 @@ public class StompHandler implements ChannelInterceptor {
             String email = claims.get("email", String.class);
             accessor.setUser(() -> email); // Principal 설정
 
-            //사용자 정보를 websocket 연결 컨텍스트에 저장 (이후 subscribe 시에도 꺼내 쓸 수 있게)
+            //사용자 정보를 websocket 연결 컨텍스트에 저장 (이후 subscribe, send 시에도 꺼내 쓸 수 있게)
             accessor.getSessionAttributes().put("user", email);
 
             log.info("stomp 연결 성공: {}", email);
         }
 
         if (StompCommand.SUBSCRIBE.equals(command)) {
-//            String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
-//
-//            if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
-//                log.warn("SUBSCRIBE 요청에 JWT 누락 또는 오류");
-//                throw new AccessDeniedException("JWT 누락 또는 오류");
-//            }
-//
-//            token = token.substring(7);
-//            if (!jwtUtil.validateToken(token)) {
-//                throw new AccessDeniedException("유효하지 않은 JWT");
-//            }
-//
-//            Claims claims = jwtUtil.parseJwt(token);
-//            String email = claims.get("email", String.class);
 
             Object user = accessor.getSessionAttributes().get("user");
             if (user != null) {
