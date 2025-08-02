@@ -37,4 +37,5 @@ out/
 .vscode/
 
 local.env
-.env
+.envsrc/main/resources/sheets-key.json
+src/main/resources/sheets-key.json

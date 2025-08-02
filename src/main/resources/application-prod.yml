@@ -48,6 +48,10 @@ spring:
     redis:
       timeout: 30000ms
 
+google:
+  sheet:
+    id: ${GOOGLE_SHEET_ID}
+
 fcm:
   service-account-file: ${FCM_SERVICE_ACCOUNT_FILE:}
 
