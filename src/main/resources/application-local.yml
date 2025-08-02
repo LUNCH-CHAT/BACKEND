@@ -54,6 +54,10 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+google:
+  sheet:
+    id: ${GOOGLE_SHEET_ID}
+
 fcm:
   service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
 
