@@ -9,4 +9,6 @@ import org.springframework.data.repository.query.Param;
 public interface UserKeywordsRepository extends JpaRepository<UserKeyword, Long> {
   @Query("SELECT uk.title FROM UserKeyword uk WHERE uk.member.id = :memberId")
   List<String> findTitlesByMemberId(@Param("memberId") Long memberId);
+
+  List<UserKeyword> findByMemberId(Long memberId);
 }

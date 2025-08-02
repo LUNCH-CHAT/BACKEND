@@ -2,12 +2,14 @@ package com.lunchchat.domain.member.entity;
 
 import com.lunchchat.domain.college.entity.College;
 import com.lunchchat.domain.department.entity.Department;
+import com.lunchchat.domain.member.dto.MemberRequestDTO;
 import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.member.entity.enums.LoginType;
 import com.lunchchat.domain.member.entity.enums.MemberStatus;
 import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.domain.user_interests.entity.Interest;
+import com.lunchchat.domain.user_keywords.converter.UserKeywordsConverter;
 import com.lunchchat.domain.user_keywords.entity.UserKeyword;
 import com.lunchchat.global.common.BaseEntity;
 import jakarta.persistence.CascadeType;
@@ -152,6 +154,15 @@ public class Member extends BaseEntity {
 
   public void updateFcmToken(String fcmToken) {
     this.fcmToken = fcmToken;
+  }
+
+  public void clearKeywords() {
+    this.userKeywords.clear();
+  }
+
+  public void addKeywords(List<MemberRequestDTO.UpdateKeywordDTO> dtos) {
+    List<UserKeyword> converted = UserKeywordsConverter.toEntityList(this, dtos);
+    this.userKeywords.addAll(converted);
   }
 
 }

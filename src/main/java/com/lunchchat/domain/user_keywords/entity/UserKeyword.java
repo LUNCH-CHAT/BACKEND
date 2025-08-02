@@ -8,6 +8,8 @@ import lombok.*;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor
 public class UserKeyword extends BaseEntity {
 
     @Id
