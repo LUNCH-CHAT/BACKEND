@@ -1,5 +1,12 @@
 package com.lunchchat.domain.match.controller;
 
-public class MentoController {
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/mentor")
+public class MentorController{
+
+
 
 }
