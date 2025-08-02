@@ -47,26 +47,27 @@ public class StompHandler implements ChannelInterceptor {
 
             // 토큰 유효성 검증 성공 시, 사용자 정보 설정 (선택)
             Claims claims = jwtUtil.parseJwt(token);
-            accessor.setUser(() -> claims.getSubject());  // principal 설정 (email)
+            String email = claims.get("email", String.class);
+            accessor.setUser(() -> email); // Principal 설정
 
-            log.info("stomp 연결 성공");
+            //사용자 정보를 websocket 연결 컨텍스트에 저장 (이후 subscribe, send 시에도 꺼내 쓸 수 있게)
+            accessor.getSessionAttributes().put("user", email);
+
+            log.info("stomp 연결 성공: {}", email);
         }
 
         if (StompCommand.SUBSCRIBE.equals(command)) {
-            String token = accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION);
 
-            if (!StringUtils.hasText(token) || !token.startsWith("Bearer ")) {
-                log.warn("SUBSCRIBE 요청에 JWT 누락 또는 오류");
-                throw new AccessDeniedException("JWT 누락 또는 오류");
+            Object user = accessor.getSessionAttributes().get("user");
+            if (user != null) {
+                accessor.setUser(() -> (String) user);
+            } else {
+                log.warn("SUBSCRIBE 요청에 인증된 사용자 없음");
+                return null;
             }
 
-            token = token.substring(7);
-            if (!jwtUtil.validateToken(token)) {
-                throw new AccessDeniedException("유효하지 않은 JWT");
-            }
+            String email = accessor.getUser().getName(); // CONNECT 시 저장한 이메일
 
-            Claims claims = jwtUtil.parseJwt(token);
-            String email = claims.get("email", String.class);
             String destination = accessor.getDestination();  // 예: /sub/chat/room/3
 
             Long chatRoomId = extractRoomIdFromDestination(destination);

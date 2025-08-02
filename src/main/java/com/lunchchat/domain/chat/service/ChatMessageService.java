@@ -26,12 +26,17 @@ public class ChatMessageService {
     private final RedisPublisher redisPublisher;
 
     // 메시지 전송 로직 구현
-    public void sendMessage(Long roomId, ChatMessageReq messageReq) {
+    public void sendMessage(Long roomId, String senderEmail, ChatMessageReq messageReq) {
 
         //user, room 불러오기 -> 유저 구현시 직접 참조로 변경
-        Long senderId = messageReq.senderId();
+//        Long senderId = messageReq.senderId();
         ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        Member sender = memberRepository.findByEmail(senderEmail)
+                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+
+        Long senderId = sender.getId();
 
         //채팅방 구독 여부 검증
         if (!room.isParticipant(senderId)) {
