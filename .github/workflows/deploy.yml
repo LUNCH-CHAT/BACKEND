@@ -116,9 +116,11 @@ env:
       echo "🎉 $SERVER_NAME 배포 성공!"
       rm -f /tmp/backup*.env
     
-      # 이미지 정리 (최근 1개만 유지)
-      docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | \
-        tail -n +2 | xargs -r docker rmi 2>/dev/null || true
+      # 이미지 정리
+      docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" \
+        --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" | \
+        sort -rk2 | awk '{print $1}' | tail -n +2 | \
+        xargs -r docker rmi 2>/dev/null || true
     
     else
       echo "🔄 $SERVER_NAME 배포 실패, 롤백 시도 중..."
