@@ -186,6 +186,10 @@ jobs:
             ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
             EOF
             chmod 600 firebase-service-account-key.json
+            cat > sheets-key.json << 'EOF'
+            ${{ secrets.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON }}
+            EOF
+            chmod 600 sheets-key.json
             sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}/" .env
             mkdir -p logs
             
