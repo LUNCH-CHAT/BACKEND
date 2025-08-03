@@ -20,10 +20,12 @@ public class StompWebsocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws") // STOMP 엔드포인트 설정
-                .setAllowedOrigins("*") // CORS 설정, 실제 도메인으로 변경 필요
+                .setAllowedOrigins("http://localhost:8080", "https://lunchchat.vercel.app",
+                        "https://develop-lunchchat.vercel.app", "http://localhost:5173", "https://lunchchat.kro.kr") // CORS 설정, 실제 도메인으로 변경 필요
                 .withSockJS(); // 브라우저가 웹소켓 지원하지 않을시 sockJs 방식으로 연결
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("*");
+                .setAllowedOrigins("http://localhost:8080", "https://lunchchat.vercel.app",
+                        "https://develop-lunchchat.vercel.app", "http://localhost:5173", "https://lunchchat.kro.kr");
     }
 
     // 메시지 브로커 설정
