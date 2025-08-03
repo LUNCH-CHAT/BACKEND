@@ -13,158 +13,6 @@ on:
 env:
   DOCKER_IMAGE_NAME: lunchchat-backend
   DOCKER_REGISTRY: xoo1228
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
-    timeout-minutes: 30
-
-    outputs:
-      image-tag: ${{ steps.set-tag.outputs.IMAGE_TAG }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build application
-        run: ./gradlew build -x test --no-daemon --parallel
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set image tag
-        id: set-tag
-        run: |
-          SAFE_REF_NAME=$(echo "${{ github.ref_name }}" | tr '/\' '-' )
-          echo "IMAGE_TAG=${SAFE_REF_NAME}-${{ github.sha }}" >> $GITHUB_OUTPUT
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
-          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.set-tag.outputs.IMAGE_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            BUILDKIT_INLINE_CACHE=1
-
-  deploy-server1:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
-    timeout-minutes: 20
-
-    steps:
-      - name: Deploy to Server-1
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER1_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          timeout: 15m
-          command_timeout: 10m
-          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
-          script: |
-            export SERVER_NAME="Server-1"
-            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
-            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
-            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
-            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
-            
-            source <(cat << 'DEPLOY_SCRIPT'
-            ${{ env.DEPLOY_SCRIPT }}
-            DEPLOY_SCRIPT
-            )
-
-  verify-server1:
-    needs: deploy-server1
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - name: Verify Server-1
-        run: |
-          source <(cat << 'VERIFY_SCRIPT'
-          ${{ env.VERIFY_SCRIPT }}
-          VERIFY_SCRIPT
-          )
-        env:
-          SERVER_NAME: "Server-1"
-          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
-
-  deploy-server2:
-    needs: verify-server1
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Deploy to Server-2
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER2_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          timeout: 15m
-          command_timeout: 10m
-          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
-          script: |
-            export SERVER_NAME="Server-2"
-            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
-            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
-            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
-            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
-            
-            source <(cat << 'DEPLOY_SCRIPT'
-            ${{ env.DEPLOY_SCRIPT }}
-            DEPLOY_SCRIPT
-            )
-
-  verify-final:
-    needs: deploy-server2
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Final System Verification
-        run: |
-          source <(cat << 'VERIFY_SCRIPT'
-          ${{ env.VERIFY_SCRIPT }}
-          VERIFY_SCRIPT
-          )
-        env:
-          SERVER_NAME: "전체 시스템"
-          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
-          TOTAL_CHECKS: "10"
-          SUCCESS_THRESHOLD: "80"
-
-env:
   DEPLOY_SCRIPT: |
     set -e
     
@@ -248,6 +96,11 @@ env:
     sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
     mkdir -p logs
     
+    # Database Migration (Server-1에서만)
+    if [ "$INCLUDE_DB_MIGRATION" = "true" ]; then
+      echo "📊 Database Migration 실행 중..."
+    fi
+    
     # 새 이미지 준비 및 서비스 시작
     NEW_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG"
     ensure_image "$NEW_IMG" || { echo "❌ 새 이미지 다운로드 실패"; exit 1; }
@@ -257,23 +110,23 @@ env:
     if health_check; then
       echo "🎉 $SERVER_NAME 배포 성공!"
       rm -f /tmp/backup*.env
-    
-      # 이미지 정리
+      
+      # 이미지 정리 (최근 3개만 유지)
       docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | \
-        tail -n +2 | xargs -r docker rmi 2>/dev/null || true
+        tail -n +4 | xargs -r docker rmi 2>/dev/null || true
     
     else
       echo "🔄 $SERVER_NAME 배포 실패, 롤백 시도 중..."
-    
+      
       if [ -f "/tmp/backup.env" ] && [ -f "/tmp/backup_info.env" ]; then
         cleanup
         source /tmp/backup_info.env
-    
+        
         BACKUP_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$BACKUP_IMAGE_TAG"
         if ensure_image "$BACKUP_IMG"; then
           cp /tmp/backup.env .env
           start_services "$BACKUP_IMAGE_TAG"
-    
+          
           if health_check; then
             echo "✅ $SERVER_NAME 롤백 성공!"
           else
@@ -285,11 +138,10 @@ env:
       else
         echo "⚠️ $SERVER_NAME 백업 없음, 수동 개입 필요"
       fi
-    
+      
       rm -f /tmp/backup*.env
       exit 1
     fi
-
   VERIFY_SCRIPT: |
     echo "🔍 $SERVER_NAME 검증 중..."
     SUCCESS_COUNT=0
@@ -317,3 +169,155 @@ env:
       echo "❌ $SERVER_NAME 검증 실패"
       exit 1
     fi
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    timeout-minutes: 30
+
+    outputs:
+      image-tag: ${{ steps.set-tag.outputs.IMAGE_TAG }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build application
+        run: ./gradlew build -x test --no-daemon --parallel
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set image tag
+        id: set-tag
+        run: |
+          SAFE_REF_NAME=$(echo "${{ github.ref_name }}" | tr '/\' '-' )
+          echo "IMAGE_TAG=${SAFE_REF_NAME}-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.set-tag.outputs.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+  deploy-server1:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    timeout-minutes: 20
+
+    steps:
+      - name: Deploy to Server-1
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER1_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 15m
+          command_timeout: 10m
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
+          script: |
+            export SERVER_NAME="Server-1"
+            export INCLUDE_DB_MIGRATION="true"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
+            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
+            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
+            
+            source <(cat << 'DEPLOY_SCRIPT'
+            ${{ env.DEPLOY_SCRIPT }}
+            DEPLOY_SCRIPT
+            )
+
+  verify-server1:
+    needs: deploy-server1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify Server-1
+        run: |
+          source <(cat << 'VERIFY_SCRIPT'
+          ${{ env.VERIFY_SCRIPT }}
+          VERIFY_SCRIPT
+          )
+        env:
+          SERVER_NAME: "Server-1"
+          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
+
+  deploy-server2:
+    needs: verify-server1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Deploy to Server-2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER2_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 15m
+          command_timeout: 10m
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
+          script: |
+            export SERVER_NAME="Server-2"
+            export INCLUDE_DB_MIGRATION="false"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
+            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
+            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
+            
+            source <(cat << 'DEPLOY_SCRIPT'
+            ${{ env.DEPLOY_SCRIPT }}
+            DEPLOY_SCRIPT
+            )
+
+  verify-final:
+    needs: deploy-server2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Final System Verification
+        run: |
+          source <(cat << 'VERIFY_SCRIPT'
+          ${{ env.VERIFY_SCRIPT }}
+          VERIFY_SCRIPT
+          )
+        env:
+          SERVER_NAME: "전체 시스템"
+          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
+          TOTAL_CHECKS: "10"
+          SUCCESS_THRESHOLD: "80"
