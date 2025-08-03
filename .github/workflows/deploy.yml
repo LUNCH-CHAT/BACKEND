@@ -102,6 +102,11 @@ env:
     fi
     
     # 새 이미지 준비 및 서비스 시작
+    if [ -z "$IMAGE_TAG" ]; then
+      echo "❌ IMAGE_TAG가 설정되지 않았습니다"
+      exit 1
+    fi
+    
     NEW_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG"
     ensure_image "$NEW_IMG" || { echo "❌ 새 이미지 다운로드 실패"; exit 1; }
     start_services "$IMAGE_TAG"
@@ -110,23 +115,23 @@ env:
     if health_check; then
       echo "🎉 $SERVER_NAME 배포 성공!"
       rm -f /tmp/backup*.env
-      
-      # 이미지 정리 (최근 3개만 유지)
+    
+      # 이미지 정리 (최근 1개만 유지)
       docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | \
-        tail -n +4 | xargs -r docker rmi 2>/dev/null || true
+        tail -n +2 | xargs -r docker rmi 2>/dev/null || true
     
     else
       echo "🔄 $SERVER_NAME 배포 실패, 롤백 시도 중..."
-      
+    
       if [ -f "/tmp/backup.env" ] && [ -f "/tmp/backup_info.env" ]; then
         cleanup
         source /tmp/backup_info.env
-        
+    
         BACKUP_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$BACKUP_IMAGE_TAG"
         if ensure_image "$BACKUP_IMG"; then
           cp /tmp/backup.env .env
           start_services "$BACKUP_IMAGE_TAG"
-          
+    
           if health_check; then
             echo "✅ $SERVER_NAME 롤백 성공!"
           else
@@ -138,7 +143,7 @@ env:
       else
         echo "⚠️ $SERVER_NAME 백업 없음, 수동 개입 필요"
       fi
-      
+    
       rm -f /tmp/backup*.env
       exit 1
     fi
@@ -246,7 +251,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           timeout: 15m
           command_timeout: 10m
-          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME,IMAGE_TAG
           script: |
             export SERVER_NAME="Server-1"
             export INCLUDE_DB_MIGRATION="true"
@@ -277,7 +282,7 @@ jobs:
           LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
 
   deploy-server2:
-    needs: verify-server1
+    needs: [ build-and-push, verify-server1 ]
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -290,7 +295,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           timeout: 15m
           command_timeout: 10m
-          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME,IMAGE_TAG
           script: |
             export SERVER_NAME="Server-2"
             export INCLUDE_DB_MIGRATION="false"
