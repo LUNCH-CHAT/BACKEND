@@ -75,193 +75,245 @@ jobs:
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-  deploy:
+  deploy-server1:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
     timeout-minutes: 20
 
-    strategy:
-      fail-fast: true
-      matrix:
-        server: [
-          { id: "server1", name: "Server-1" },
-          { id: "server2", name: "Server-2" }
-        ]
-
     steps:
-      - name: Set server host
-        id: set-host
-        run: |
-          if [ "${{ matrix.server.id }}" = "server1" ]; then
-            echo "host=${{ secrets.SERVER1_HOST }}" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.server.id }}" = "server2" ]; then
-            echo "host=${{ secrets.SERVER2_HOST }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Deploy to ${{ matrix.server.name }}
+      - name: Deploy to Server-1
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ steps.set-host.outputs.host }}
+          host: ${{ secrets.SERVER1_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           timeout: 15m
           command_timeout: 10m
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
           script: |
-            set -e
+            export SERVER_NAME="Server-1"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
+            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
+            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
             
-            # 함수 정의
-            ensure_image() {
-              local img="$1"
-              if ! docker image inspect "$img" >/dev/null 2>&1; then
-                docker pull "$img" || return 1
-              fi
-            }
-            
-            start_services() {
-              local tag="$1"
-              export IMAGE_TAG="$tag"
-              export DOCKER_REGISTRY=${{ env.DOCKER_REGISTRY }}
-              export DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE_NAME }}
-              docker-compose up -d backend --no-build
-              sleep 10
-            }
-            
-            health_check() {
-              local max_attempts=25
-              for i in $(seq 1 $max_attempts); do
-                if curl -sf -m 5 http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
-                  curl -sf -m 3 http://localhost:8080/actuator/health/db >/dev/null 2>&1 && return 0
-                fi
-                [ $i -eq $max_attempts ] && return 1
-                sleep 12
-              done
-            }
-            
-            cleanup() {
-              docker-compose down || true
-              docker container prune -f >/dev/null 2>&1 || true
-            }
-            
-            # 메인 로직
-            cd /home/ubuntu
-            
-            # 환경 파일 설정
-            if [[ "${{ github.ref_name }}" == "main" ]]; then
-              ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.production"
-            else
-              ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.development"
-            fi
-            
-            # 백업 생성
-            if [ -d "lunchchat-app" ]; then
-              cd lunchchat-app
-              cleanup
-            
-              if [ -f ".env" ]; then
-                CURRENT_TAG=$(grep "^IMAGE_TAG=" ".env" | cut -d'=' -f2)
-                if [ -n "$CURRENT_TAG" ]; then
-                  BACKUP_IMG="${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:$CURRENT_TAG"
-                  if ensure_image "$BACKUP_IMG"; then
-                    echo "BACKUP_IMAGE_TAG=$CURRENT_TAG" > /tmp/backup_info.env
-                    cp ".env" /tmp/backup.env
-                    echo "✅ 백업 생성 완료: $CURRENT_TAG"
-                  fi
-                fi
-              fi
-              cd ..
-            fi
-            
-            # 새 버전 배포
-            rm -rf lunchchat-temp lunchchat-app
-            git clone -q --depth 1 --branch "${{ github.ref_name }}" \
-              ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
-            
-            mv lunchchat-temp lunchchat-app
-            cd lunchchat-app
-            
-            # 설정 파일 준비
-            cp "$ENV_CONFIG_FILE" .env
-            cat > firebase-service-account-key.json << 'EOF'
-            ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
-            EOF
-            chmod 600 firebase-service-account-key.json
-            cat > sheets-key.json << 'EOF'
-            ${{ secrets.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON }}
-            EOF
-            chmod 600 sheets-key.json
-            sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${{ needs.build-and-push.outputs.image-tag }}/" .env
-            mkdir -p logs
-            
-            # 새 이미지 준비
-            NEW_IMG="${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
-            ensure_image "$NEW_IMG" || { echo "❌ 새 이미지 다운로드 실패"; exit 1; }
-            
-            # 서비스 시작 및 헬스체크
-            start_services "${{ needs.build-and-push.outputs.image-tag }}"
-            
-            if health_check; then
-              echo "🎉 배포 성공!"
-              rm -f /tmp/backup*.env
-            
-              # 이전 이미지 정리
-              docker images "${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}" --format "{{.Repository}}:{{.Tag}}" | \
-                tail -n +4 | xargs -r docker rmi 2>/dev/null || true
-            
-            else
-              echo "🔄 배포 실패, 롤백 시도 중..."
-            
-              if [ -f "/tmp/backup.env" ] && [ -f "/tmp/backup_info.env" ]; then
-                cleanup
-                source /tmp/backup_info.env
-            
-                BACKUP_IMG="${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:$BACKUP_IMAGE_TAG"
-                if ensure_image "$BACKUP_IMG"; then
-                  cp /tmp/backup.env .env
-                  start_services "$BACKUP_IMAGE_TAG"
-            
-                  if health_check; then
-                    echo "✅ 롤백 성공!"
-                  else
-                    echo "❌ 롤백 실패"
-                  fi
-                else
-                  echo "❌ 백업 이미지 사용 불가"
-                fi
-              else
-                echo "⚠️ 백업 없음, 수동 개입 필요"
-              fi
-            
-              rm -f /tmp/backup*.env
-              exit 1
-            fi
+            source <(cat << 'DEPLOY_SCRIPT'
+            ${{ env.DEPLOY_SCRIPT }}
+            DEPLOY_SCRIPT
+            )
 
-  verify:
-    needs: deploy
+  verify-server1:
+    needs: deploy-server1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify Server-1
+        run: |
+          source <(cat << 'VERIFY_SCRIPT'
+          ${{ env.VERIFY_SCRIPT }}
+          VERIFY_SCRIPT
+          )
+        env:
+          SERVER_NAME: "Server-1"
+          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
+
+  deploy-server2:
+    needs: verify-server1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Deploy to Server-2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER2_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 15m
+          command_timeout: 10m
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME
+          script: |
+            export SERVER_NAME="Server-2"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
+            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
+            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
+            
+            source <(cat << 'DEPLOY_SCRIPT'
+            ${{ env.DEPLOY_SCRIPT }}
+            DEPLOY_SCRIPT
+            )
+
+  verify-final:
+    needs: deploy-server2
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
-      - name: Verify Load Balancer
+      - name: Final System Verification
         run: |
-          echo "🔍 로드밸런서 확인 중..."
+          source <(cat << 'VERIFY_SCRIPT'
+          ${{ env.VERIFY_SCRIPT }}
+          VERIFY_SCRIPT
+          )
+        env:
+          SERVER_NAME: "전체 시스템"
+          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
+          TOTAL_CHECKS: "10"
+          SUCCESS_THRESHOLD: "80"
 
-          SUCCESS_COUNT=0
-          TOTAL_CHECKS=10
-
-          for i in $(seq 1 $TOTAL_CHECKS); do
-            response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 https://${{ secrets.LOAD_BALANCER_IP }}/actuator/health || echo "000")
-            if [ "$response" = "200" ]; then
-              SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-            fi
-            sleep 3
-          done
-
-          SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_CHECKS))
-
-          if [ $SUCCESS_RATE -ge 80 ]; then
-            echo "🎉 배포 검증 성공 (성공률: $SUCCESS_RATE%)"
-          else
-            echo "❌ 배포 검증 실패 (성공률: $SUCCESS_RATE%)"
-            exit 1
+env:
+  DEPLOY_SCRIPT: |
+    set -e
+    
+    # 공통 함수들
+    ensure_image() {
+      local img="$1"
+      if ! docker image inspect "$img" >/dev/null 2>&1; then
+        docker pull "$img" || return 1
+      fi
+    }
+    
+    start_services() {
+      local tag="$1"
+      export IMAGE_TAG="$tag"
+      docker-compose up -d backend --no-build
+      sleep 15
+    }
+    
+    health_check() {
+      local max_attempts=25
+      echo "🔍 $SERVER_NAME 헬스체크 시작..."
+      for i in $(seq 1 $max_attempts); do
+        if curl -sf -m 5 http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+          echo "✅ $SERVER_NAME 헬스체크 성공"
+          return 0
+        fi
+        [ $i -eq $max_attempts ] && return 1
+        if [ $((i % 5)) -eq 0 ]; then
+          echo "⏳ 헬스체크 진행 중... ($i/$max_attempts)"
+        fi
+        sleep 12
+      done
+    }
+    
+    cleanup() {
+      docker-compose down || true
+      docker container prune -f >/dev/null 2>&1 || true
+    }
+    
+    # 메인 배포 로직
+    echo "🚀 $SERVER_NAME 배포 시작..."
+    cd /home/ubuntu
+    
+    # 백업 생성
+    if [ -d "lunchchat-app" ]; then
+      cd lunchchat-app
+      cleanup
+    
+      if [ -f ".env" ]; then
+        CURRENT_TAG=$(grep "^IMAGE_TAG=" ".env" | cut -d'=' -f2)
+        if [ -n "$CURRENT_TAG" ]; then
+          BACKUP_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$CURRENT_TAG"
+          if ensure_image "$BACKUP_IMG"; then
+            echo "BACKUP_IMAGE_TAG=$CURRENT_TAG" > /tmp/backup_info.env
+            cp ".env" /tmp/backup.env
+            echo "✅ $SERVER_NAME 백업 생성 완료: $CURRENT_TAG"
           fi
+        fi
+      fi
+      cd ..
+    fi
+    
+    # 새 버전 배포
+    rm -rf lunchchat-temp lunchchat-app
+    git clone -q --depth 1 --branch "${{ github.ref_name }}" \
+      ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
+    
+    mv lunchchat-temp lunchchat-app
+    cd lunchchat-app
+    
+    # 설정 파일 준비
+    cp "$ENV_CONFIG_FILE" .env
+    cat > firebase-service-account-key.json << 'EOF'
+    ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+    EOF
+    chmod 600 firebase-service-account-key.json
+    cat > sheets-key.json << 'EOF'
+    ${{ secrets.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON }}
+    EOF
+    chmod 600 sheets-key.json
+    sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
+    mkdir -p logs
+    
+    # 새 이미지 준비 및 서비스 시작
+    NEW_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG"
+    ensure_image "$NEW_IMG" || { echo "❌ 새 이미지 다운로드 실패"; exit 1; }
+    start_services "$IMAGE_TAG"
+    
+    # 헬스체크 및 롤백 처리
+    if health_check; then
+      echo "🎉 $SERVER_NAME 배포 성공!"
+      rm -f /tmp/backup*.env
+    
+      # 이미지 정리
+      docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" | \
+        tail -n +2 | xargs -r docker rmi 2>/dev/null || true
+    
+    else
+      echo "🔄 $SERVER_NAME 배포 실패, 롤백 시도 중..."
+    
+      if [ -f "/tmp/backup.env" ] && [ -f "/tmp/backup_info.env" ]; then
+        cleanup
+        source /tmp/backup_info.env
+    
+        BACKUP_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$BACKUP_IMAGE_TAG"
+        if ensure_image "$BACKUP_IMG"; then
+          cp /tmp/backup.env .env
+          start_services "$BACKUP_IMAGE_TAG"
+    
+          if health_check; then
+            echo "✅ $SERVER_NAME 롤백 성공!"
+          else
+            echo "❌ $SERVER_NAME 롤백 실패"
+          fi
+        else
+          echo "❌ $SERVER_NAME 백업 이미지 사용 불가"
+        fi
+      else
+        echo "⚠️ $SERVER_NAME 백업 없음, 수동 개입 필요"
+      fi
+    
+      rm -f /tmp/backup*.env
+      exit 1
+    fi
+
+  VERIFY_SCRIPT: |
+    echo "🔍 $SERVER_NAME 검증 중..."
+    SUCCESS_COUNT=0
+    TOTAL_CHECKS=${TOTAL_CHECKS:-5}
+    SUCCESS_THRESHOLD=${SUCCESS_THRESHOLD:-80}
+
+    for i in $(seq 1 $TOTAL_CHECKS); do
+      response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "https://$LOAD_BALANCER_IP/actuator/health" || echo "000")
+      if [ "$response" = "200" ]; then
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+      fi
+      sleep 2
+    done
+
+    SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_CHECKS))
+    echo "📊 $SERVER_NAME 성공률: $SUCCESS_RATE% ($SUCCESS_COUNT/$TOTAL_CHECKS)"
+
+    if [ $SUCCESS_RATE -ge $SUCCESS_THRESHOLD ]; then
+      if [ "$SERVER_NAME" = "전체 시스템" ]; then
+        echo "🎉 롤링 배포 완료! 시스템 정상 작동 중"
+      else
+        echo "✅ $SERVER_NAME 검증 성공!"
+      fi
+    else
+      echo "❌ $SERVER_NAME 검증 실패"
+      exit 1
+    fi
