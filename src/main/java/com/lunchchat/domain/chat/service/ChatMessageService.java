@@ -12,7 +12,6 @@ import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,6 +43,9 @@ public class ChatMessageService {
         }
 
         ChatMessage message = chatMessageRepository.save(handleMessage(senderId, room, messageReq.content()));
+
+        ChatRoom chatRoom = message.getChatRoom();
+        chatRoom.setLastMessageSendAt(message.getSentAt());
 
         ChatMessageRes chatMessageRes = ChatMessageRes.of(roomId, message);
 
