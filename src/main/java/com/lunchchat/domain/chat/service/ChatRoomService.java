@@ -268,8 +268,10 @@ public class ChatRoomService {
             }
         }
 
-        Pageable pageable = PageRequest.of(0, size + 1); // size+1로 hasNext 판별
-        List<ChatMessage> messages = chatMessageRepository.findAllByChatRoomOrderBySentAtAsc(room);
+        Pageable pageable = PageRequest.of(0, size + 1);
+        List<ChatMessage> messages = chatMessageRepository.findByChatRoomWithCursor(
+            room, cursorTime, cursorId, pageable
+        );
 
         boolean hasNext = messages.size() > size;
         if (hasNext) {
