@@ -2,7 +2,6 @@ package com.lunchchat.domain.chat.service;
 
 import com.lunchchat.domain.chat.entity.ChatMessage;
 import com.lunchchat.domain.chat.entity.ChatRoom;
-import com.lunchchat.domain.chat.dto.request.CreateChatRoomReq;
 import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
@@ -10,12 +9,17 @@ import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.chat.repository.ChatRoomRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
+import com.lunchchat.global.apiPayLoad.CursorPaginatedResponse;
+import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,49 +86,118 @@ public class ChatRoomService {
     }
 
     //채팅방 리스트 조회
-    @Transactional(readOnly = true)
-    public List<ChatRoomCardRes> getChatRooms(Long userId) {
+//    @Transactional(readOnly = true)
+//    public List<ChatRoomCardRes> getChatRooms(Long userId) {
+//
+//        // 유저 존재 검증
+//        Member user = memberRepository.findById(userId)
+//                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+//
+//        // 사용자 기준 채팅방 조회
+//        List<ChatRoom> rooms = chatRoomRepository.findAllByStarterOrFriend(user, user);
+//
+//        List<ChatRoomCardRes> result = new ArrayList<>();
+//
+//        for (ChatRoom room : rooms) {
+//            // 나간 채팅방은 제외
+//            if ((room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
+//                    (room.getFriend().getId().equals(userId) && room.isExitedByFriend())) {
+//                continue;
+//            }
+//
+//            // 최근 메시지 조회
+//            ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
+//                    .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
+//
+//            //상대방 정보
+//            Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+//            String department = friend.getDepartment().getName();
+//            String friendName = friend.getMembername();
+//
+//            //안 읽은 메시지 수
+//            int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
+//
+//            result.add(new ChatRoomCardRes(
+//                    room.getId(),
+//                    friendName,
+//                    department,
+//                    lastMessage.getContent(),
+//                    lastMessage.getCreatedAt(),
+//                    unreadCount
+//            ));
+//        }
+//
+//        return result;
+//    }
 
-        // 유저 존재 검증
+    @Transactional(readOnly = true)
+    public CursorPaginatedResponse<ChatRoomCardRes> getChatRooms(Long userId, int size, String cursor) {
         Member user = memberRepository.findById(userId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
-        // 사용자 기준 채팅방 조회
-        List<ChatRoom> rooms = chatRoomRepository.findAllByStarterOrFriend(user, user);
+        LocalDateTime cursorTime = null;
+        Long cursorId = null;
+
+        // 커서 파싱 (예: "2025-08-04T21:33:12.345Z_123")
+        if (cursor != null && !cursor.isBlank()) {
+            try {
+                String[] parts = cursor.split("_");
+                cursorTime = LocalDateTime.parse(parts[0]);
+                cursorId = Long.parseLong(parts[1]);
+            } catch (Exception e) {
+                throw new ChatException(ErrorStatus.INVALID_CURSOR_FORMAT);
+            }
+        }
+
+        Pageable pageable = PageRequest.of(0, size + 1); // size+1 로 hasNext 판별
+
+        List<ChatRoom> rooms = chatRoomRepository.findByUserWithCursor(user, cursorTime, cursorId, pageable);
+
+        boolean hasNext = rooms.size() > size;
+        if (hasNext) {
+            rooms = rooms.subList(0, size);
+        }
 
         List<ChatRoomCardRes> result = new ArrayList<>();
+        String nextCursor = null;
 
         for (ChatRoom room : rooms) {
-            // 나간 채팅방은 제외
             if ((room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
                     (room.getFriend().getId().equals(userId) && room.isExitedByFriend())) {
                 continue;
             }
 
-            // 최근 메시지 조회
             ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
                     .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
 
-            //상대방 정보
             Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
-            String department = friend.getDepartment().getName();
-            String friendName = friend.getMembername();
-
-            //안 읽은 메시지 수
             int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
 
             result.add(new ChatRoomCardRes(
                     room.getId(),
-                    friendName,
-                    department,
+                    friend.getMembername(),
+                    friend.getDepartment().getName(),
                     lastMessage.getContent(),
                     lastMessage.getCreatedAt(),
                     unreadCount
             ));
         }
 
-        return result;
+        if (hasNext && !rooms.isEmpty()) {
+            ChatRoom last = rooms.get(rooms.size() - 1);
+            nextCursor = last.getLastMessageSendAt().toString() + "_" + last.getId(); // ex: "2025-08-04T22:00:00.000_42"
+        }
+
+        return CursorPaginatedResponse.<ChatRoomCardRes>builder()
+                .data(result)
+                .meta(CursorPaginatedResponse.CursorMeta.builder()
+                        .pageSize(size)
+                        .hasNext(hasNext)
+                        .nextCursor(nextCursor)
+                        .build())
+                .build();
     }
+
 
     // 채팅방 내 채팅 메시지 조회(단일 채팅방 조회)
     @Transactional
