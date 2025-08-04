@@ -29,14 +29,15 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     );
 
     @Query("""
-    SELECT c FROM ChatRoom c
-    WHERE (c.starter = :user OR c.friend = :user)
-    AND (
-        :cursorTime IS NULL OR
-        (c.lastMessageSendAt < :cursorTime) OR
-        (c.lastMessageSendAt = :cursorTime AND c.id < :cursorId)
-    )
-    ORDER BY c.lastMessageSendAt DESC, c.id DESC
-""")
-    List<ChatRoom> findByUserWithCursor(Member user, LocalDateTime cursorTime, Long cursorId, Pageable pageable);
+        SELECT r FROM ChatRoom r
+        WHERE 
+            (r.starter = :user OR r.friend = :user)
+            AND (:cursorTime IS NULL OR r.lastMessageSendAt < :cursorTime)
+        ORDER BY r.lastMessageSendAt DESC
+    """)
+    List<ChatRoom> findByUserWithCursor(
+            @Param("user") Member user,
+            @Param("cursorTime") LocalDateTime cursorTime,
+            Pageable pageable
+    );
 }

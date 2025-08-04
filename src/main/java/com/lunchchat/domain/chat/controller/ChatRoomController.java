@@ -79,12 +79,28 @@ public class ChatRoomController {
     }
 
     // 채팅방 내 메시지 전체 조회(단일 채팅방 조회)
-    @GetMapping("/{roomId}/messages")
-    @Operation(summary = "채팅방 내 메시지 조회")
-    public ResponseEntity<ApiResponse<List<ChatMessageRes>>> getChatMessages(@PathVariable Long roomId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-        Long userId = userDetails.getMemberId();
+//    @GetMapping("/{roomId}/messages")
+//    @Operation(summary = "채팅방 내 메시지 조회")
+//    public ResponseEntity<ApiResponse<List<ChatMessageRes>>> getChatMessages(@PathVariable Long roomId,
+//            @AuthenticationPrincipal CustomUserDetails userDetails) {
+//        Long userId = userDetails.getMemberId();
+//
+//        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.getChatMessages(roomId, userId)));
+//    }
 
-        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.getChatMessages(roomId, userId)));
+    // 채팅방 내 메시지 페이징 조회 (커서 기반)
+    @GetMapping("/{roomId}/messages")
+    @Operation(summary = "채팅방 내 메시지 조회 (커서 페이징)")
+    public ResponseEntity<ApiResponse<CursorPaginatedResponse<ChatMessageRes>>> getChatMessages(
+            @PathVariable Long roomId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String cursor) {
+
+        Long userId = userDetails.getMemberId();
+        CursorPaginatedResponse<ChatMessageRes> response = chatRoomService.getChatMessages(roomId, userId, size, cursor);
+
+        return ResponseEntity.ok(ApiResponse.onSuccess(response));
     }
+
 }
