@@ -164,7 +164,8 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                 .filter(member -> isFilterMatched(member, req))
                 .map(member -> {
                     long matchCount = matchRepository.countMatchesByMember(member.getEmail());
-                    return new Object[]{member, matchCount, member.getUpdatedAt()};
+                    LocalDateTime updatedAt = Optional.ofNullable(member.getUpdatedAt()).orElse(LocalDateTime.MIN); // null 방어
+                    return new Object[]{member, matchCount, updatedAt};
                 })
                 .sorted((a, b) -> {
                     if ("recommend".equals(req.getSort())) {
