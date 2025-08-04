@@ -65,6 +65,7 @@ public enum ErrorStatus implements BaseErrorCode {
   UNAUTHORIZED_CHATROOM_ACCESS(HttpStatus.FORBIDDEN, "CHAT_403", "해당 채팅방에 접근할 수 있는 사용자가 아닙니다."),
   NO_MESSAGES_IN_CHATROOM(HttpStatus.NOT_FOUND, "CHAT_404", "해당 채팅방에 메시지가 존재하지 않습니다."),
   CHATROOM_EXITED(HttpStatus.FORBIDDEN, "CHAT_200", "퇴장한 채팅방입니다."),
+  INVALID_CURSOR_FORMAT(HttpStatus.BAD_REQUEST, "CHAT_400_CURSOR", "잘못된 커서 형식입니다."),
 
   // FCM Error
   FCM_SEND_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FCM500", "FCM 메시지 전송에 실패했습니다."),
