@@ -55,9 +55,18 @@ public enum ErrorStatus implements BaseErrorCode {
   INVALID_MATCH_ID(HttpStatus.BAD_REQUEST, "MATCH_400", "유효하지 않은 매칭 ID입니다."),
   MATCH_NOT_FOUND(HttpStatus.NOT_FOUND, "MATCH_404", "매칭을 찾을 수 없습니다."),
 
+  // Time Table Error
+  INVALID_TIME_FORMAT(HttpStatus.BAD_REQUEST, "TIMETABLE_400", "잘못된 시간 형식입니다."),
+  INVALID_TIME_RANGE(HttpStatus.BAD_REQUEST, "TIMETABLE_400", "시작 시간은 종료 시간보다 이전이어야 합니다."),
+
   // Interest Error
   INTERESTS_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "INTEREST_400", "관심사는 최대 3개까지만 선택할 수 있습니다."),
   INTERESTS_NOT_FOUND(HttpStatus.NOT_FOUND, "INTEREST_404", "선택한 관심사를 찾을 수 없습니다."),
+
+  // Keyword Error
+  KEYWORDS_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "KEYWORD_400", "키워드는 3개여야 합니다."),
+  DUPLICATE_KEYWORD_TYPE(HttpStatus.BAD_REQUEST, "KEYWORD_400_DUPLICATE", "키워드 타입이 중복되었습니다."),
+  KEYWORD_TYPE_REQUIRED(HttpStatus.BAD_REQUEST, "KEYWORD_400_TYPE_REQUIRED", "키워드 타입은 필수입니다."),
 
   // Chat Error
   CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_404", "해당 채팅방이 존재하지 않습니다."),

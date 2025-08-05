@@ -8,6 +8,7 @@ import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.service.MatchCommandService;
 import com.lunchchat.domain.match.service.MatchQueryService;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
+import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,13 +26,14 @@ public class MatchRestController {
 
   @GetMapping
   @Operation(summary = "매치 목록 조회", description = "사용자의 매치 목록을 상태에 따라 조회합니다.")
-  public ApiResponse<MatchResponseDto.MatchListPageDto> getMatchList(
+  public ApiResponse<PaginatedResponse<MatchResponseDto.MatchListDto>> getMatchList(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @RequestParam(name = "status") MatchStatusType status,
-      @RequestParam(name = "page", defaultValue = "0") int page) {
+      @RequestParam(name = "page", defaultValue = "0") int page,
+      @RequestParam(name = "size", defaultValue = "10") int size) {
 
     String email = customUserDetails.getUsername();
-    return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, email, page));
+    return ApiResponse.onSuccess(matchQueryService.getMatchListDtosByStatus(status, email, page, size));
   }
 
   @PostMapping
