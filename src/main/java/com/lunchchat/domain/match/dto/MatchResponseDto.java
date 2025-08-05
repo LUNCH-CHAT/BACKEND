@@ -24,15 +24,6 @@ public class MatchResponseDto {
         List<InterestDto> userInterests
     ) {}
 
-    public record MatchListPageDto(
-        List<MatchListDto> matchList,
-        Integer listSize,
-        Integer totalPage,
-        Long totalElements,
-        Boolean isFirst,
-        Boolean hasNext
-    ) {}
-
     public record KeywordDto(
         Long id,
         String keywordName
