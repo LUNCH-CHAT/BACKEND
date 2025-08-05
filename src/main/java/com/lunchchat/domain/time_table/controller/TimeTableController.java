@@ -8,18 +8,18 @@ import com.lunchchat.global.security.auth.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/timetable")
+@RequestMapping("/api/timetables")
 public class TimeTableController {
   private final TimeTableCommandService timeTableCommandService;
 
-  @PutMapping
+  @PatchMapping
   @Operation(summary = "시간표 업데이트", description = "사용자의 시간표를 업데이트합니다.")
   public ApiResponse<SuccessStatus> updateTimeTable(
       @AuthenticationPrincipal CustomUserDetails userDetails,
