@@ -70,5 +70,19 @@ public class MemberResponseDTO {
         private List<InterestType> tags;
 
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MyProfileDetailResponseDTO {
+        private String profileImageUrl;
+        private String memberName;
+        private String studentNo;
+        private String department;
+        private List<InterestType> userInterests;
+        private List<UserKeywordDTO> userKeywords;
+        private List<TimeTableDTO> timeTables;
+    }
 }
 

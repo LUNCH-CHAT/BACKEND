@@ -308,6 +308,17 @@ public class MemberQueryServiceImpl implements MemberQueryService {
             tags
         );
       }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MemberResponseDTO.MyProfileDetailResponseDTO getMyDetail(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+
+        return memberConverter.toMyProfileDetailResponse(member);
+    }
+
+
     private Member getCurrentMember() {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -125,4 +125,13 @@ public class MemberController {
         List<UserKeywordDTO> keywords = memberQueryService.getUserKeywords(email);
         return ApiResponse.onSuccess(keywords);
     }
+
+    @GetMapping("/me")
+    @Operation(summary = "내 프로필 상세 조회", description = "내 프로필을 상세 조회합니다.")
+    public ApiResponse<MemberResponseDTO.MyProfileDetailResponseDTO> getMyProfileDetail(
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        MemberResponseDTO.MyProfileDetailResponseDTO detail = memberQueryService.getMyDetail(userDetails.getUsername());
+        return ApiResponse.onSuccess(detail);
+    }
 }

@@ -14,4 +14,5 @@ public interface MemberQueryService {
     List<MemberResponseDTO.MemberRecommendationResponseDTO> getPopularMembers(Long currentMemberId);
     MemberResponseDTO.MyPageResponseDTO getMyPage(String email);
     List<UserKeywordDTO> getUserKeywords(String email);
+    MemberResponseDTO.MyProfileDetailResponseDTO getMyDetail(String email);
 }
