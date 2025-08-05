@@ -9,6 +9,7 @@ import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.member.service.MemberCommandService;
 import com.lunchchat.domain.member.service.MemberQueryService;
 import com.lunchchat.domain.notification.dto.FcmUpdateRequestDto;
+import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
@@ -98,11 +99,30 @@ public class MemberController {
         return ApiResponse.onSuccess(myPage);
     }
 
-    @PatchMapping("me/tags")
+    @PatchMapping("/me/tags")
     @Operation(summary = "사용자 관심사 태그 업데이트", description = "사용자의 관심사 태그를 업데이트합니다.")
     public ApiResponse<SuccessStatus> updateUserInterest(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid MemberRequestDTO.UpdateInterestDTO request) {
         String email = userDetails.getUsername();
         memberCommandService.updateInterests(email, request.getInterestIds());
         return ApiResponse.onSuccess(SuccessStatus.INTERESTS_UPDATE_SUCCESS);
+    }
+
+    @PatchMapping("/keywords")
+    @Operation(summary = "사용자 키워드 등록", description = "사용자의 키워드를 등록 또는 업데이트합니다.")
+    public ApiResponse<SuccessStatus> updateUserKeywords(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody @Valid MemberRequestDTO.UpdateKeywordListDTO request) {
+        String email = userDetails.getUsername();
+        memberCommandService.updateKeywords(email, request);
+        return ApiResponse.onSuccess(SuccessStatus.KEYWORDS_UPDATE_SUCCESS);
+    }
+
+    @GetMapping("/keywords")
+    @Operation(summary = "내 키워드 조회", description = "현재 로그인한 사용자의 키워드를 조회합니다.")
+    public ApiResponse<List<UserKeywordDTO>> getMyKeywords(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        String email = userDetails.getUsername();
+        List<UserKeywordDTO> keywords = memberQueryService.getUserKeywords(email);
+        return ApiResponse.onSuccess(keywords);
     }
 }
