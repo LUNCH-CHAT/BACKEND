@@ -307,6 +307,17 @@ public class MemberQueryServiceImpl implements MemberQueryService {
             tags
         );
       }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MemberResponseDTO.MyProfileDetailResponseDTO getMyDetail(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+
+        return memberConverter.toMyProfileDetailResponse(member);
+    }
+
+
     private Member getCurrentMember() {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -353,27 +364,5 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     private boolean hasKeyword(Member member) {
         return member.getUserKeywords() != null && !member.getUserKeywords().isEmpty();
     }
-
-//
-//  @Override
-//  public MemberResponseDTO.MyPageResponseDTO getMyPage(Long memberId) {
-//    Member member = memberRepository.findById(memberId)
-//        .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
-//
-//    UserStatistics userStatistics = userStatisticsRepository.findByMemberId(memberId)
-//        .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
-//
-//    List<String> keywords = userKeywordsRepository.findTitlesByMemberId(memberId);
-//    List<String> tags = userInterestsRepository.findInterestNamesByMemberId(memberId);
-//
-//    return MemberConverter.toMyPageDto(
-//        member,
-//        userStatistics.getMatchCompletedCount(),
-//        userStatistics.getMatchRequestedCount(),
-//        userStatistics.getMatchReceivedCount(),
-//        keywords,
-//        tags
-//    );
-//  }
 }
 

@@ -12,4 +12,5 @@ public interface MemberQueryService {
     PaginatedResponse<MemberResponseDTO.MemberRecommendationResponseDTO> getFilteredRecommendations(String currentMemberEmail, MemberFilterRequestDTO req);
     List<MemberResponseDTO.MemberRecommendationResponseDTO> getPopularMembers(Long currentMemberId);
     MemberResponseDTO.MyPageResponseDTO getMyPage(String email);
+    MemberResponseDTO.MyProfileDetailResponseDTO getMyDetail(String email);
 }

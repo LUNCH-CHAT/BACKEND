@@ -60,5 +60,23 @@ public class MemberConverter {
             .tags(tags)
             .build();
     }
+
+    public MemberResponseDTO.MyProfileDetailResponseDTO toMyProfileDetailResponse(Member member) {
+        return MemberResponseDTO.MyProfileDetailResponseDTO.builder()
+            .profileImageUrl(member.getProfileImageUrl())
+            .memberName(member.getMembername())
+            .studentNo(member.getStudentNo())
+            .department(member.getDepartment().getName())
+            .userInterests(member.getInterests().stream()
+                .map(Interest::getType)
+                .collect(Collectors.toList()))
+            .userKeywords(member.getUserKeywords().stream()
+                .map(UserKeywordDTO::from)
+                .collect(Collectors.toList()))
+            .timeTables(member.getTimeTables().stream()
+                .map(timeTableConverter::toTimeTableDTO)
+                .collect(Collectors.toList()))
+            .build();
+    }
 }
 
