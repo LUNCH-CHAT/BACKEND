@@ -7,6 +7,7 @@ import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_keywords.entity.UserKeyword;
 
+import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -24,22 +25,29 @@ public class MatchConverter {
   }
 
 
-  public static MatchResponseDto.MatchListPageDto toMatchListPageDto(Page<Matches> matchPage, Long currentUserId) {
+  public static PaginatedResponse<MatchResponseDto.MatchListDto> toPaginatedMatchListDto(
+      Page<Matches> matchPage,
+      Long currentUserId
+  ) {
     List<MatchResponseDto.MatchListDto> matchList = matchPage.stream()
         .map(match -> {
           Member opponent = getOpponent(currentUserId, match);
           return toMatchListDto(match, opponent);
         })
-        .toList();
+        .collect(Collectors.toList());
 
-    return new MatchResponseDto.MatchListPageDto(
-        matchList,
-        matchList.size(),
-        matchPage.getTotalPages(),
-        matchPage.getTotalElements(),
-        matchPage.isFirst(),
-        matchPage.hasNext()
-    );
+    PaginatedResponse.Meta meta = PaginatedResponse.Meta.builder()
+        .currentPage(matchPage.getNumber())
+        .pageSize(matchPage.getSize())
+        .totalItems(matchPage.getTotalElements())
+        .totalPages(matchPage.getTotalPages())
+        .hasNext(matchPage.hasNext())
+        .build();
+
+    return PaginatedResponse.<MatchResponseDto.MatchListDto>builder()
+        .data(matchList)
+        .meta(meta)
+        .build();
   }
 
   private static MatchResponseDto.MatchedUserDto toMatchedUserDto(Member member) {

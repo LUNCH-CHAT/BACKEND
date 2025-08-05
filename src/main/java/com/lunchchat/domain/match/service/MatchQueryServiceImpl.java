@@ -2,12 +2,14 @@ package com.lunchchat.domain.match.service;
 
 import com.lunchchat.domain.match.converter.MatchConverter;
 import com.lunchchat.domain.match.dto.MatchResponseDto;
+import com.lunchchat.domain.match.dto.MatchResponseDto.MatchListDto;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.repository.MatchRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
+import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.MatchException;
 import lombok.RequiredArgsConstructor;
@@ -44,13 +46,13 @@ public class MatchQueryServiceImpl implements MatchQueryService {
 
   @Override
   @Transactional(readOnly = true)
-  public MatchResponseDto.MatchListPageDto getMatchListDtosByStatus(MatchStatusType status, String email, int page) {
+  public PaginatedResponse<MatchListDto> getMatchListDtosByStatus(MatchStatusType status, String email, int page, int size) {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new MatchException(ErrorStatus.USER_NOT_FOUND));
 
-    PageRequest pageable = PageRequest.of(page, 10);
+    PageRequest pageable = PageRequest.of(page, size);
     Page<Matches> matchPage = getMatchesByStatus(status, member.getId(), pageable);
 
-    return MatchConverter.toMatchListPageDto(matchPage, member.getId());
+    return MatchConverter.toPaginatedMatchListDto(matchPage, member.getId());
   }
 }
