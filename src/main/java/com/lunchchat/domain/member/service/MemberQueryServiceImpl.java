@@ -21,6 +21,7 @@ import com.lunchchat.domain.time_table.entity.TimeTable;
 import com.lunchchat.domain.time_table.service.TimeTableQueryService;
 import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_interests.repository.InterestRepository;
+import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import com.lunchchat.domain.user_keywords.repository.UserKeywordsRepository;
 import com.lunchchat.domain.user_statistics.entity.UserStatistics;
 import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
@@ -354,26 +355,15 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         return member.getUserKeywords() != null && !member.getUserKeywords().isEmpty();
     }
 
-//
-//  @Override
-//  public MemberResponseDTO.MyPageResponseDTO getMyPage(Long memberId) {
-//    Member member = memberRepository.findById(memberId)
-//        .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
-//
-//    UserStatistics userStatistics = userStatisticsRepository.findByMemberId(memberId)
-//        .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
-//
-//    List<String> keywords = userKeywordsRepository.findTitlesByMemberId(memberId);
-//    List<String> tags = userInterestsRepository.findInterestNamesByMemberId(memberId);
-//
-//    return MemberConverter.toMyPageDto(
-//        member,
-//        userStatistics.getMatchCompletedCount(),
-//        userStatistics.getMatchRequestedCount(),
-//        userStatistics.getMatchReceivedCount(),
-//        keywords,
-//        tags
-//    );
-//  }
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserKeywordDTO> getUserKeywords(String email) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+
+        return userKeywordsRepository.findByMemberId(member.getId()).stream()
+            .map(UserKeywordDTO::from)
+            .collect(Collectors.toList());
+    }
 }
 
