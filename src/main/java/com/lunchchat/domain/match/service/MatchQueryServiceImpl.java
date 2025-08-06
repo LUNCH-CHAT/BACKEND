@@ -15,6 +15,7 @@ import com.lunchchat.global.apiPayLoad.exception.handler.MatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +51,7 @@ public class MatchQueryServiceImpl implements MatchQueryService {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new MatchException(ErrorStatus.USER_NOT_FOUND));
 
-    PageRequest pageable = PageRequest.of(page, size);
+    PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
     Page<Matches> matchPage = getMatchesByStatus(status, member.getId(), pageable);
 
     return MatchConverter.toPaginatedMatchListDto(matchPage, member.getId());
