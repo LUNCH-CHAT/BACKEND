@@ -84,5 +84,14 @@ public class MemberResponseDTO {
         private List<UserKeywordDTO> userKeywords;
         private List<TimeTableDTO> timeTables;
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PresignedUrlResponse {
+        private String presignedUrl;
+        private String s3Url;
+    }
 }
 

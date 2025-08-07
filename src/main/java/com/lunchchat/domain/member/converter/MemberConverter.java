@@ -9,6 +9,7 @@ import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -76,6 +77,13 @@ public class MemberConverter {
             .timeTables(member.getTimeTables().stream()
                 .map(timeTableConverter::toTimeTableDTO)
                 .collect(Collectors.toList()))
+            .build();
+    }
+
+    public static MemberResponseDTO.PresignedUrlResponse toPresignedUrlResponse(String presignedUrl, String s3Url) {
+        return MemberResponseDTO.PresignedUrlResponse.builder()
+            .presignedUrl(presignedUrl)
+            .s3Url(s3Url)
             .build();
     }
 }
