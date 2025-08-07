@@ -12,13 +12,13 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class NotificationQueueService {
-    
+
     private final StringRedisTemplate redisTemplate;
     private final FcmService fcmService;
     private final ObjectMapper objectMapper;
-    
+
     private static final String QUEUE_KEY = "notification-queue";
-    
+
     public void enqueue(FcmSendDto dto) {
         try {
             String jsonDto = objectMapper.writeValueAsString(dto);
@@ -27,12 +27,12 @@ public class NotificationQueueService {
             log.error("알림 큐 추가 실패 - userId: {}", dto.getUserId(), e);
         }
     }
-    
-    @Scheduled(fixedDelay = 500)
+
+    @Scheduled(fixedDelay = 200)
     public void processQueue() {
         try {
             String jsonDto = redisTemplate.opsForList().rightPop(QUEUE_KEY);
-            
+
             if (jsonDto != null) {
                 FcmSendDto dto = objectMapper.readValue(jsonDto, FcmSendDto.class);
                 fcmService.sendNotification(dto);
@@ -41,7 +41,7 @@ public class NotificationQueueService {
             log.error("큐 알림 처리 실패", e);
         }
     }
-    
+
     public long getQueueSize() {
         Long size = redisTemplate.opsForList().size(QUEUE_KEY);
         return size != null ? size : 0;
