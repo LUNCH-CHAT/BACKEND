@@ -13,6 +13,7 @@ import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class ChatMessageService {
     private final RedisPublisher redisPublisher;
 
     // 메시지 전송 로직 구현
+    @Transactional
     public void sendMessage(Long roomId, String senderEmail, ChatMessageReq messageReq) {
 
         //user, room 불러오기 -> 유저 구현시 직접 참조로 변경
