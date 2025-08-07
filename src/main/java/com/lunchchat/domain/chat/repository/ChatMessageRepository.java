@@ -23,10 +23,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     @Query("""
     SELECT m FROM ChatMessage m
+    JOIN FETCH m.sender
     WHERE m.chatRoom = :chatRoom
     AND (:cursorTime IS NULL OR 
-         (m.sentAt < :cursorTime OR 
-          (m.sentAt = :cursorTime AND m.id < :cursorId)))
+         (m.sentAt > :cursorTime OR 
+          (m.sentAt = :cursorTime AND m.id > :cursorId)))
     ORDER BY m.sentAt ASC, m.id ASC
     """)
     List<ChatMessage> findByChatRoomWithCursor(

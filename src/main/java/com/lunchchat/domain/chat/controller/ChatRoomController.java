@@ -105,7 +105,7 @@ public class ChatRoomController {
 
     // 채팅방 내 메시지 페이징 조회 (커서 기반)
     @GetMapping("/{roomId}/messages")
-    @Operation(summary = "채팅방 내 메시지 조회 (커서 페이징)")
+    @Operation(summary = "채팅방 내 메시지 조회")
     public ResponseEntity<ApiResponse<CursorPaginatedResponse<ChatMessageRes>>> getChatMessages(
             @PathVariable Long roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
