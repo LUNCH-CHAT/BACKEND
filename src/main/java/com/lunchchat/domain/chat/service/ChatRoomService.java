@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -132,75 +133,123 @@ public class ChatRoomService {
 //    }
 
     @Transactional(readOnly = true)
-    public CursorPaginatedResponse<ChatRoomCardRes> getChatRooms(Long userId, int size, String cursor) {
+    public PaginatedResponse<ChatRoomCardRes> getChatRooms(Long userId, int page, int size) {
         Member user = memberRepository.findById(userId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
-        LocalDateTime cursorTime = null;
+        Pageable pageable = PageRequest.of(page, size);
 
-        // 커서 파싱 (예: "2025-08-04T21:33:12.345")
-        if (cursor != null && !cursor.isBlank()) {
-            try {
-                cursorTime = LocalDateTime.parse(cursor);
-            } catch (Exception e) {
-                throw new ChatException(ErrorStatus.INVALID_CURSOR_FORMAT);
-            }
-        }
+        // 나간 채팅방 필터링 쿼리 호출 (이제 여기서 걸러진 상태)
+        Page<ChatRoom> roomsPage = chatRoomRepository.findActiveChatRoomsByUser(user, pageable);
 
-        Pageable pageable = PageRequest.of(
-                0,
-                size + 1,
-                Sort.by(Sort.Direction.DESC, "lastMessageSendAt") // 최신순 정렬
-        );
+        List<ChatRoomCardRes> data = roomsPage.stream()
+                .map(room -> {
+                    ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
+                            .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
 
-        List<ChatRoom> rooms = chatRoomRepository.findByUserWithCursor(user, cursorTime, pageable);
+                    Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+                    String department = friend.getDepartment().getName();
+                    String friendName = friend.getMembername();
 
-        boolean hasNext = rooms.size() > size;
-        if (hasNext) {
-            rooms = rooms.subList(0, size);
-        }
+                    int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
 
-        List<ChatRoomCardRes> result = new ArrayList<>();
+                    return new ChatRoomCardRes(
+                            room.getId(),
+                            friendName,
+                            department,
+                            lastMessage.getContent(),
+                            lastMessage.getCreatedAt(),
+                            unreadCount
+                    );
+                })
+                .toList();
 
-        for (ChatRoom room : rooms) {
-            // 퇴장한 유저의 채팅방 제외
-            if ((room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
-                    (room.getFriend().getId().equals(userId) && room.isExitedByFriend())) {
-                continue;
-            }
+        PaginatedResponse.Meta meta = PaginatedResponse.Meta.builder()
+                .currentPage(roomsPage.getNumber())
+                .pageSize(roomsPage.getSize())
+                .totalItems(roomsPage.getTotalElements())
+                .totalPages(roomsPage.getTotalPages())
+                .hasNext(roomsPage.hasNext())
+                .build();
 
-            ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
-                    .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
-
-            Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
-            int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
-
-            result.add(new ChatRoomCardRes(
-                    room.getId(),
-                    friend.getMembername(),
-                    friend.getDepartment().getName(),
-                    lastMessage.getContent(),
-                    lastMessage.getCreatedAt(),
-                    unreadCount
-            ));
-        }
-
-        // 다음 커서 생성
-        String nextCursor = null;
-        if (hasNext && !rooms.isEmpty()) {
-            ChatRoom lastRoom = rooms.get(rooms.size() - 1);
-            nextCursor = lastRoom.getLastMessageSendAt().toString(); // ex: "2025-08-04T22:00:00.000"
-        }
-
-        return CursorPaginatedResponse.<ChatRoomCardRes>builder()
-                .data(result)
-                .meta(CursorPaginatedResponse.CursorMeta.builder()
-                        .pageSize(size)
-                        .hasNext(hasNext)
-                        .nextCursor(nextCursor)
-                        .build())
+        return PaginatedResponse.<ChatRoomCardRes>builder()
+                .data(data)
+                .meta(meta)
                 .build();
     }
+
+
+
+//    @Transactional(readOnly = true)
+//    public CursorPaginatedResponse<ChatRoomCardRes> getChatRooms(Long userId, int size, String cursor) {
+//        Member user = memberRepository.findById(userId)
+//                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
+//
+//        LocalDateTime cursorTime = null;
+//
+//        // 커서 파싱 (예: "2025-08-04T21:33:12.345")
+//        if (cursor != null && !cursor.isBlank()) {
+//            try {
+//                cursorTime = LocalDateTime.parse(cursor);
+//            } catch (Exception e) {
+//                throw new ChatException(ErrorStatus.INVALID_CURSOR_FORMAT);
+//            }
+//        }
+//
+//        Pageable pageable = PageRequest.of(
+//                0,
+//                size + 1,
+//                Sort.by(Sort.Direction.DESC, "lastMessageSendAt") // 최신순 정렬
+//        );
+//
+//        List<ChatRoom> rooms = chatRoomRepository.findByUserWithCursor(user, cursorTime, pageable);
+//
+//        boolean hasNext = rooms.size() > size;
+//        if (hasNext) {
+//            rooms = rooms.subList(0, size);
+//        }
+//
+//        List<ChatRoomCardRes> result = new ArrayList<>();
+//
+//        for (ChatRoom room : rooms) {
+//            // 퇴장한 유저의 채팅방 제외
+//            if ((room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
+//                    (room.getFriend().getId().equals(userId) && room.isExitedByFriend())) {
+//                continue;
+//            }
+//
+//            ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
+//                    .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
+//
+//            Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+//            int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
+//
+//            result.add(new ChatRoomCardRes(
+//                    room.getId(),
+//                    friend.getMembername(),
+//                    friend.getDepartment().getName(),
+//                    lastMessage.getContent(),
+//                    lastMessage.getCreatedAt(),
+//                    unreadCount
+//            ));
+//        }
+//
+//        // 다음 커서 생성
+//        String nextCursor = null;
+//        if (hasNext && !rooms.isEmpty()) {
+//            ChatRoom lastRoom = rooms.get(rooms.size() - 1);
+//            nextCursor = lastRoom.getLastMessageSendAt().toString(); // ex: "2025-08-04T22:00:00.000"
+//        }
+//
+//        return CursorPaginatedResponse.<ChatRoomCardRes>builder()
+//                .data(result)
+//                .meta(CursorPaginatedResponse.CursorMeta.builder()
+//                        .pageSize(size)
+//                        .hasNext(hasNext)
+//                        .nextCursor(nextCursor)
+//                        .build())
+//                .build();
+//    }
 
 
     // 채팅방 내 채팅 메시지 조회(단일 채팅방 조회)
@@ -296,6 +345,7 @@ public class ChatRoomService {
         }
 
         return CursorPaginatedResponse.<ChatMessageRes>builder()
+                .userId(userId)
                 .data(result)
                 .meta(CursorPaginatedResponse.CursorMeta.builder()
                         .pageSize(size)
