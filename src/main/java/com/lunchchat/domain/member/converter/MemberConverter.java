@@ -5,11 +5,9 @@ import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.time_table.converter.TimeTableConverter;
-import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_interests.entity.Interest;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

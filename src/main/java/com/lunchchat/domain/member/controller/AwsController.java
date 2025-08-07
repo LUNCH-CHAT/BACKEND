@@ -1,7 +1,6 @@
 package com.lunchchat.domain.member.controller;
 
 import com.lunchchat.domain.member.dto.MemberRequestDTO;
-import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.PresignedUrlResponse;
 import com.lunchchat.domain.member.service.ProfileImageService;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
