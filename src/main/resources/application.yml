@@ -73,16 +73,8 @@ management:
     health:
       show-details: always
 
-cloud:
-  aws:
-    s3:
-      bucket: lunchchat-images
-      path:
-        profile: profile-images
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
-    credentials:
-      accessKey: ${AWS_ACCESS_KEY}
-      secretKey: ${AWS_SECRET_KEY}
+aws:
+  s3:
+    bucket: lunchchat-images
+    path:
+      profile: profile-images

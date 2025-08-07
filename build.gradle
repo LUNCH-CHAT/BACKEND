@@ -99,7 +99,7 @@ dependencies {
     implementation 'com.google.apis:google-api-services-sheets:v4-rev20230227-2.0.0'
 
     // S3
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
 }
 
 tasks.named('test') {
