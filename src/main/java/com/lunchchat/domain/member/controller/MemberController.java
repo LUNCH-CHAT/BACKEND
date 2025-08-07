@@ -139,11 +139,11 @@ public class MemberController {
 
     @PatchMapping("/profile-image")
     @Operation(summary = "프로필 이미지 URL 저장", description = "이미지 업로드 완료 후 S3 URL을 저장합니다.")
-    public ApiResponse<String> updateProfileImageUrl(
+    public ApiResponse<SuccessStatus> updateProfileImageUrl(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestBody @Valid MemberRequestDTO.UpdateProfileImageRequest dto
     ) {
         memberCommandService.updateProfileImageUrl(userDetails.getUsername(), dto.getProfileImageUrl());
-        return ApiResponse.onSuccess("프로필 이미지가 변경되었습니다.");
+        return ApiResponse.onSuccess(SuccessStatus.PROFILE_IMAGE_UPLOAD_SUCCESS);
     }
 }
