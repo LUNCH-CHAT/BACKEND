@@ -53,18 +53,33 @@ public class ChatRoomController {
 //
 //        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.getChatRooms(userId)));
 //    }
+
     @GetMapping
-    @Operation(summary = "채팅방 목록 조회 (lastMessageSendAt 기준 커서 페이징)")
-    public ResponseEntity<ApiResponse<CursorPaginatedResponse<ChatRoomCardRes>>> getChatRooms(
+    @Operation(summary = "채팅방 리스트 조회")
+    public ResponseEntity<ApiResponse<PaginatedResponse<ChatRoomCardRes>>> getChatRooms(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String cursor) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         Long userId = userDetails.getMemberId();
 
-        CursorPaginatedResponse<ChatRoomCardRes> response = chatRoomService.getChatRooms(userId, size, cursor);
+        PaginatedResponse<ChatRoomCardRes> response = chatRoomService.getChatRooms(userId, page, size);
+
         return ResponseEntity.ok(ApiResponse.onSuccess(response));
     }
+
+//    @GetMapping
+//    @Operation(summary = "채팅방 목록 조회 (lastMessageSendAt 기준 커서 페이징)")
+//    public ResponseEntity<ApiResponse<CursorPaginatedResponse<ChatRoomCardRes>>> getChatRooms(
+//            @AuthenticationPrincipal CustomUserDetails userDetails,
+//            @RequestParam(defaultValue = "10") int size,
+//            @RequestParam(required = false) String cursor) {
+//
+//        Long userId = userDetails.getMemberId();
+//
+//        CursorPaginatedResponse<ChatRoomCardRes> response = chatRoomService.getChatRooms(userId, size, cursor);
+//        return ResponseEntity.ok(ApiResponse.onSuccess(response));
+//    }
 
 
     //채팅방 퇴장
