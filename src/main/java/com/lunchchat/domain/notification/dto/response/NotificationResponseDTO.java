@@ -28,10 +28,10 @@ public class NotificationResponseDTO {
         
         if (notification.getSender() != null) {
             this.senderMembername = notification.getSender().getMembername();
-            this.senderProfileImageUrl = "/api/files/default-profile.png";
+            this.senderProfileImageUrl = notification.getSender().getProfileImageUrl();
         } else {
             this.senderMembername = "시스템";
-            this.senderProfileImageUrl = "/api/files/default-profile.png";
+            this.senderProfileImageUrl = null;
         }
     }
 }

@@ -25,6 +25,9 @@ public enum SuccessStatus implements BaseCode {
     // 키워드 관련 응답
     KEYWORDS_UPDATE_SUCCESS(HttpStatus.OK, "KEYWORDS200", "키워드가 성공적으로 업데이트되었습니다."),
 
+    // 프로필 이미지 관련 응답
+    PROFILE_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "PROFILE200", "프로필 이미지가 성공적으로 업로드되었습니다."),
+
     // 매칭 관련 응답
     MATCH_REQUEST_SUCCESS(HttpStatus.OK, "MATCH200", "매칭 요청이 성공적으로 처리되었습니다."),
 

@@ -3,6 +3,7 @@ package com.lunchchat.domain.member.dto;
 import com.lunchchat.domain.user_keywords.entity.KeywordType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -59,5 +60,17 @@ public class MemberRequestDTO {
     @Valid
     @Size(min = 3, max = 3, message = "항상 3개의 키워드를 입력해야 합니다.")
     private List<UpdateKeywordDTO> keywords;
+  }
+
+  @Getter
+  public static class PresignedUrlRequest {
+    @NotBlank(message = "파일 이름은 필수입니다.")
+    private String fileName;
+  }
+
+  @Getter
+  public static class UpdateProfileImageRequest {
+    @NotBlank(message = "프로필 이미지 URL은 필수입니다.")
+    private String profileImageUrl;
   }
 }
