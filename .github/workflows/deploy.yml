@@ -149,6 +149,46 @@ env:
       rm -f /tmp/backup*.env
       exit 1
     fi
+
+  MONITORING_DEPLOY_SCRIPT: |
+    set -e
+    
+    echo "🎯 모니터링 스택 배포 시작..."
+    cd /home/ubuntu
+    
+    if [ -d "lunchchat-monitoring" ]; then
+      cd lunchchat-monitoring/monitoring
+      docker-compose down || true
+      cd ../..
+    fi
+    
+    rm -rf lunchchat-monitoring-temp lunchchat-monitoring
+    git clone -q --depth 1 --branch "${{ github.ref_name }}" \
+      ${{ github.server_url }}/${{ github.repository }}.git lunchchat-monitoring-temp
+    
+    mv lunchchat-monitoring-temp lunchchat-monitoring
+    cd lunchchat-monitoring/monitoring
+    
+    if [ -f "/opt/lunchchat/configs/.env" ]; then
+      cp /opt/lunchchat/configs/.env .env
+      echo "✅ 외부 모니터링 설정 파일 사용"
+    else
+      echo "❌ /opt/lunchchat/configs/.env 파일 없음"
+      exit 1
+    fi
+    
+    docker-compose up -d
+    
+    sleep 30
+    
+    if curl -s -m 10 "http://localhost:3000/api/health" > /dev/null && \
+       curl -s -m 10 "http://localhost:9090/-/healthy" > /dev/null; then
+      echo "🎉 모니터링 시작!"
+    else
+      echo "❌ 모니터링 배포 실패"
+      exit 1
+    fi
+
   VERIFY_SCRIPT: |
     echo "🔍 $SERVER_NAME 검증 중..."
     SUCCESS_COUNT=0
@@ -238,8 +278,31 @@ jobs:
           build-args: |
             BUILDKIT_INLINE_CACHE=1
 
-  deploy-server1:
+  deploy-monitoring:
     needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    timeout-minutes: 15
+
+    steps:
+      - name: Deploy Monitoring Stack
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.LOAD_BALANCER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 12m
+          command_timeout: 10m
+          script: |
+            export SERVER_NAME="Monitoring-Stack"
+            
+            source <(cat << 'MONITORING_DEPLOY_SCRIPT'
+            ${{ env.MONITORING_DEPLOY_SCRIPT }}
+            MONITORING_DEPLOY_SCRIPT
+            )
+
+  deploy-server1:
+    needs: [ build-and-push, deploy-monitoring ]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
     timeout-minutes: 20
