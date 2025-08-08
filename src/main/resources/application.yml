@@ -72,3 +72,9 @@ management:
   endpoint:
     health:
       show-details: always
+
+aws:
+  s3:
+    bucket: lunchchat-images
+    path:
+      profile: profile-images

@@ -95,4 +95,12 @@ public class MemberCommandServiceImpl implements MemberCommandService {
             }
         }
     }
+
+    @Override
+    @Transactional
+    public void updateProfileImageUrl(String email, String imageUrl) {
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+        member.updateProfileImageUrl(imageUrl);
+    }
 }
