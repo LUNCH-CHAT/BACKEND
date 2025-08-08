@@ -9,6 +9,7 @@ import com.lunchchat.domain.match.service.MatchCommandService;
 import com.lunchchat.domain.match.service.MatchQueryService;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.PaginatedResponse;
+import com.lunchchat.global.apiPayLoad.code.status.SuccessStatus;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -47,14 +48,14 @@ public class MatchRestController {
     return ApiResponse.onSuccess(MatchConverter.toMatchResultDto(match));
   }
 
-  @PatchMapping("/{matchId}/accept")
-  @Operation(summary = "매칭 수락", description = "특정 매칭 요청을 수락합니다. 수락 알림이 자동으로 전송됩니다.")
-  public ApiResponse<Void> acceptMatch(
+  @PatchMapping("/accept/{otherMemberId}")
+  @Operation(summary = "매칭 수락", description = "특정 상대 멤버의 매칭 요청을 수락합니다. 수락 알림이 자동으로 전송됩니다.")
+  public ApiResponse<SuccessStatus> acceptMatch(
           @AuthenticationPrincipal CustomUserDetails customUserDetails,
-          @Parameter(description = "매칭 ID", required = true) @PathVariable Long matchId) {
+          @Parameter(description = "상대 멤버 ID", required = true) @PathVariable Long otherMemberId) {
 
-    matchCommandService.acceptMatch(matchId, customUserDetails.getUsername());
+    matchCommandService.acceptMatch(otherMemberId, customUserDetails.getUsername());
     
-    return ApiResponse.onSuccess(null);
+    return ApiResponse.onSuccess(SuccessStatus.MATCH_REQUEST_SUCCESS);
   }
 }
