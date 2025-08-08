@@ -3,7 +3,6 @@ package com.lunchchat.domain.member.dto;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.member.entity.enums.InterestType;
 import com.lunchchat.domain.time_table.dto.TimeTableDTO;
-import com.lunchchat.domain.user_interests.dto.UserInterestDTO;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import java.time.LocalDateTime;
 
@@ -83,6 +82,15 @@ public class MemberResponseDTO {
         private List<InterestType> userInterests;
         private List<UserKeywordDTO> userKeywords;
         private List<TimeTableDTO> timeTables;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PresignedUrlResponse {
+        private String presignedUrl;
+        private String s3Url;
     }
 }
 
