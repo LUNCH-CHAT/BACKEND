@@ -3,9 +3,10 @@ package com.lunchchat.domain.chat.dto.response;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.lunchchat.domain.chat.entity.ChatMessage;
 import java.time.LocalDateTime;
+import org.bson.types.ObjectId;
 
 public record ChatMessageRes(
-    Long id,
+    ObjectId id,
     Long roomId,
     Long senderId,
     String content,
@@ -15,10 +16,10 @@ public record ChatMessageRes(
     public static ChatMessageRes from(ChatMessage chatMessage) {
         return new ChatMessageRes(
             chatMessage.getId(),
-            chatMessage.getChatRoom().getId(),
-            chatMessage.getSender().getId(),
+            chatMessage.getChatRoomId(),
+            chatMessage.getSenderId(),
             chatMessage.getContent(),
-            chatMessage.getCreatedAt()
+            chatMessage.getSentAt()
         );
     }
 
@@ -26,9 +27,9 @@ public record ChatMessageRes(
         return new ChatMessageRes(
             message.getId(),
             roomId,
-            message.getSender().getId(),
+            message.getSenderId(),
             message.getContent(),
-            message.getCreatedAt()
+            message.getSentAt()
         );
     }
 }
