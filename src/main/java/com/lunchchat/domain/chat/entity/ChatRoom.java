@@ -55,7 +55,7 @@ public class ChatRoom extends BaseEntity {
         return starter.getId().equals(userId) || friend.getId().equals(userId);
     }
 
-    public void setLastMessageSendAt(LocalDateTime sentAt) {
+    public void updateLastMessageSendAt(LocalDateTime sentAt) {
         this.lastMessageSendAt = sentAt;
     }
 }

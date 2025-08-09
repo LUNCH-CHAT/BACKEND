@@ -6,35 +6,27 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import org.bson.types.ObjectId;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
+@Document(collection = "chat_messages")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessage extends BaseEntity {
+public class ChatMessage {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private ObjectId id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id")
-    private ChatRoom chatRoom;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    private Member sender;
-
-    @Column(columnDefinition = "TEXT")
+    private Long chatRoomId; // RDB ChatRoom ID 참조
+    private Long senderId;   // RDB Member ID 참조
     private String content;
-
-    private Boolean isRead = false;
-
+    private Boolean isRead;
     private LocalDateTime sentAt;
 
-    public static ChatMessage of(ChatRoom chatRoom, Member sender, String content) {
+    public static ChatMessage of(Long chatRoomId, Long senderId, String content) {
         ChatMessage message = new ChatMessage();
-        message.chatRoom = chatRoom;
-        message.sender = sender;
+        message.chatRoomId = chatRoomId;
+        message.senderId = senderId;
         message.content = content;
         message.isRead = false;
         message.sentAt = LocalDateTime.now();
