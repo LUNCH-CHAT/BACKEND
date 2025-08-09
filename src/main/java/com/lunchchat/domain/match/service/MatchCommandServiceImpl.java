@@ -5,6 +5,7 @@ import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.entity.Matches;
 import com.lunchchat.domain.match.repository.MatchRepository;
 import com.lunchchat.domain.member.entity.Member;
+import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.user_statistics.service.UserStatisticsCommandService;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
@@ -54,27 +55,27 @@ public class MatchCommandServiceImpl implements MatchCommandService {
 
     @Override
     @Transactional
-    public void acceptMatch(Long matchId, String memberEmail) {
-        Matches match = matchRepository.findById(matchId)
-            .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
+    public void acceptMatch(Long otherMemberId, String memberEmail) {
+        Member me = memberRepository.findByEmail(memberEmail)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-        Member from = match.getFromMember();
-        Member to = match.getToMember();
+        Member other = memberRepository.findById(otherMemberId)
+            .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
+
+        // 나(me)를 to로, 상대(other)를 from으로 한 매칭 요청 조회
+        Matches match = matchRepository.findByFromMemberAndToMember(other, me)
+            .orElseThrow(() -> new MatchException(ErrorStatus.MATCH_NOT_FOUND));
 
         if (match.getStatus() != MatchStatus.REQUESTED) {
             throw new MatchException(ErrorStatus.INVALID_MATCH_STATUS);
         }
 
-        if (!to.getEmail().equals(memberEmail)) {
-            throw new MatchException(ErrorStatus.INVALID_MATCH_ID);
-        }
-
         match.updateStatus(MatchStatus.ACCEPTED);
 
-        userStatisticsCommandService.incrementAcceptedCount(from);
-        userStatisticsCommandService.incrementAcceptedCount(to);
+        userStatisticsCommandService.incrementAcceptedCount(me);
+        userStatisticsCommandService.incrementAcceptedCount(other);
 
-        matchNotificationService.sendMatchAcceptNotification(from, to);
+        matchNotificationService.sendMatchAcceptNotification(other, me);
 
         matchRepository.save(match);
     }
