@@ -10,6 +10,7 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
 
   private final RedisTemplate<String, Object> redisTemplate;
   private static final String PREFIX = "Refresh:";
+  private static final String IDX = "RefreshIdx:";
 
   public RedisRefreshTokenRepository(RedisTemplate<String, Object> redisTemplate) {
     this.redisTemplate = redisTemplate;
@@ -19,6 +20,8 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
   @Override
   public void save(String key, String token, Duration ttl) {
     redisTemplate.opsForValue().set(PREFIX + key, token, ttl);
+    //역인덱스
+    redisTemplate.opsForValue().set(IDX+token,key,ttl);
   }
 
   //RT Redis에서 조회
@@ -31,7 +34,17 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
   //RT Redis에서 조회
   @Override
   public void delete(String key) {
+    String token = (String) redisTemplate.opsForValue().get(PREFIX + key);
     redisTemplate.delete(PREFIX + key);
+    if (token != null) redisTemplate.delete(IDX + token);
+  }
+
+  //RT Redis에서 삭제
+  @Override
+  public void deleteByToken(String token) {
+    Object key = redisTemplate.opsForValue().get(IDX + token);
+    if (key != null) redisTemplate.delete(PREFIX + key);
+    redisTemplate.delete(IDX + token);
   }
 
   //RT Request와 Redis 비교
@@ -42,8 +55,8 @@ public class RedisRefreshTokenRepository implements RefreshTokenRepository {
 
   //RT rotation
   @Override
-  public void rotate(String Key, String newToken, Duration ttl){
-    save(Key, newToken, ttl);
+  public void rotate(String key, String newToken, Duration ttl){
+    save(key, newToken, ttl);
   }
 
 }
