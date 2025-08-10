@@ -59,7 +59,7 @@ public class ChatRoomService {
         return new CreateChatRoomRes(
                 chatRoom.getId(),
                 chatRoom.getStarter().getId(),
-                chatRoom.getFriend().getNickname(),
+                chatRoom.getFriend().getMembername(),
                 chatRoom.getFriend().getDepartment().getName()
         );
     }
