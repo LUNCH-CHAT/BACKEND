@@ -54,6 +54,15 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.0
+          max-tokens: 32
+
 google:
   sheet:
     id: ${GOOGLE_SHEET_ID}
