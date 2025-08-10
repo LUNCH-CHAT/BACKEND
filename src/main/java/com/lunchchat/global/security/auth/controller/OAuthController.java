@@ -75,7 +75,13 @@ public class OAuthController {
   }
 
   // 로그아웃
-
+  @PostMapping("/logout")
+  public ApiResponse<?> logout(@CookieValue(name = "refresh", required = false) String refreshToken, HttpServletResponse response
+  ) {
+    log.info("✅ logout 성공");
+    googleAuthService.logout(refreshToken, response);
+    return ApiResponse.onSuccess("로그아웃 완료");
+  }
 
   //Reissue
   @Transactional
