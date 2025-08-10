@@ -28,6 +28,10 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springAiVersion', "1.0.0")
+}
+
 // Flyway Gradle Plugin 설정
 flyway {
     url = findProperty('DATABASE_URL')
@@ -102,7 +106,13 @@ dependencies {
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
 
     //SpringAI
-    implementation "org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0"
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {

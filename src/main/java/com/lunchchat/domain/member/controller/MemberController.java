@@ -146,4 +146,7 @@ public class MemberController {
         memberCommandService.updateProfileImageUrl(userDetails.getUsername(), dto.getProfileImageUrl());
         return ApiResponse.onSuccess(SuccessStatus.PROFILE_IMAGE_UPLOAD_SUCCESS);
     }
+
+//    @PostMapping("/keywordsAI")
+//    public
 }
