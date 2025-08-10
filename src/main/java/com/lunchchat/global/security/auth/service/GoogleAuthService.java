@@ -162,7 +162,7 @@ public class GoogleAuthService {
     String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
 
     // 6. 토큰 rotate
-    refreshTokenRepository.rotate(email, newRefreshToken, Duration.ofDays(30));
+    refreshTokenRepository.rotate(email, refreshToken, newRefreshToken, Duration.ofDays(30));
 
     // 7. RT 전송
     ResponseCookie refreshCookie = CookieUtil.createCookie(newRefreshToken, Duration.ofDays(30));

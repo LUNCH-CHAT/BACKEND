@@ -10,6 +10,6 @@ public interface RefreshTokenRepository {
   void delete(String key);
   void deleteByToken(String token);
   boolean isValid(String key, String token);
-  void rotate(String key,String newToken, Duration ttl);
+  void rotate(String key,String oldToken,String newToken, Duration ttl);
 
 }
