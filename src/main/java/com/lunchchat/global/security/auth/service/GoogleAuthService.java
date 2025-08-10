@@ -162,7 +162,7 @@ public class GoogleAuthService {
     String newRefreshToken = jwtTokenProvider.generateRefreshToken(email);
 
     // 6. 토큰 rotate
-    refreshTokenRepository.rotate(email, newRefreshToken, Duration.ofDays(30));
+    refreshTokenRepository.rotate(email, refreshToken, newRefreshToken, Duration.ofDays(30));
 
     // 7. RT 전송
     ResponseCookie refreshCookie = CookieUtil.createCookie(newRefreshToken, Duration.ofDays(30));
@@ -237,4 +237,33 @@ public class GoogleAuthService {
     memberRepository.save(member);
   }
 
+  public void logout(String refreshToken, HttpServletResponse response) {
+    //쿠키 값 확인
+    if (refreshToken == null || refreshToken.isBlank()) {
+      response.addHeader("Set-Cookie", CookieUtil.deleteCookie().toString());
+      return;
+    }
+
+    //토큰 유효성 검사
+    try {
+      if (!jwtUtil.validateToken(refreshToken)) {
+        response.addHeader("Set-Cookie", CookieUtil.deleteCookie().toString());
+        return;
+      }
+
+      Claims claims = jwtUtil.parseJwt(refreshToken);
+      String email = jwtUtil.getEmail(claims);
+
+      // 요청이 온다면 일단 삭제(일치여부와 상관없이)
+      if (refreshTokenRepository.isValid(email, refreshToken)) {
+        refreshTokenRepository.deleteByToken(refreshToken);
+      } else {
+        refreshTokenRepository.deleteByToken(refreshToken);
+      }
+    } catch (Exception e) {
+      log.warn("🚨로그아웃 실패: {}", e.getMessage());
+    } finally {
+      response.addHeader("Set-Cookie", CookieUtil.deleteCookie().toString());
+    }
+  }
 }
