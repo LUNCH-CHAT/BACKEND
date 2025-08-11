@@ -5,12 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 public record KeywordRecommendationDTO(){
 
   public record request(
-    @NotBlank
+    @NotBlank(message = "설명은 비어 있을 수 없습니다.")
     String description
   ){}
 
   public record response(
-    @NotBlank
+    @NotBlank(message = "키워드는 비어 있을 수 없습니다.")
     String keyword
   ){}
 }
