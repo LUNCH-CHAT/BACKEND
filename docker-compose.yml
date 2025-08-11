@@ -63,6 +63,9 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
       - AWS_REGION=${AWS_REGION:-}
 
+      # OpenAI 설정
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
     restart: unless-stopped
 
     volumes:

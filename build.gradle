@@ -28,6 +28,10 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    set('springAiVersion', "1.0.0")
+}
+
 // Flyway Gradle Plugin 설정
 flyway {
     url = findProperty('DATABASE_URL')
@@ -91,7 +95,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
     //Web Flux
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    //implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     //GoogleApi
     implementation 'com.google.api-client:google-api-client:2.2.0'
@@ -100,6 +104,18 @@ dependencies {
 
     // S3
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
+
+    //SpringAI
+    implementation('org.springframework.ai:spring-ai-starter-model-openai') {
+        exclude group: 'io.swagger.core.v3', module: 'swagger-annotations'
+        exclude group: 'io.swagger.core.v3', module: 'swagger-models'
+    }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+    }
 }
 
 tasks.named('test') {
