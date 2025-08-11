@@ -23,8 +23,12 @@ services:
       - '--web.enable-lifecycle'
       - '--web.route-prefix=/'
       - '--web.external-url=http://localhost:${PROMETHEUS_PORT}'
-    mem_limit: 300m
-    memswap_limit: 300m
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+        reservations:
+          memory: 200M
     networks:
       - monitoring
     user: "nobody"
@@ -54,8 +58,12 @@ services:
       - GF_UNIFIED_ALERTING_ENABLED=false
       - GF_RENDERING_SERVER_URL=""
       - GF_RENDERING_CALLBACK_URL=""
-    mem_limit: 150m
-    memswap_limit: 150m
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+        reservations:
+          memory: 100M
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -91,8 +99,12 @@ services:
       - monitoring
     user: "nobody"
     read_only: true
-    mem_limit: 30m
-    memswap_limit: 30m
+    deploy:
+      resources:
+        limits:
+          memory: 30M
+        reservations:
+          memory: 20M
 
   redis-exporter:
     image: oliver006/redis_exporter:latest
@@ -107,8 +119,12 @@ services:
       - monitoring
     user: "nobody"
     read_only: true
-    mem_limit: 20m
-    memswap_limit: 20m
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+        reservations:
+          memory: 15M
 
 networks:
   monitoring:
