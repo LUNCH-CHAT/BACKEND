@@ -177,6 +177,12 @@ env:
       exit 1
     fi
     
+    if [ -f "prometheus/prometheus.yml.template" ]; then
+      source .env
+      envsubst < prometheus/prometheus.yml.template > prometheus/prometheus.yml
+      echo "✅ Prometheus 설정 파일 생성 완료 (APP_SERVER_2_IP: $APP_SERVER_2_IP, APP_SERVER_3_IP: $APP_SERVER_3_IP)"
+    fi
+    
     docker-compose up -d
     
     sleep 30

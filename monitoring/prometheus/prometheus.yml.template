@@ -1,10 +1,10 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 30s
+  evaluation_interval: 30s
   scrape_timeout: 10s
   external_labels:
     cluster: 'lunchchat'
-    environment: 'production'
+    environment: '${MONITORING_ENVIRONMENT}'
 
 rule_files:
   - "rules/*.yml"
@@ -12,58 +12,56 @@ rule_files:
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: [ 'localhost:9090' ]
+      - targets: ['localhost:9090']
         labels:
           service: 'prometheus'
           server_name: 'monitoring'
     metrics_path: /metrics
-    scrape_interval: 15s
+    scrape_interval: 30s
 
   - job_name: 'loadbalancer-system'
     static_configs:
-      - targets: [ 'node-exporter:9100' ]
+      - targets: ['node-exporter:9100']
         labels:
           server_role: 'loadbalancer'
-          server_name: 'LCC-1'
-          server_ip: '54.180.153.142'
+          server_name: 'loadbalancer'
     metrics_path: /metrics
-    scrape_interval: 15s
+    scrape_interval: 30s
 
   - job_name: 'redis'
     static_configs:
-      - targets: [ 'redis-exporter:9121' ]
+      - targets: ['redis-exporter:9121']
         labels:
           service: 'redis'
-          server_name: 'LCC-1'
-          server_ip: '54.180.153.142'
+          server_name: 'loadbalancer'
     metrics_path: /metrics
-    scrape_interval: 15s
+    scrape_interval: 30s
 
   - job_name: 'lunchchat-app-server-2'
     static_configs:
-      - targets: [ '13.124.209.247:8080' ]
+      - targets: ['${APP_SERVER_2_IP}:8080']
         labels:
           service: 'lunchchat-backend'
           server_role: 'app'
-          server_name: 'LCC-2'
-          server_ip: '13.124.209.247'
+          server_name: 'app-server-2'
+          server_ip: '${APP_SERVER_2_IP}'
     metrics_path: /actuator/prometheus
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
 
   - job_name: 'lunchchat-app-server-3'
     static_configs:
-      - targets: [ '13.125.95.66:8080' ]
+      - targets: ['${APP_SERVER_3_IP}:8080']
         labels:
           service: 'lunchchat-backend'
           server_role: 'app'
-          server_name: 'LCC-3'
-          server_ip: '13.125.95.66'
+          server_name: 'app-server-3'
+          server_ip: '${APP_SERVER_3_IP}'
     metrics_path: /actuator/prometheus
-    scrape_interval: 15s
+    scrape_interval: 30s
     scrape_timeout: 10s
 
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: [ ]
+        - targets: []
