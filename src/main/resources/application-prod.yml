@@ -55,7 +55,7 @@ spring:
         options:
           model: gpt-4o-mini
           temperature: 0.0
-          max-tokens: 32
+          max-completion-tokens: 32
 
 google:
   sheet:
