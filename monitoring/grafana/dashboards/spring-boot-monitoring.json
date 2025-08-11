@@ -91,7 +91,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{job=~\"lunchchat-app-server-.*\"} / jvm_memory_max_bytes{job=~\"lunchchat-app-server-.*\"} * 100",
+          "expr": "jvm_memory_used_bytes{job=\"lunchchat-via-nginx\"} / jvm_memory_max_bytes{job=\"lunchchat-via-nginx\"} * 100",
           "interval": "",
           "legendFormat": "{{server_name}} - {{area}} Memory Usage",
           "refId": "A"
@@ -173,7 +173,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_count{job=~\"lunchchat-app-server-.*\"}[5m])",
+          "expr": "rate(http_server_requests_seconds_count{job=\"lunchchat-via-nginx\"}[5m])",
           "interval": "",
           "legendFormat": "{{server_name}} - {{method}} {{uri}}",
           "refId": "A"
@@ -255,13 +255,13 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=~\"lunchchat-app-server-.*\"}[5m])) * 1000",
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"lunchchat-via-nginx\"}[5m])) * 1000",
           "interval": "",
           "legendFormat": "{{server_name}} - 95th percentile",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{job=~\"lunchchat-app-server-.*\"}[5m])) * 1000",
+          "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{job=\"lunchchat-via-nginx\"}[5m])) * 1000",
           "interval": "",
           "legendFormat": "{{server_name}} - 50th percentile",
           "refId": "B"
@@ -343,7 +343,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "hikaricp_connections{job=~\"lunchchat-app-server-.*\"}",
+          "expr": "hikaricp_connections{job=\"lunchchat-via-nginx\"}",
           "interval": "",
           "legendFormat": "{{server_name}} - {{pool}} {{state}} connections",
           "refId": "A"
