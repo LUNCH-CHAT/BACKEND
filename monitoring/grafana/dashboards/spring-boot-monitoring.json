@@ -255,13 +255,13 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{job=\"lunchchat-via-nginx\"}[5m])) * 1000",
+          "expr": "rate(http_server_requests_seconds_sum{job=\"lunchchat-via-nginx\"}[5m]) / rate(http_server_requests_seconds_count{job=\"lunchchat-via-nginx\"}[5m]) * 1000",
           "interval": "",
           "legendFormat": "{{server_name}} - 95th percentile",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.50, rate(http_server_requests_seconds_bucket{job=\"lunchchat-via-nginx\"}[5m])) * 1000",
+          "expr": "rate(http_server_requests_seconds_sum{job=\"lunchchat-via-nginx\"}[5m]) / rate(http_server_requests_seconds_count{job=\"lunchchat-via-nginx\"}[5m]) * 1000",
           "interval": "",
           "legendFormat": "{{server_name}} - 50th percentile",
           "refId": "B"
