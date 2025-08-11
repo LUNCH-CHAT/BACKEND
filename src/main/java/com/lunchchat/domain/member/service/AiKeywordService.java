@@ -29,9 +29,10 @@ public class AiKeywordService {
         You are a keyword generator.
         Based on the user's description, output exactly one keyword in Korean.
         Output rules:
-        - One keyword only.
-        - Must be in Korean.
-        - No explanations.
+        - Output: just the keyword text, no explanations.
+        - Do NOT include the word 'keyword' or any prefix before the keyword.
+        - The keyword must be a single word or hyphenated phrase.
+        - Example: "예술인", not "keyword예술인"
         Examples:
         Description: "I like playing football and running."
         Keyword: "스포츠인"
