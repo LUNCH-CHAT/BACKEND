@@ -67,7 +67,7 @@ public enum ErrorStatus implements BaseErrorCode {
   KEYWORDS_COUNT_MISMATCH(HttpStatus.BAD_REQUEST, "KEYWORD_400", "키워드는 3개여야 합니다."),
   DUPLICATE_KEYWORD_TYPE(HttpStatus.BAD_REQUEST, "KEYWORD_400_DUPLICATE", "키워드 타입이 중복되었습니다."),
   KEYWORD_TYPE_REQUIRED(HttpStatus.BAD_REQUEST, "KEYWORD_400_TYPE_REQUIRED", "키워드 타입은 필수입니다."),
-  KEYWORD_DESC_REQUIRED(HttpStatus.BAD_REQUEST,"KEYWORD_404_DESC_REQUIRED","키워드 샹세 설명은 필수입니다. "),
+  KEYWORD_DESC_REQUIRED(HttpStatus.BAD_REQUEST,"KEYWORD_404_DESC_REQUIRED","키워드 상세 설명은 필수입니다. "),
 
   // Chat Error
   CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_404", "해당 채팅방이 존재하지 않습니다."),
