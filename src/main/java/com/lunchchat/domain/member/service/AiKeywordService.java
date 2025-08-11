@@ -54,6 +54,10 @@ public class AiKeywordService {
         .content()
         .trim();
 
+    if (result.toLowerCase().startsWith("keyword")) {
+      result = result.substring(7).trim();
+    }
+
     return getNormalized(result);
   }
 
