@@ -64,6 +64,7 @@ dependencies {
 
     // 모니터링 및 헬스체크
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
     // 개발 도구
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
