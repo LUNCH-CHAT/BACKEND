@@ -8,6 +8,7 @@ import com.lunchchat.domain.member.exception.MemberException;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.domain.member.service.MemberCommandService;
 import com.lunchchat.domain.member.service.MemberQueryService;
+import com.lunchchat.domain.member.service.ProfileImageService;
 import com.lunchchat.domain.notification.dto.FcmUpdateRequestDto;
 import com.lunchchat.domain.user_keywords.dto.UserKeywordDTO;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
@@ -37,6 +38,7 @@ public class MemberController {
     private final MemberQueryService memberQueryService;
     private final MemberCommandService memberCommandService;
     private final MemberRepository memberRepository;
+    private final ProfileImageService profileImageService;
 
     @PatchMapping("/fcm-token")
     @Operation(summary = "FCM 토큰 업데이트", description = "사용자의 FCM 토큰을 업데이트합니다.")
@@ -133,5 +135,15 @@ public class MemberController {
 
         MemberResponseDTO.MyProfileDetailResponseDTO detail = memberQueryService.getMyDetail(userDetails.getUsername());
         return ApiResponse.onSuccess(detail);
+    }
+
+    @PatchMapping("/profile-image")
+    @Operation(summary = "프로필 이미지 URL 저장", description = "이미지 업로드 완료 후 S3 URL을 저장합니다.")
+    public ApiResponse<SuccessStatus> updateProfileImageUrl(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody @Valid MemberRequestDTO.UpdateProfileImageRequest dto
+    ) {
+        memberCommandService.updateProfileImageUrl(userDetails.getUsername(), dto.getProfileImageUrl());
+        return ApiResponse.onSuccess(SuccessStatus.PROFILE_IMAGE_UPLOAD_SUCCESS);
     }
 }

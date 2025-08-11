@@ -76,3 +76,9 @@ management:
     metrics:
       export:
         enabled: true
+
+aws:
+  s3:
+    bucket: lunchchat-images
+    path:
+      profile: profile-images

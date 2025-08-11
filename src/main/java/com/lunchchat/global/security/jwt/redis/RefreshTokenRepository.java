@@ -8,7 +8,8 @@ public interface RefreshTokenRepository {
   void save(String key, String token, Duration ttl);
   Optional<String> findByKey(String key);
   void delete(String key);
+  void deleteByToken(String token);
   boolean isValid(String key, String token);
-  void rotate(String key,String newToken, Duration ttl);
+  void rotate(String key,String oldToken,String newToken, Duration ttl);
 
 }

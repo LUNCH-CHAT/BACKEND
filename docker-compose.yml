@@ -58,6 +58,11 @@ services:
       - GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE=${GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE:-}
       - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID:-}
 
+      # AWS S3 설정
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-}
+
     restart: unless-stopped
 
     volumes:
