@@ -154,7 +154,7 @@ env:
     set -e
     
     echo "🎯 모니터링 스택 배포 시작..."
-    cd /home/ubuntu
+    cd $HOME
     
     if [ -d "lunchchat-monitoring" ]; then
       cd lunchchat-monitoring/monitoring
