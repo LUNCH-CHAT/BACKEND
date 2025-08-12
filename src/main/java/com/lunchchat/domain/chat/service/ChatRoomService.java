@@ -14,13 +14,24 @@ import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +42,7 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final MemberRepository memberRepository;
+    private final MongoTemplate mongoTemplate;
 
     @Transactional
     public CreateChatRoomRes createRoom(Long starterId, Long friendId) {
@@ -89,47 +101,53 @@ public class ChatRoomService {
 
     //채팅방 리스트 조회
 //    @Transactional(readOnly = true)
-//    public List<ChatRoomCardRes> getChatRooms(Long userId) {
-//
-//        // 유저 존재 검증
+//    public PaginatedResponse<ChatRoomCardRes> getChatRooms(Long userId, int page, int size) {
 //        Member user = memberRepository.findById(userId)
 //                .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 //
-//        // 사용자 기준 채팅방 조회
-//        List<ChatRoom> rooms = chatRoomRepository.findAllByStarterOrFriend(user, user);
+//        Pageable pageable = PageRequest.of(page, size);
 //
-//        List<ChatRoomCardRes> result = new ArrayList<>();
+//        // 나간 채팅방 필터링 쿼리 호출 (이제 여기서 걸러진 상태)
+//        Page<ChatRoom> roomsPage = chatRoomRepository.findActiveChatRoomsByUser(user, pageable);
 //
-//        for (ChatRoom room : rooms) {
-//            // 나간 채팅방은 제외
-//            if ((room.getStarter().getId().equals(userId) && room.isExitedByStarter()) ||
-//                    (room.getFriend().getId().equals(userId) && room.isExitedByFriend())) {
-//                continue;
-//            }
+//        List<ChatRoomCardRes> data = roomsPage.stream()
+//                .map(room -> {
+//                    Long chatRoomId = room.getId();
+//                    ChatMessage lastMessage = chatMessageRepository.findTopByChatRoomIdOrderBySentAtDesc(chatRoomId)
+//                            .orElse(null);
 //
-//            // 최근 메시지 조회
-//            ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
-//                    .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
+//                    String lastMessageContent = lastMessage != null ? lastMessage.getContent() : null;
+//                    LocalDateTime lastMessageSentAt = lastMessage != null ? lastMessage.getSentAt() : null;
 //
-//            //상대방 정보
-//            Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
-//            String department = friend.getDepartment().getName();
-//            String friendName = friend.getMembername();
+//                    Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
+//                    String department = friend.getDepartment().getName();
+//                    String friendName = friend.getMembername();
 //
-//            //안 읽은 메시지 수
-//            int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
+//                    int unreadCount = chatMessageRepository.countByChatRoomIdAndSenderIdNotAndIsReadFalse(chatRoomId, userId);
 //
-//            result.add(new ChatRoomCardRes(
-//                    room.getId(),
-//                    friendName,
-//                    department,
-//                    lastMessage.getContent(),
-//                    lastMessage.getCreatedAt(),
-//                    unreadCount
-//            ));
-//        }
+//                    return new ChatRoomCardRes(
+//                            room.getId(),
+//                            friendName,
+//                            department,
+//                            lastMessageContent,
+//                            lastMessageSentAt,
+//                            unreadCount
+//                    );
+//                })
+//                .toList();
 //
-//        return result;
+//        PaginatedResponse.Meta meta = PaginatedResponse.Meta.builder()
+//                .currentPage(roomsPage.getNumber())
+//                .pageSize(roomsPage.getSize())
+//                .totalItems(roomsPage.getTotalElements())
+//                .totalPages(roomsPage.getTotalPages())
+//                .hasNext(roomsPage.hasNext())
+//                .build();
+//
+//        return PaginatedResponse.<ChatRoomCardRes>builder()
+//                .data(data)
+//                .meta(meta)
+//                .build();
 //    }
 
     @Transactional(readOnly = true)
@@ -138,16 +156,23 @@ public class ChatRoomService {
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
         Pageable pageable = PageRequest.of(page, size);
-
-        // 나간 채팅방 필터링 쿼리 호출 (이제 여기서 걸러진 상태)
         Page<ChatRoom> roomsPage = chatRoomRepository.findActiveChatRoomsByUser(user, pageable);
+
+        List<Long> chatRoomIds = roomsPage.stream()
+                .map(ChatRoom::getId)
+                .toList();
+
+        // Batch fetch last messages per chatRoomId using MongoDB aggregation
+        Map<Long, ChatMessage> lastMessageMap = getLastMessages(chatRoomIds);
+
+        // Batch fetch unread message counts per chatRoomId using aggregation
+        Map<Long, Integer> unreadCountMap = getUnreadCounts(chatRoomIds, userId);
 
         List<ChatRoomCardRes> data = roomsPage.stream()
                 .map(room -> {
                     Long chatRoomId = room.getId();
-                    ChatMessage lastMessage = chatMessageRepository.findTopByChatRoomIdOrderBySentAtDesc(chatRoomId)
-                            .orElse(null);
 
+                    ChatMessage lastMessage = lastMessageMap.get(chatRoomId);
                     String lastMessageContent = lastMessage != null ? lastMessage.getContent() : null;
                     LocalDateTime lastMessageSentAt = lastMessage != null ? lastMessage.getSentAt() : null;
 
@@ -155,10 +180,10 @@ public class ChatRoomService {
                     String department = friend.getDepartment().getName();
                     String friendName = friend.getMembername();
 
-                    int unreadCount = chatMessageRepository.countByChatRoomIdAndSenderIdNotAndIsReadFalse(chatRoomId, userId);
+                    int unreadCount = unreadCountMap.getOrDefault(chatRoomId, 0);
 
                     return new ChatRoomCardRes(
-                            room.getId(),
+                            chatRoomId,
                             friendName,
                             department,
                             lastMessageContent,
@@ -181,6 +206,51 @@ public class ChatRoomService {
                 .meta(meta)
                 .build();
     }
+
+    private Map<Long, ChatMessage> getLastMessages(List<Long> chatRoomIds) {
+        if (chatRoomIds.isEmpty()) return Collections.emptyMap();
+
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("chatRoomId").in(chatRoomIds)),
+                Aggregation.sort(Sort.by(Sort.Direction.DESC, "sentAt")),
+                Aggregation.group("chatRoomId").first(Aggregation.ROOT).as("lastMessage")
+        );
+
+        AggregationResults<Document> results = mongoTemplate.aggregate(agg, "chat_messages", Document.class);
+
+        Map<Long, ChatMessage> lastMessageMap = new HashMap<>();
+        for (Document doc : results) {
+            Long chatRoomId = doc.getLong("_id");
+            Document lastMessageDoc = (Document) doc.get("lastMessage");
+            ChatMessage lastMessage = mongoTemplate.getConverter().read(ChatMessage.class, lastMessageDoc);
+            lastMessageMap.put(chatRoomId, lastMessage);
+        }
+        return lastMessageMap;
+    }
+
+    private Map<Long, Integer> getUnreadCounts(List<Long> chatRoomIds, Long userId) {
+        if (chatRoomIds.isEmpty()) return Collections.emptyMap();
+
+        Criteria criteria = Criteria.where("chatRoomId").in(chatRoomIds)
+                .and("senderId").ne(userId)
+                .and("isRead").is(false);
+
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.match(criteria),
+                Aggregation.group("chatRoomId").count().as("unreadCount")
+        );
+
+        AggregationResults<Document> results = mongoTemplate.aggregate(agg, "chat_messages", Document.class);
+
+        Map<Long, Integer> unreadCountMap = new HashMap<>();
+        for (Document doc : results) {
+            Long chatRoomId = doc.getLong("_id");
+            Integer unreadCount = doc.getInteger("unreadCount", 0);
+            unreadCountMap.put(chatRoomId, unreadCount);
+        }
+        return unreadCountMap;
+    }
+
 
 
 
@@ -329,9 +399,28 @@ public class ChatRoomService {
             messages = messages.subList(0, size);
         }
 
-        messages.stream()
-                .filter(msg -> !msg.getSenderId().equals(userId)) // MongoDB는 senderId 필드 사용
+//        messages.stream()
+//                .filter(msg -> !msg.getSenderId().equals(userId)) // MongoDB는 senderId 필드 사용
+//                .filter(msg -> !msg.getIsRead())
+//                .forEach(ChatMessage::markAsRead);
+
+        //메시지 읽음 처리 bulk update
+        List<ObjectId> unreadMsgIds = messages.stream()
+                .filter(msg -> !msg.getSenderId().equals(userId))
                 .filter(msg -> !msg.getIsRead())
+                .map(ChatMessage::getId)
+                .toList();
+
+        if (!unreadMsgIds.isEmpty()) {
+            Query query = new Query(Criteria.where("_id").in(unreadMsgIds));
+            Update update = new Update().set("isRead", true);
+            mongoTemplate.updateMulti(query, update, ChatMessage.class);
+        }
+
+        //db에 반영되지만, 클라이언트에도 일관된 응답 위해 in memory 객체에도 반영
+        messages.stream()
+                .filter(msg -> !msg.getSenderId().equals(userId))
+                .filter(msg -> !Boolean.TRUE.equals(msg.getIsRead()))
                 .forEach(ChatMessage::markAsRead);
 
         List<ChatMessageRes> result = messages.stream()
