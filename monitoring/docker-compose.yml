@@ -154,7 +154,6 @@ services:
           memory: 64M
           cpus: '0.1'
 
-  # Alertmanager (알림 관리)
   alertmanager:
     image: prom/alertmanager:latest
     container_name: ${PROJECT_NAME}_alertmanager
