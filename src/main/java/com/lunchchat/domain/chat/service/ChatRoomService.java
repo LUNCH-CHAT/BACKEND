@@ -312,13 +312,13 @@ public class ChatRoomService {
                 LocalDateTime cursorTime = LocalDateTime.parse(parts[0]);
                 ObjectId cursorId = new ObjectId(parts[1]);  // ObjectId 변환
 
-                messages = chatMessageRepository.findByChatRoomIdAndSentAtGreaterThanEqualAndIdGreaterThanOrderBySentAtAscIdAsc(
+                messages = chatMessageRepository.findByChatRoomIdAndSentAtLessThanEqualAndIdLessThanOrderBySentAtDescIdDesc(
                         room.getId(), cursorTime, cursorId, pageable);
             } catch (Exception e) {
                 throw new ChatException(ErrorStatus.INVALID_CURSOR_FORMAT);
             }
         } else {
-            messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAscIdAsc(room.getId(), pageable);
+            messages = chatMessageRepository.findByChatRoomIdOrderBySentAtDescIdDesc(room.getId(), pageable);
         }
 
         boolean hasNext = messages.size() > size;

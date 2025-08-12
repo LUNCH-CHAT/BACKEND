@@ -24,6 +24,11 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Obje
     // 읽지 않은 메시지 수 조회 (chatRoomId, senderId 제외, isRead=false)
     int countByChatRoomIdAndSenderIdNotAndIsReadFalse(Long chatRoomId, Long senderId);
 
+    List<ChatMessage> findByChatRoomIdAndSentAtLessThanEqualAndIdLessThanOrderBySentAtDescIdDesc(
+            Long chatRoomId, LocalDateTime sentAt, ObjectId id, Pageable pageable);
+
+    List<ChatMessage> findByChatRoomIdOrderBySentAtDescIdDesc(Long chatRoomId, Pageable pageable);
+
     List<ChatMessage> findByChatRoomIdAndSentAtGreaterThanEqualAndIdGreaterThanOrderBySentAtAscIdAsc(
             Long chatRoomId, LocalDateTime sentAt, ObjectId id, Pageable pageable);
 
