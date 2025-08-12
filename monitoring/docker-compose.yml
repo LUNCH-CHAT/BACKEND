@@ -15,20 +15,25 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=7d'
-      - '--storage.tsdb.retention.size=500MB'
-      - '--query.max-concurrency=4'
-      - '--query.max-samples=10000'
-      - '--web.max-connections=128'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=5GB'
+      - '--query.max-concurrency=20'
+      - '--query.max-samples=50000000'
+      - '--web.max-connections=512'
+      - '--storage.tsdb.wal-compression'
+      - '--storage.tsdb.min-block-duration=2h'
+      - '--storage.tsdb.max-block-duration=24h'
       - '--web.enable-lifecycle'
       - '--web.route-prefix=/'
       - '--web.external-url=http://localhost:${PROMETHEUS_PORT}'
     deploy:
       resources:
         limits:
-          memory: 300M
+          memory: 2G
+          cpus: '1.0'
         reservations:
-          memory: 200M
+          memory: 1G
+          cpus: '0.5'
     networks:
       - monitoring
     user: "65534:65534"
@@ -51,19 +56,23 @@ services:
       - GF_SECURITY_COOKIE_SAMESITE=lax
       - GF_ANALYTICS_REPORTING_ENABLED=false
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
-      - GF_LOG_LEVEL=error
-      - GF_DATABASE_MAX_OPEN_CONN=5
-      - GF_DATABASE_MAX_IDLE_CONN=2
-      - GF_ALERTING_ENABLED=false
-      - GF_UNIFIED_ALERTING_ENABLED=false
+      - GF_LOG_LEVEL=warn
+      - GF_DATABASE_MAX_OPEN_CONN=20
+      - GF_DATABASE_MAX_IDLE_CONN=5
+      - GF_ALERTING_ENABLED=true
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_FEATURE_TOGGLES_ENABLE=alertingBigTransactions
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_RENDERING_SERVER_URL=""
       - GF_RENDERING_CALLBACK_URL=""
     deploy:
       resources:
         limits:
-          memory: 150M
+          memory: 512M
+          cpus: '0.5'
         reservations:
-          memory: 100M
+          memory: 256M
+          cpus: '0.25'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -83,14 +92,12 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-      - '--web.disable-exporter-metrics'
-      - '--collector.disable-defaults'
-      - '--collector.cpu'
-      - '--collector.meminfo'
-      - '--collector.diskstats'
-      - '--collector.filesystem'
-      - '--collector.loadavg'
-      - '--collector.netdev'
+      - '--collector.systemd'
+      - '--collector.processes'
+      - '--collector.tcpstat'
+      - '--collector.conntrack'
+      - '--collector.cpu.info'
+      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($$|/)'
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -102,9 +109,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: 30M
+          memory: 128M
+          cpus: '0.1'
         reservations:
-          memory: 20M
+          memory: 64M
+          cpus: '0.05'
 
   redis-exporter:
     image: oliver006/redis_exporter:latest
@@ -122,9 +131,54 @@ services:
     deploy:
       resources:
         limits:
-          memory: 20M
+          memory: 64M
+          cpus: '0.1'
         reservations:
-          memory: 15M
+          memory: 32M
+          cpus: '0.05'
+
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: ${PROJECT_NAME}_pushgateway
+    restart: unless-stopped
+    ports:
+      - "${PUSHGATEWAY_PORT}:9091"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+
+  # Alertmanager (알림 관리)
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: ${PROJECT_NAME}_alertmanager
+    restart: unless-stopped
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:${ALERTMANAGER_PORT:-9093}'
+      - '--cluster.listen-address=0.0.0.0:9094'
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
 
 networks:
   monitoring:
@@ -134,4 +188,6 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  alertmanager_data:
     driver: local
