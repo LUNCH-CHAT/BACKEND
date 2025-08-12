@@ -67,7 +67,7 @@
               }
             ]
           },
-          "unit": "percent"
+          "unit": "reqps"
         },
         "overrides": []
       },
@@ -88,13 +88,269 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{job=\"lunchchat-via-nginx\"} / jvm_memory_max_bytes{job=\"lunchchat-via-nginx\"} * 100",
+          "expr": "sum(rate(http_requests_total[5m])) by (instance)",
           "interval": "",
-          "legendFormat": "{{server_name}} - {{area}} Memory Usage",
+          "legendFormat": "{{instance}} Request Rate",
           "refId": "A"
+        }
+      ],
+      "title": "Request Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance))",
+          "interval": "",
+          "legendFormat": "{{instance}} 95th Percentile",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance))",
+          "interval": "",
+          "legendFormat": "{{instance}} 50th Percentile",
+          "refId": "B"
+        }
+      ],
+      "title": "Response Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (instance) / sum(rate(http_requests_total[5m])) by (instance) * 100",
+          "interval": "",
+          "legendFormat": "{{instance}} Error Rate",
+          "refId": "A"
+        }
+      ],
+      "title": "Error Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\"}",
+          "interval": "",
+          "legendFormat": "{{instance}} Heap Used",
+          "refId": "A"
+        },
+        {
+          "expr": "jvm_memory_max_bytes{area=\"heap\"}",
+          "interval": "",
+          "legendFormat": "{{instance}} Heap Max",
+          "refId": "B"
         }
       ],
       "title": "JVM Memory Usage",
@@ -149,89 +405,7 @@
               }
             ]
           },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "pluginVersion": "8.0.0",
-      "targets": [
-        {
-          "expr": "rate(http_server_requests_seconds_count{job=\"lunchchat-via-nginx\"}[5m])",
-          "interval": "",
-          "legendFormat": "{{server_name}} - {{method}} {{uri}}",
-          "refId": "A"
-        }
-      ],
-      "title": "HTTP Request Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "vis": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -239,9 +413,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 16
       },
-      "id": 3,
+      "id": 5,
       "options": {
         "legend": {
           "calcs": [],
@@ -252,22 +426,21 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "rate(http_server_requests_seconds_sum{job=\"lunchchat-via-nginx\"}[5m]) / rate(http_server_requests_seconds_count{job=\"lunchchat-via-nginx\"}[5m]) * 1000",
+          "expr": "redis_connected_clients",
           "interval": "",
-          "legendFormat": "{{server_name}} - 95th percentile",
+          "legendFormat": "Redis Connected Clients",
           "refId": "A"
         },
         {
-          "expr": "rate(http_server_requests_seconds_sum{job=\"lunchchat-via-nginx\"}[5m]) / rate(http_server_requests_seconds_count{job=\"lunchchat-via-nginx\"}[5m]) * 1000",
+          "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) * 100",
           "interval": "",
-          "legendFormat": "{{server_name}} - 50th percentile",
+          "legendFormat": "Redis Hit Rate (%)",
           "refId": "B"
         }
       ],
-      "title": "HTTP Response Time",
+      "title": "Redis Metrics",
       "type": "timeseries"
     },
     {
@@ -327,9 +500,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 16
       },
-      "id": 4,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [],
@@ -340,26 +513,21 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "hikaricp_connections{job=\"lunchchat-via-nginx\"}",
+          "expr": "up{job=~\"lunchchat.*\"}",
           "interval": "",
-          "legendFormat": "{{server_name}} - {{pool}} {{state}} connections",
+          "legendFormat": "{{job}} - {{instance}} Status",
           "refId": "A"
         }
       ],
-      "title": "Database Connection Pool",
+      "title": "Service Status",
       "type": "timeseries"
     }
   ],
-  "refresh": "30s",
   "schemaVersion": 27,
   "style": "dark",
-  "tags": [
-    "lunchchat",
-    "spring-boot"
-  ],
+  "tags": ["application", "spring-boot", "lunchchat"],
   "templating": {
     "list": []
   },
@@ -369,7 +537,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "LunchChat Spring Boot Monitoring",
-  "uid": "lunchchat_spring_boot_monitoring",
+  "title": "LunchChat Application Monitoring",
+  "uid": "lunchchat-application",
   "version": 1
 }
