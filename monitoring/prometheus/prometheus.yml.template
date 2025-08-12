@@ -1,0 +1,55 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: 'lunchchat'
+    environment: '${MONITORING_ENVIRONMENT}'
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+          server_name: 'monitoring'
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'loadbalancer-system'
+    static_configs:
+      - targets: ['node-exporter:9100']
+        labels:
+          server_role: 'loadbalancer'
+          server_name: 'loadbalancer'
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+          server_name: 'loadbalancer'
+    metrics_path: /metrics
+    scrape_interval: 30s
+
+  - job_name: 'lunchchat-via-nginx'
+    static_configs:
+      - targets: ['lunchchat.kro.kr']
+        labels:
+          service: 'lunchchat-backend'
+          server_role: 'loadbalancer'
+          server_name: 'nginx-loadbalancer'
+    metrics_path: /actuator/prometheus
+    scheme: https
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []

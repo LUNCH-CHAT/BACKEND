@@ -51,6 +51,15 @@ spring:
     mongodb:
       uri: ${MONGO_URI}
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.0
+          max-completion-tokens: 32
+
 google:
   sheet:
     id: ${GOOGLE_SHEET_ID}

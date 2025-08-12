@@ -18,4 +18,13 @@ public class CookieUtil {
         .build();
   }
 
+  public static ResponseCookie deleteCookie() {
+    return ResponseCookie.from("refresh", "")
+        .httpOnly(true)
+        .secure(true)
+        .path("/")
+        .maxAge(0) // 즉시 만료
+        .sameSite("Strict")
+        .build();
+  }
 }

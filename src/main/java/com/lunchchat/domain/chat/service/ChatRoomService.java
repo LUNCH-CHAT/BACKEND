@@ -58,7 +58,8 @@ public class ChatRoomService {
         return new CreateChatRoomRes(
                 chatRoom.getId(),
                 chatRoom.getStarter().getId(),
-                chatRoom.getFriend().getId()
+                chatRoom.getFriend().getMembername(),
+                chatRoom.getFriend().getDepartment().getName()
         );
     }
 
@@ -143,10 +144,11 @@ public class ChatRoomService {
 
         List<ChatRoomCardRes> data = roomsPage.stream()
                 .map(room -> {
-                    Long chatroomId = room.getId();
+                    ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
+                            .orElse(null);
 
-                    ChatMessage lastMessage = chatMessageRepository.findTopByChatRoomIdOrderBySentAtDesc(chatroomId)
-                            .orElseThrow(() -> new ChatException(ErrorStatus.NO_MESSAGES_IN_CHATROOM));
+                    String lastMessageContent = lastMessage != null ? lastMessage.getContent() : null;
+                    LocalDateTime lastMessageCreatedAt = lastMessage != null ? lastMessage.getCreatedAt() : null;
 
                     Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
                     String department = friend.getDepartment().getName();
@@ -158,8 +160,8 @@ public class ChatRoomService {
                             room.getId(),
                             friendName,
                             department,
-                            lastMessage.getContent(),
-                            lastMessage.getSentAt(),
+                            lastMessageContent,
+                            lastMessageCreatedAt,
                             unreadCount
                     );
                 })

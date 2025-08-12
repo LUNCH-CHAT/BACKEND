@@ -20,6 +20,8 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
 
     int countByFromMemberAndStatus(Member fromMember, MatchStatus status);
 
+    Optional<Matches> findByFromMemberAndToMember(Member from, Member to);
+
     @Query("""
         SELECT m FROM Matches m
         WHERE m.status = :status
