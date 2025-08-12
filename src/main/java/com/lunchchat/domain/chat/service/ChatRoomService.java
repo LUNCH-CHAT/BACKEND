@@ -144,24 +144,25 @@ public class ChatRoomService {
 
         List<ChatRoomCardRes> data = roomsPage.stream()
                 .map(room -> {
-                    ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
+                    Long chatRoomId = room.getId();
+                    ChatMessage lastMessage = chatMessageRepository.findTopByChatRoomIdOrderBySentAtDesc(chatRoomId)
                             .orElse(null);
 
                     String lastMessageContent = lastMessage != null ? lastMessage.getContent() : null;
-                    LocalDateTime lastMessageCreatedAt = lastMessage != null ? lastMessage.getCreatedAt() : null;
+                    LocalDateTime lastMessageSentAt = lastMessage != null ? lastMessage.getSentAt() : null;
 
                     Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
                     String department = friend.getDepartment().getName();
                     String friendName = friend.getMembername();
 
-                    int unreadCount = chatMessageRepository.countByChatRoomIdAndSenderIdNotAndIsReadFalse(chatroomId, userId);
+                    int unreadCount = chatMessageRepository.countByChatRoomIdAndSenderIdNotAndIsReadFalse(chatRoomId, userId);
 
                     return new ChatRoomCardRes(
                             room.getId(),
                             friendName,
                             department,
                             lastMessageContent,
-                            lastMessageCreatedAt,
+                            lastMessageSentAt,
                             unreadCount
                     );
                 })
