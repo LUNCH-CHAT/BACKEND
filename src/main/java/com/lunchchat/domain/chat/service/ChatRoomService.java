@@ -417,6 +417,12 @@ public class ChatRoomService {
             mongoTemplate.updateMulti(query, update, ChatMessage.class);
         }
 
+        //db에 반영되지만, 클라이언트에도 일관된 응답 위해 in memory 객체에도 반영
+        messages.stream()
+                .filter(msg -> !msg.getSenderId().equals(userId))
+                .filter(msg -> !Boolean.TRUE.equals(msg.getIsRead()))
+                .forEach(ChatMessage::markAsRead);
+
         List<ChatMessageRes> result = messages.stream()
                 .map(ChatMessageRes::from)
                 .toList();
