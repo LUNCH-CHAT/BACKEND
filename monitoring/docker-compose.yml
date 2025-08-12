@@ -33,7 +33,6 @@ services:
           cpus: '1.0'
         reservations:
           memory: 1G
-          cpus: '0.5'
     networks:
       - monitoring
     user: "65534:65534"
@@ -69,7 +68,6 @@ services:
           cpus: '0.5'
         reservations:
           memory: 256M
-          cpus: '0.25'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -109,7 +107,6 @@ services:
           cpus: '0.1'
         reservations:
           memory: 64M
-          cpus: '0.05'
 
   redis-exporter:
     image: oliver006/redis_exporter:latest
@@ -131,7 +128,6 @@ services:
           cpus: '0.1'
         reservations:
           memory: 32M
-          cpus: '0.05'
 
   pushgateway:
     image: prom/pushgateway:latest
@@ -148,10 +144,9 @@ services:
           cpus: '0.2'
         reservations:
           memory: 64M
-          cpus: '0.1'
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.27.0
     container_name: ${PROJECT_NAME}_alertmanager
     restart: unless-stopped
     ports:
@@ -173,7 +168,6 @@ services:
           cpus: '0.2'
         reservations:
           memory: 64M
-          cpus: '0.1'
 
 networks:
   monitoring:
