@@ -179,7 +179,7 @@ env:
     
     if [ -f "prometheus/prometheus.yml.template" ]; then
       source .env
-      export APP_SERVER_2_IP APP_SERVER_3_IP MONITORING_ENVIRONMENT
+      export MONITORING_ENVIRONMENT
       envsubst < prometheus/prometheus.yml.template > prometheus/prometheus.yml
       echo "✅ Prometheus 설정 파일 생성 완료"
     fi
