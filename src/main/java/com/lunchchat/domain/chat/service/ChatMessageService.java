@@ -5,8 +5,8 @@ import com.lunchchat.domain.chat.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.request.ChatMessageReq;
 import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.redis.RedisPublisher;
-import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.chat.repository.ChatRoomRepository;
+import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
@@ -46,8 +46,7 @@ public class ChatMessageService {
 
         ChatMessage message = chatMessageRepository.save(handleMessage(senderId, room, messageReq.content()));
 
-        ChatRoom chatRoom = message.getChatRoom();
-        chatRoom.setLastMessageSendAt(message.getSentAt());
+        room.updateLastMessageSendAt(message.getSentAt());
 
         ChatMessageRes chatMessageRes = ChatMessageRes.of(roomId, message);
 
@@ -64,7 +63,7 @@ public class ChatMessageService {
 
         if (senderId.equals(room.getStarter().getId()) || senderId.equals(room.getFriend().getId())) {
             room.activateRoom();
-            return ChatMessage.of(room, sender, content);
+            return ChatMessage.of(room.getId(), senderId, content);
         } else {
             throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
         }

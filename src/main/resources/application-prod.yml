@@ -47,6 +47,9 @@ spring:
   data:
     redis:
       timeout: 30000ms
+    
+    mongodb:
+      uri: ${MONGO_URI}
 
   ai:
     openai:

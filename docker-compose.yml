@@ -29,6 +29,9 @@ services:
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
 
+      # MongoDB 설정
+      - MONGO_URI=${MONGO_URI}
+
       # JPA 설정
       - JPA_DDL_AUTO=${JPA_DDL_AUTO:-validate}
       - JPA_SHOW_SQL=${JPA_SHOW_SQL:-false}
@@ -115,6 +118,21 @@ services:
       - redis_data:/data
     profiles: [ "local" ]
 
+  mongodb:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=lunchchatdb
+      - TZ=Asia/Seoul
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    profiles: [ "local" ]
+
 volumes:
   mysql_data:
   redis_data:
+  mongo_data:

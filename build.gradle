@@ -105,12 +105,15 @@ dependencies {
 
     // S3
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
-
+    
     //SpringAI
     implementation('org.springframework.ai:spring-ai-starter-model-openai') {
         exclude group: 'io.swagger.core.v3', module: 'swagger-annotations'
         exclude group: 'io.swagger.core.v3', module: 'swagger-models'
     }
+    
+    // mongoDB
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 }
 
 dependencyManagement {

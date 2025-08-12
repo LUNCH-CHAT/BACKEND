@@ -5,8 +5,8 @@ import com.lunchchat.domain.chat.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
 import com.lunchchat.domain.chat.dto.response.ChatRoomCardRes;
 import com.lunchchat.domain.chat.dto.response.CreateChatRoomRes;
-import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.chat.repository.ChatRoomRepository;
+import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.repository.MemberRepository;
 import com.lunchchat.global.apiPayLoad.CursorPaginatedResponse;
@@ -14,14 +14,13 @@ import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -83,7 +82,7 @@ public class ChatRoomService {
 
         // 채팅방에서 양쪽 모두 퇴장했는지 확인
         if(chatRoom.isExitedByStarter() && chatRoom.isExitedByFriend()) {
-            chatMessageRepository.deleteByChatRoom(chatRoom);   //관련 채팅 메시지 삭제
+            chatMessageRepository.deleteByChatRoomId(roomId);   //관련 채팅 메시지 삭제
             chatRoomRepository.delete(chatRoom);    //채팅방 삭제
         }
     }
@@ -145,24 +144,25 @@ public class ChatRoomService {
 
         List<ChatRoomCardRes> data = roomsPage.stream()
                 .map(room -> {
-                    ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoomOrderByIdDesc(room)
+                    Long chatRoomId = room.getId();
+                    ChatMessage lastMessage = chatMessageRepository.findTopByChatRoomIdOrderBySentAtDesc(chatRoomId)
                             .orElse(null);
 
                     String lastMessageContent = lastMessage != null ? lastMessage.getContent() : null;
-                    LocalDateTime lastMessageCreatedAt = lastMessage != null ? lastMessage.getCreatedAt() : null;
+                    LocalDateTime lastMessageSentAt = lastMessage != null ? lastMessage.getSentAt() : null;
 
                     Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
                     String department = friend.getDepartment().getName();
                     String friendName = friend.getMembername();
 
-                    int unreadCount = chatMessageRepository.countByChatRoomAndSenderNotAndIsReadFalse(room, user);
+                    int unreadCount = chatMessageRepository.countByChatRoomIdAndSenderIdNotAndIsReadFalse(chatRoomId, userId);
 
                     return new ChatRoomCardRes(
                             room.getId(),
                             friendName,
                             department,
                             lastMessageContent,
-                            lastMessageCreatedAt,
+                            lastMessageSentAt,
                             unreadCount
                     );
                 })
@@ -296,35 +296,33 @@ public class ChatRoomService {
         Member user = memberRepository.findById(userId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
-        // 해당 사용자가 채팅방에 속해있는지 확인
         if (!room.getStarter().getId().equals(userId) && !room.getFriend().getId().equals(userId)) {
             throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
         }
 
-        //채팅방 퇴장 여부 확인
         if ((room.isExitedByStarter() && room.getStarter().getId().equals(userId)) ||
                 (room.isExitedByFriend() && room.getFriend().getId().equals(userId))) {
             throw new ChatException(ErrorStatus.CHATROOM_EXITED);
         }
 
-        // 커서 파싱
-        LocalDateTime cursorTime = null;
-        Long cursorId = null;
+        Pageable pageable = PageRequest.of(0, size + 1);
+
+        List<ChatMessage> messages;
 
         if (cursor != null && !cursor.isBlank()) {
             try {
                 String[] parts = cursor.split("_");
-                cursorTime = LocalDateTime.parse(parts[0]);
-                cursorId = Long.parseLong(parts[1]);
+                LocalDateTime cursorTime = LocalDateTime.parse(parts[0]);
+                ObjectId cursorId = new ObjectId(parts[1]);  // ObjectId 변환
+
+                messages = chatMessageRepository.findByChatRoomIdAndSentAtLessThanEqualAndIdLessThanOrderBySentAtDescIdDesc(
+                        room.getId(), cursorTime, cursorId, pageable);
             } catch (Exception e) {
                 throw new ChatException(ErrorStatus.INVALID_CURSOR_FORMAT);
             }
+        } else {
+            messages = chatMessageRepository.findByChatRoomIdOrderBySentAtDescIdDesc(room.getId(), pageable);
         }
-
-        Pageable pageable = PageRequest.of(0, size + 1);
-        List<ChatMessage> messages = chatMessageRepository.findByChatRoomWithCursor(
-            room, cursorTime, cursorId, pageable
-        );
 
         boolean hasNext = messages.size() > size;
         if (hasNext) {
@@ -332,20 +330,18 @@ public class ChatRoomService {
         }
 
         messages.stream()
-                .filter(msg -> !msg.getSender().getId().equals(userId)) // 상대방이 보낸 메시지
-                .filter(msg -> !msg.getIsRead())              // 아직 읽지 않은 메시지
-                .forEach(msg -> msg.markAsRead());            // 읽음 처리
+                .filter(msg -> !msg.getSenderId().equals(userId)) // MongoDB는 senderId 필드 사용
+                .filter(msg -> !msg.getIsRead())
+                .forEach(ChatMessage::markAsRead);
 
-        // 응답 변환
         List<ChatMessageRes> result = messages.stream()
                 .map(ChatMessageRes::from)
                 .toList();
 
-        // nextCursor 구성 (마지막 메시지의 sentAt과 id 사용)
         String nextCursor = null;
         if (hasNext && !messages.isEmpty()) {
             ChatMessage last = messages.get(messages.size() - 1);
-            nextCursor = last.getSentAt().toString() + "_" + last.getId();
+            nextCursor = last.getSentAt().toString() + "_" + last.getId().toHexString();
         }
 
         return CursorPaginatedResponse.<ChatMessageRes>builder()
