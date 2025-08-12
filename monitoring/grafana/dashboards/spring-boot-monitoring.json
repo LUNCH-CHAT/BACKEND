@@ -90,7 +90,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[5m])) by (instance)",
+          "expr": "sum(rate(http_server_requests_seconds_count[5m])) by (instance)",
           "interval": "",
           "legendFormat": "{{instance}} Request Rate",
           "refId": "A"
@@ -171,13 +171,13 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, instance))",
           "interval": "",
           "legendFormat": "{{instance}} 95th Percentile",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, instance))",
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, instance))",
           "interval": "",
           "legendFormat": "{{instance}} 50th Percentile",
           "refId": "B"
@@ -260,7 +260,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (instance) / sum(rate(http_requests_total[5m])) by (instance) * 100",
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) by (instance) / sum(rate(http_server_requests_seconds_count[5m])) by (instance) * 100",
           "interval": "",
           "legendFormat": "{{instance}} Error Rate",
           "refId": "A"
@@ -434,7 +434,7 @@
           "refId": "A"
         },
         {
-          "expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) * 100",
+          "expr": "rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) * 100",
           "interval": "",
           "legendFormat": "Redis Hit Rate (%)",
           "refId": "B"

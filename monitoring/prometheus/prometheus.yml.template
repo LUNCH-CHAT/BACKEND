@@ -2,10 +2,11 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   scrape_timeout: 10s
-  query_log_file: /prometheus/queries.log
   external_labels:
     cluster: 'lunchchat'
     environment: '${MONITORING_ENVIRONMENT}'
+
+query_log_file: /prometheus/queries.log
 
 rule_files:
   - "rules/*.yml"

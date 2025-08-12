@@ -40,7 +40,7 @@ groups:
   - name: application
     rules:
       - alert: HighErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) / rate(http_server_requests_seconds_count[5m]) * 100 > 5
         for: 5m
         labels:
           severity: warning
@@ -49,7 +49,7 @@ groups:
           description: "Error rate is above 5% for more than 5 minutes on {{ $labels.instance }}"
 
       - alert: HighResponseTime
-        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) > 1
         for: 5m
         labels:
           severity: warning
@@ -78,7 +78,7 @@ groups:
           description: "Redis instance has been down for more than 2 minutes"
 
       - alert: RedisHighMemoryUsage
-        expr: redis_memory_used_bytes / redis_config_maxmemory * 100 > 90
+        expr: redis_memory_used_bytes / clamp_min(redis_config_maxmemory, 1) * 100 > 90
         for: 5m
         labels:
           severity: warning

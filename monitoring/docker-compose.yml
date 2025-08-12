@@ -16,9 +16,9 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=30d'
-      - '--storage.tsdb.retention.size=5GB'
-      - '--query.max-concurrency=20'
-      - '--query.max-samples=50000000'
+      - '--storage.tsdb.retention.size=20GB'
+      - '--query.max-concurrency=10'
+      - '--query.max-samples=5000000'
       - '--web.max-connections=512'
       - '--storage.tsdb.wal-compression'
       - '--storage.tsdb.min-block-duration=2h'
@@ -59,10 +59,7 @@ services:
       - GF_LOG_LEVEL=warn
       - GF_DATABASE_MAX_OPEN_CONN=20
       - GF_DATABASE_MAX_IDLE_CONN=5
-      - GF_ALERTING_ENABLED=true
-      - GF_UNIFIED_ALERTING_ENABLED=true
       - GF_FEATURE_TOGGLES_ENABLE=alertingBigTransactions
-      - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_RENDERING_SERVER_URL=""
       - GF_RENDERING_CALLBACK_URL=""
     deploy:
@@ -91,13 +88,12 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc|var/lib/docker/.+)($$|/)'
       - '--collector.systemd'
       - '--collector.processes'
       - '--collector.tcpstat'
       - '--collector.conntrack'
       - '--collector.cpu.info'
-      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($$|/)'
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
