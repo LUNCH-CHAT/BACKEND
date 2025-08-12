@@ -184,6 +184,13 @@ env:
       echo "✅ Prometheus 설정 파일 생성 완료"
     fi
     
+    if [ -f "alertmanager/alertmanager.yml.template" ]; then
+      source .env
+      export DISCORD_WEBHOOK_URL
+      envsubst < alertmanager/alertmanager.yml.template > alertmanager/alertmanager.yml
+      echo "✅ Alertmanager 설정 파일 생성 완료"
+    fi
+    
     docker-compose up -d
     
     sleep 30

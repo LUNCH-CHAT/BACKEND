@@ -54,6 +54,8 @@
             }
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -88,12 +90,11 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
           "interval": "",
-          "legendFormat": "CPU Usage",
+          "legendFormat": "{{instance}} CPU Usage",
           "refId": "A"
         }
       ],
@@ -136,6 +137,8 @@
             }
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -145,7 +148,7 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 85
               }
             ]
           },
@@ -170,12 +173,11 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100",
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
           "interval": "",
-          "legendFormat": "Memory Usage",
+          "legendFormat": "{{instance}} Memory Usage",
           "refId": "A"
         }
       ],
@@ -218,6 +220,8 @@
             }
           },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -227,7 +231,7 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 90
               }
             ]
           },
@@ -252,12 +256,11 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "((node_filesystem_size_bytes{fstype!=\"tmpfs\"} - node_filesystem_free_bytes{fstype!=\"tmpfs\"}) / node_filesystem_size_bytes{fstype!=\"tmpfs\"}) * 100",
+          "expr": "(node_filesystem_size_bytes{fstype!=\"tmpfs\"} - node_filesystem_avail_bytes{fstype!=\"tmpfs\"}) / node_filesystem_size_bytes{fstype!=\"tmpfs\"} * 100",
           "interval": "",
-          "legendFormat": "Disk Usage - {{mountpoint}}",
+          "legendFormat": "{{instance}} {{mountpoint}} Disk Usage",
           "refId": "A"
         }
       ],
@@ -313,7 +316,7 @@
               }
             ]
           },
-          "unit": "binBps"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -334,29 +337,27 @@
           "mode": "single"
         }
       },
-      "pluginVersion": "8.0.0",
       "targets": [
         {
           "expr": "irate(node_network_receive_bytes_total{device!=\"lo\"}[5m])",
           "interval": "",
-          "legendFormat": "Receive - {{device}}",
+          "legendFormat": "{{instance}} {{device}} RX",
           "refId": "A"
         },
         {
           "expr": "irate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])",
           "interval": "",
-          "legendFormat": "Transmit - {{device}}",
+          "legendFormat": "{{instance}} {{device}} TX",
           "refId": "B"
         }
       ],
-      "title": "Network Traffic",
+      "title": "Network I/O",
       "type": "timeseries"
     }
   ],
-  "refresh": "30s",
   "schemaVersion": 27,
   "style": "dark",
-  "tags": [],
+  "tags": ["system", "monitoring", "lunchchat"],
   "templating": {
     "list": []
   },
@@ -366,7 +367,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "System Monitoring Dashboard",
-  "uid": "system_monitoring",
+  "title": "LunchChat System Monitoring",
+  "uid": "lunchchat-system",
   "version": 1
 }
