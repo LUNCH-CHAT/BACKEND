@@ -295,9 +295,9 @@ jobs:
       - name: Deploy Monitoring Stack
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.LOAD_BALANCER_IP }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          host: ${{ secrets.MONITORING_SERVER_HOST }}
+          username: ${{ secrets.MONITORING_SERVER_USERNAME }}
+          key: ${{ secrets.MONITORING_SERVER_SSH_KEY }}
           timeout: 12m
           command_timeout: 10m
           script: |
