@@ -165,5 +165,7 @@ public class Member extends BaseEntity {
     this.userKeywords.addAll(converted);
   }
 
+  public void updateProfileImageUrl(String imageUrl) { this.profileImageUrl = imageUrl; }
+
 }
 
