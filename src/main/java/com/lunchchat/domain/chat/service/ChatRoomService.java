@@ -62,10 +62,16 @@ public class ChatRoomService {
                 .findByStarterIdAndFriendId(starterId, friendId)
                 .or(() -> chatRoomRepository.findByStarterIdAndFriendId(friendId, starterId));
 
-        ChatRoom chatRoom = existingRoom.orElseGet(() -> {
-            ChatRoom newRoom = ChatRoom.of(starter, friend);
-            return chatRoomRepository.save(newRoom);
-        });
+//        ChatRoom chatRoom = existingRoom.orElseGet(() -> {
+//            ChatRoom newRoom = ChatRoom.of(starter, friend);
+//            return chatRoomRepository.save(newRoom);
+//        });
+
+        ChatRoom chatRoom = existingRoom.map(room -> {
+            // 재활성화
+            room.activateRoom();
+            return room;
+        }).orElseGet(() -> chatRoomRepository.save(ChatRoom.of(starter, friend)));
 
         return new CreateChatRoomRes(
                 chatRoom.getId(),
