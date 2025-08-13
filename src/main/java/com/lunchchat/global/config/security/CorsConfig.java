@@ -16,8 +16,7 @@ public class CorsConfig {
 
         // 허용 오리진 목록
         configuration.setAllowedOrigins(
-            List.of("http://localhost:8080", "https://lunchchat.vercel.app",
-                "https://develop-lunchchat.vercel.app", "http://localhost:5173", "https://lunchchat.kro.kr"));
+            List.of("http://localhost:8080", "https://lunchchat.vercel.app", "http://localhost:5173", "https://lunchchat.kro.kr"));
         configuration.addAllowedHeader("*");
         configuration.setExposedHeaders(List.of("access", "Authorization"));
         configuration.setAllowedMethods(
