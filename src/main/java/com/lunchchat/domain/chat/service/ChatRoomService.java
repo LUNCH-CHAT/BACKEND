@@ -375,6 +375,10 @@ public class ChatRoomService {
             throw new ChatException(ErrorStatus.CHATROOM_EXITED);
         }
 
+        Long friendId = room.getStarter().getId().equals(userId)
+                ? room.getFriend().getId()
+                : room.getStarter().getId();
+
         Pageable pageable = PageRequest.of(0, size + 1);
 
         List<ChatMessage> messages;
@@ -435,6 +439,7 @@ public class ChatRoomService {
 
         return CursorPaginatedResponse.<ChatMessageRes>builder()
                 .userId(userId)
+                .friendId(friendId)
                 .data(result)
                 .meta(CursorPaginatedResponse.CursorMeta.builder()
                         .pageSize(size)

@@ -10,6 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class CursorPaginatedResponse<T> {
     private Long userId;
+    private Long friendId;
     private List<T> data;
     private CursorMeta meta;
 
