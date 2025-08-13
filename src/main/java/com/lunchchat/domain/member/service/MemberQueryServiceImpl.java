@@ -98,6 +98,15 @@ public class MemberQueryServiceImpl implements MemberQueryService {
             if (memberPage.isEmpty()) break;
 
             for (Member member : memberPage) {
+
+                boolean isMatched = matchRepository.existsByMembersAndStatus(
+                        currentMemberId, member.getId(), MatchStatus.ACCEPTED
+                );
+
+                if (isMatched) {
+                    continue;
+                }
+
                 List<TimeTable> memberTimeTables = timeTableQueryService.findByMemberId(member.getId());
                 int matchedTimeTableCount = calculateTimeTableOverlap(currentMemberTimeTables, memberTimeTables);
                 int matchedInterestsCount = calculateInterestsOverlap(currentMember, member);
@@ -250,6 +259,15 @@ public class MemberQueryServiceImpl implements MemberQueryService {
             if (memberPage.isEmpty()) break;
 
             for (Member member : memberPage.getContent()) {
+
+                // 이미 매칭이 ACCEPTED 상태인지 확인
+                boolean isMatched = matchRepository.existsByMembersAndStatus(
+                        currentMemberId, member.getId(), MatchStatus.ACCEPTED
+                );
+                if (isMatched) {
+                    continue; // 매칭 완료된 회원은 인기 멤버 목록에서 제외
+                }
+
                 int score = 0;
 
                 // 관심사
