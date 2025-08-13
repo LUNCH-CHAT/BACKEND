@@ -53,4 +53,19 @@ public interface MatchRepository extends JpaRepository<Matches, Long> {
     """)
     long countMatchesByMember(@Param("memberEmail") String memberEmail);
 
+    @Query("""
+    SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END
+    FROM Matches m
+    WHERE m.status = :status
+      AND (
+        (m.fromMember.id = :id1 AND m.toMember.id = :id2)
+        OR (m.fromMember.id = :id2 AND m.toMember.id = :id1)
+      )
+    """)
+    boolean existsByMembersAndStatus(
+            @Param("id1") Long id1,
+            @Param("id2") Long id2,
+            @Param("status") MatchStatus status
+    );
+
 }
