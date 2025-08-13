@@ -64,6 +64,6 @@
 
 ---
 
-## 🛠️ 서버 아키텍처
+## 🛠️ Architecture
 
-<img width="1653" height="625" alt="diagram-export-2025 -7 -23 -오전-3_31_12" src="https://github.com/user-attachments/assets/a6d5dcf2-274a-4c01-84c4-b928eeb0863b" />
+<img width="2125" height="814" alt="diagram-export-8-13-2025-6_00_21-PM (1)" src="https://github.com/user-attachments/assets/5f2b22c3-6706-4169-abd3-d68f2ba3e200" />
