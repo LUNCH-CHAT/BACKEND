@@ -1,6 +1,5 @@
 package com.lunchchat.domain.member.service;
 
-import com.google.api.client.util.SecurityUtils;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.repository.MatchRepository;
@@ -10,8 +9,6 @@ import com.lunchchat.domain.member.dto.MemberFilterRequestDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberDetailResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberRecommendationResponseDTO;
-import com.lunchchat.domain.member.dto.MemberResponseDTO.MyPageResponseDTO;
-import com.lunchchat.domain.member.dto.MemberScore;
 import com.lunchchat.domain.member.dto.MemberScoreWrapper;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.entity.enums.InterestType;
@@ -28,7 +25,6 @@ import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
 import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
-import com.lunchchat.global.security.jwt.JwtTokenProvider;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -311,17 +307,21 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member member = memberRepository.findByEmail(email)
             .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-        UserStatistics userStatistics = userStatisticsRepository.findByMemberId(member.getId())
-            .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
+        int currentRequestedCount = matchRepository.countByFromMemberAndStatus(member, MatchStatus.REQUESTED);
+        int currentReceivedCount  = matchRepository.countByToMemberAndStatus(member, MatchStatus.REQUESTED);
+
+        int matchCompletedCount = userStatisticsRepository.findByMemberId(member.getId())
+            .map(UserStatistics::getMatchCompletedCount)
+            .orElse(0);
 
         List<String> keywords = userKeywordsRepository.findTitlesByMemberId(member.getId());
         List<InterestType> tags = userInterestsRepository.findInterestTypesByMemberId(member.getId());
 
         return MemberConverter.toMyPageDto(
             member,
-            userStatistics.getMatchCompletedCount(),
-            userStatistics.getMatchRequestedCount(),
-            userStatistics.getMatchReceivedCount(),
+            matchCompletedCount,
+            currentRequestedCount,
+            currentReceivedCount,
             keywords,
             tags
         );
