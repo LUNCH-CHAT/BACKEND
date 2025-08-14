@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableJpaAuditing
 @SpringBootApplication
+@SpringBootApplication(exclude = RedisRepositoriesAutoConfiguration.class)
 @EnableScheduling
 @EnableConfigurationProperties(AwsS3Properties.class)
 @EnableJpaRepositories(
