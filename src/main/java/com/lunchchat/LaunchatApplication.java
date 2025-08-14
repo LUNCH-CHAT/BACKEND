@@ -3,6 +3,7 @@ package com.lunchchat;
 import com.lunchchat.global.config.AwsS3Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
@@ -13,7 +14,6 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableJpaAuditing
-@SpringBootApplication
 @SpringBootApplication(exclude = RedisRepositoriesAutoConfiguration.class)
 @EnableScheduling
 @EnableConfigurationProperties(AwsS3Properties.class)
