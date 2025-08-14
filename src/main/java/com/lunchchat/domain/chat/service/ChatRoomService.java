@@ -185,6 +185,7 @@ public class ChatRoomService {
                     Member friend = room.getStarter().equals(user) ? room.getFriend() : room.getStarter();
                     String department = friend.getDepartment().getName();
                     String friendName = friend.getMembername();
+                    String friendImageUrl = friend.getProfileImageUrl();
 
                     int unreadCount = unreadCountMap.getOrDefault(chatRoomId, 0);
 
@@ -192,6 +193,7 @@ public class ChatRoomService {
                             chatRoomId,
                             friendName,
                             department,
+                            friendImageUrl,
                             lastMessageContent,
                             lastMessageSentAt,
                             unreadCount
