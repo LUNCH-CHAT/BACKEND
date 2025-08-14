@@ -78,10 +78,10 @@ groups:
           description: "Redis instance has been down for more than 2 minutes"
 
       - alert: RedisHighMemoryUsage
-        expr: redis_memory_used_bytes / clamp_min(redis_config_maxmemory, 1) * 100 > 90
+        expr: redis_memory_rss_bytes > 500*1024*1024
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "Redis memory usage high"
-          description: "Redis memory usage is above 90%"
+          description: "Redis RSS memory usage is above 500MB on {{ $labels.instance }}"
