@@ -1,6 +1,8 @@
 package com.lunchchat.domain.member.repository;
 
 import com.lunchchat.domain.member.entity.Member;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -18,5 +20,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
   boolean existsByStudentNo (String studentNo);
 
   Page<Member> findByIdNot(Long excludedId, Pageable pageable);
+
+  Page<Member> findByUniversityIdAndIdNot(Long universityId, Long memberId, Pageable pageable);
+
+  List<Member> findByUniversityIdAndIdNot(Long universityId, Long memberId);
+
 
 }

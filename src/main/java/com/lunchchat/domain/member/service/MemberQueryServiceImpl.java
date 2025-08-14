@@ -85,6 +85,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member currentMember = memberRepository.findById(currentMemberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
+        Long universityId = currentMember.getUniversity().getId();
         List<TimeTable> currentMemberTimeTables = timeTableQueryService.findByMemberId(currentMemberId);
         List<MemberScoreWrapper> scoreList = new ArrayList<>();
 
@@ -93,7 +94,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
         while (true) {
             Pageable pageable = PageRequest.of(page, batchSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-            Page<Member> memberPage = memberRepository.findByIdNot(currentMemberId, pageable);
+            Page<Member> memberPage = memberRepository.findByUniversityIdAndIdNot(universityId, currentMemberId, pageable);
 
             if (memberPage.isEmpty()) break;
 
@@ -169,8 +170,11 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member currentMember = memberRepository.findByEmail(currentMemberEmail)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-        List<Object[]> filteredList = memberRepository.findAll().stream()
-                .filter(member -> !member.getEmail().equals(currentMemberEmail))
+        List<Object[]> filteredList = memberRepository
+                .findByUniversityIdAndIdNot(
+                        currentMember.getUniversity().getId(),
+                        currentMember.getId()
+                ).stream()
                 .filter(member -> isFilterMatched(member, req))
                 .map(member -> {
                     long matchCount = matchRepository.countMatchesByMember(member.getEmail());
@@ -185,7 +189,6 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                     }
                 })
                 .toList();
-
         int total = filteredList.size();
         int startIdx = req.getPage() * req.getSize();
         int endIdx = Math.min(startIdx + req.getSize(), total);
@@ -254,7 +257,8 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
         while (true) {
             Pageable pageable = PageRequest.of(page, batchSize);
-            Page<Member> memberPage = memberRepository.findByIdNot(currentMemberId, pageable);
+            Page<Member> memberPage = memberRepository
+                    .findByUniversityIdAndIdNot(currentMember.getUniversity().getId(), currentMemberId, pageable);
 
             if (memberPage.isEmpty()) break;
 
