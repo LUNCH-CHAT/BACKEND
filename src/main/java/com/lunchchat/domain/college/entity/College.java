@@ -1,5 +1,6 @@
 package com.lunchchat.domain.college.entity;
 
+import com.lunchchat.domain.university.entity.University;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,4 +15,8 @@ public class College {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "university_id", nullable = false)
+    private University university;
 }
