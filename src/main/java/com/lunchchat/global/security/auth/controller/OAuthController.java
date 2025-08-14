@@ -13,6 +13,7 @@ import com.lunchchat.global.security.auth.service.GoogleAuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -96,8 +97,17 @@ public class OAuthController {
   @GetMapping("/uniName")
   public ResponseEntity<String> getUniversityName(Authentication authentication) {
     String email = authentication.getName();
+    String domain = email.substring(email.indexOf("@") + 1);
+
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+    Map<String, String> domainToName = Map.of(
+        "ewhain.net", "이화여대",
+        "ewha.ac.kr", "이화여대",
+        "kau.kr", "한국항공대",
+        "catholic.ac.kr", "가톨릭대"
+    );
 
     University university = member.getUniversity();
     if (university == null) {
