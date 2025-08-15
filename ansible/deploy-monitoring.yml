@@ -20,26 +20,12 @@
         group: g4987kk1379
         mode: '0755'
 
-    - name: Copy monitoring stack files from Git repo
-      copy:
+    - name: Sync monitoring stack files from Git repo
+      synchronize:
         src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
-
-    - name: Ensure prometheus directory exists
-      file:
-        path: "{{ monitoring_dir }}/monitoring/prometheus"
-        state: directory
-        owner: g4987kk1379
-        group: g4987kk1379
-        mode: '0755'
-
-    - name: Ensure alertmanager directory exists
-      file:
-        path: "{{ monitoring_dir }}/monitoring/alertmanager"
-        state: directory
-        owner: g4987kk1379
-        group: g4987kk1379
-        mode: '0755'
+        delete: yes
+        recursive: yes
 
     - name: Template out prometheus.yml
       template:

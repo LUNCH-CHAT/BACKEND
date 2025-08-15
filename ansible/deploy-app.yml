@@ -17,18 +17,14 @@
         content: "{{ fcm_service_account_json }}"
         dest: "{{ app_dir }}/firebase-service-account-key.json"
         mode: '0600'
+      when: fcm_service_account_json is defined and fcm_service_account_json != ''
 
     - name: Create Google Sheets key file from AWX secret
       copy:
         content: "{{ google_sheets_service_account_json }}"
         dest: "{{ app_dir }}/sheets-key.json"
         mode: '0600'
-
-    - name: Stop existing services
-      community.docker.docker_compose_v2:
-        project_src: "{{ app_dir }}"
-        state: absent
-      ignore_errors: yes
+      when: google_sheets_service_account_json is defined and google_sheets_service_account_json != ''
 
     - name: Pull the new image and start services
       community.docker.docker_compose_v2:
@@ -37,13 +33,20 @@
         state: present
         recreate: always
 
+    - name: Wait for container to start
+      pause:
+        seconds: 80
+
     - name: Wait for application to be healthy
       uri:
         url: http://localhost:8080/actuator/health
         status_code: 200
-        timeout: 30
-      retries: 60
-      delay: 15
+        timeout: 10
+      retries: 30
+      delay: 20
+      register: health_check
+      until: health_check.status == 200
+      ignore_errors: yes
 
     - name: Clean up unused Docker images
       docker_prune:
