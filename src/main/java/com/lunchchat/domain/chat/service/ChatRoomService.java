@@ -45,13 +45,13 @@ public class ChatRoomService {
     private final MongoTemplate mongoTemplate;
 
     @Transactional
-    public CreateChatRoomRes createRoom(Long starterId, Long friendId) {
+    public CreateChatRoomRes createRoom(Long userId, Long friendId) {
 
-        if (starterId.equals(friendId)) {
+        if (userId.equals(friendId)) {
             throw new ChatException(ErrorStatus.CANNOT_CHAT_WITH_SELF);
         }
 
-        Member starter = memberRepository.findById(starterId)
+        Member loginUser = memberRepository.findById(userId)
                 .orElseThrow(() -> new ChatException(ErrorStatus.USER_NOT_FOUND));
 
         Member friend = memberRepository.findById(friendId)
@@ -59,8 +59,8 @@ public class ChatRoomService {
 
         // 기존 채팅방 존재하는지 확인 (starter-friend / friend-starter 모두 포함)
         Optional<ChatRoom> existingRoom = chatRoomRepository
-                .findByStarterIdAndFriendId(starterId, friendId)
-                .or(() -> chatRoomRepository.findByStarterIdAndFriendId(friendId, starterId));
+                .findByStarterIdAndFriendId(userId, friendId)
+                .or(() -> chatRoomRepository.findByStarterIdAndFriendId(friendId, userId));
 
 //        ChatRoom chatRoom = existingRoom.orElseGet(() -> {
 //            ChatRoom newRoom = ChatRoom.of(starter, friend);
@@ -71,13 +71,18 @@ public class ChatRoomService {
             // 재활성화
             room.activateRoom();
             return room;
-        }).orElseGet(() -> chatRoomRepository.save(ChatRoom.of(starter, friend)));
+        }).orElseGet(() -> chatRoomRepository.save(ChatRoom.of(loginUser, friend)));
+
+        // 로그인한 사용자가 starter인지 friend인지 확인
+        Member opponent = chatRoom.getStarter().getId().equals(userId)
+                ? chatRoom.getFriend()
+                : chatRoom.getStarter();
 
         return new CreateChatRoomRes(
                 chatRoom.getId(),
-                chatRoom.getStarter().getId(),
-                chatRoom.getFriend().getMembername(),
-                chatRoom.getFriend().getDepartment().getName()
+                userId,
+                opponent.getMembername(),
+                opponent.getDepartment().getName()
         );
     }
 

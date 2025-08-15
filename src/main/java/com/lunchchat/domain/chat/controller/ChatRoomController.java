@@ -39,9 +39,9 @@ public class ChatRoomController {
     @Operation(summary = "채팅방 생성")
     public ResponseEntity<ApiResponse<CreateChatRoomRes>> createChatRoom(@AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam Long friendId) {
-        Long starterId = userDetails.getMemberId();
+        Long userId = userDetails.getMemberId();
 
-        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.createRoom(starterId, friendId)));
+        return ResponseEntity.ok(ApiResponse.onSuccess(chatRoomService.createRoom(userId, friendId)));
     }
 
     //채팅방 리스트 조회
