@@ -32,14 +32,12 @@ public class ChatRoom extends BaseEntity {
         ChatRoom room = new ChatRoom();
         room.starter = starter;
         room.friend = friend;
-        room.lastMessageSendAt = LocalDateTime.now();
         return room;
     }
 
     public void activateRoom() {
         this.isExitedByStarter = false;
         this.isExitedByFriend = false;
-        this.lastMessageSendAt = LocalDateTime.now();
     }
 
     public void exit(Long userId) {
