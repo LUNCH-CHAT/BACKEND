@@ -1,5 +1,5 @@
 - name: Deploy Monitoring Stack
-  hosts: monitoring  # GCP 인벤토리에서 생성될 'monitoring' 그룹을 대상으로 실행
+  hosts: monitoring
   become: yes
   gather_facts: no
   vars:
@@ -12,11 +12,35 @@
           - "Playbook directory: {{ playbook_dir }}"
           - "Looking for monitoring files in: {{ playbook_dir }}/../monitoring/"
 
+    - name: Ensure base monitoring directory exists
+      file:
+        path: "{{ monitoring_dir }}"
+        state: directory
+        mode: '0755'
+        owner: ubuntu
+        group: ubuntu
+
     - name: Copy monitoring stack files from Git repo
       copy:
         src: "{{ playbook_dir }}/../monitoring/"
         dest: "{{ monitoring_dir }}/"
         mode: '0644'
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Ensure prometheus config directory exists
+      file:
+        path: "{{ monitoring_dir }}/monitoring/prometheus"
+        state: directory
+        mode: '0755'
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Ensure alertmanager config directory exists
+      file:
+        path: "{{ monitoring_dir }}/monitoring/alertmanager"
+        state: directory
+        mode: '0755'
         owner: ubuntu
         group: ubuntu
 
