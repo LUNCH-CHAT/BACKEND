@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'dev/**'
+      - 'deploy/**' # 테스트를 위해 deploy 브랜치 패턴 추가
 
 env:
   DOCKER_IMAGE_NAME: lunchchat-backend
@@ -12,8 +13,8 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    runs-on: ubuntu-latest-4-cores
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/') || startsWith(github.ref, 'refs/heads/deploy/')
     outputs:
       image-tag: ${{ steps.set-tag.outputs.IMAGE_TAG }}
     steps:
@@ -25,11 +26,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build application
-        run: ./gradlew build -x test --no-daemon --parallel
+        run: ./gradlew build -x test --no-daemon --parallel --build-cache
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -52,6 +63,9 @@ jobs:
           context: .
           push: true
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.set-tag.outputs.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
 
   deploy-monitoring:
     needs: build-and-push
@@ -64,21 +78,34 @@ jobs:
           awx_server: ${{ secrets.AWX_SERVER_URL }}
           job_template_name: "Deploy Monitoring Stack"
 
-  deploy-app-rolling:
+  deploy-app-server1:
     needs: [ build-and-push, deploy-monitoring ]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        server: [ 'server1', 'server2' ]
     steps:
-      - name: Trigger AWX App Deployment on ${{ matrix.server }}
+      - name: Trigger AWX App Deployment on server1
         uses: clowdhaus/awx-action@v1
         with:
           awx_token: ${{ secrets.AWX_TOKEN }}
           awx_server: ${{ secrets.AWX_SERVER_URL }}
-          job_template_name: "Deploy LunchChat App"
+          job_template_name: ${{ github.ref_name == 'main' && 'Deploy LunchChat App' || 'Deploy LunchChat App - Dev' }}
           extra_vars: |
-            image_tag: ${{ needs.build-and-push.outputs.image_tag }}
+            image_tag: ${{ needs.build-and-push.outputs.image-tag }}
             docker_registry: ${{ env.DOCKER_REGISTRY }}
             docker_image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          limit: ${{ matrix.server }}
+          limit: server1
+
+  deploy-app-server2:
+    needs: deploy-app-server1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger AWX App Deployment on server2
+        uses: clowdhaus/awx-action@v1
+        with:
+          awx_token: ${{ secrets.AWX_TOKEN }}
+          awx_server: ${{ secrets.AWX_SERVER_URL }}
+          job_template_name: ${{ github.ref_name == 'main' && 'Deploy LunchChat App' || 'Deploy LunchChat App - Dev' }}
+          extra_vars: |
+            image_tag: ${{ needs.build-and-push.outputs.image-tag }}
+            docker_registry: ${{ env.DOCKER_REGISTRY }}
+            docker_image_name: ${{ env.DOCKER_IMAGE_NAME }}
+          limit: server2
