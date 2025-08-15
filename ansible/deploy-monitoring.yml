@@ -8,7 +8,7 @@
   tasks:
     - name: Stop and remove existing monitoring containers
       community.docker.docker_compose_v2:
-        project_src: "{{ monitoring_dir }}/monitoring"
+        project_src: "{{ monitoring_dir }}"
         state: absent
       ignore_errors: yes
 
@@ -24,10 +24,13 @@
       copy:
         src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: preserve
 
     - name: Ensure prometheus directory exists
       file:
-        path: "{{ monitoring_dir }}/monitoring/prometheus"
+        path: "{{ monitoring_dir }}/prometheus"
         state: directory
         owner: g4987kk1379
         group: g4987kk1379
@@ -35,7 +38,7 @@
 
     - name: Ensure alertmanager directory exists
       file:
-        path: "{{ monitoring_dir }}/monitoring/alertmanager"
+        path: "{{ monitoring_dir }}/alertmanager"
         state: directory
         owner: g4987kk1379
         group: g4987kk1379
@@ -44,14 +47,14 @@
     - name: Template out prometheus.yml
       template:
         src: ../monitoring/prometheus/prometheus.yml.template
-        dest: "{{ monitoring_dir }}/monitoring/prometheus/prometheus.yml"
+        dest: "{{ monitoring_dir }}/prometheus/prometheus.yml"
       vars:
         MONITORING_ENVIRONMENT: "{{ monitoring_environment | default('production') }}"
 
     - name: Template out alertmanager.yml
       template:
         src: ../monitoring/alertmanager/alertmanager.yml.template
-        dest: "{{ monitoring_dir }}/monitoring/alertmanager/alertmanager.yml"
+        dest: "{{ monitoring_dir }}/alertmanager/alertmanager.yml"
         variable_start_string: '[[['
         variable_end_string: ']]]'
       vars:
@@ -60,7 +63,7 @@
     - name: Create .env file for monitoring stack
       template:
         src: ../monitoring/.env.template
-        dest: "{{ monitoring_dir }}/monitoring/.env"
+        dest: "{{ monitoring_dir }}/.env"
         variable_start_string: '[[['
         variable_end_string: ']]]'
       vars:
@@ -79,7 +82,7 @@
 
     - name: Start monitoring stack with environment variables from AWX
       community.docker.docker_compose_v2:
-        project_src: "{{ monitoring_dir }}/monitoring"
+        project_src: "{{ monitoring_dir }}"
         files:
           - docker-compose.yml
         env_files:
