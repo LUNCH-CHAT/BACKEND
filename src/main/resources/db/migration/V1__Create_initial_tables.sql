@@ -288,17 +288,3 @@ CREATE INDEX idx_college_deleted_at ON college(deleted_at);
 CREATE INDEX idx_university_deleted_at ON university(deleted_at);
 CREATE INDEX idx_department_deleted_at ON department(deleted_at);
 
--- ============================================
--- 7. 기본 데이터 삽입 (선택적)
--- ============================================
-
--- 관심사 기본 데이터
-INSERT INTO interest (type) VALUES
-                                ('EXCHANGE_STUDENT'),
-                                ('EMPLOYMENT_CAREER'),
-                                ('EXAM_PREPARATION'),
-                                ('STARTUP'),
-                                ('FOREIGN_LANGUAGE_STUDY'),
-                                ('HOBBY_LEISURE'),
-                                ('SCHOOL_LIFE'),
-                                ('ETC');
