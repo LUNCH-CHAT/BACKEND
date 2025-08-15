@@ -26,7 +26,7 @@
         DISCORD_WEBHOOK_URL: "{{ discord_webhook_url }}"
 
     - name: Start monitoring stack with environment variables from AWX
-      docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ monitoring_dir }}/monitoring"
         state: present
         environment:
