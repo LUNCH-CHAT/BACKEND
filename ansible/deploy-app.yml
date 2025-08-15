@@ -1,7 +1,8 @@
 - name: Deploy LunchChat Application
-  hosts: app_server # 인벤토리의 'app_server' 그룹을 대상으로 실행
+  hosts: app_server
   become: yes
   gather_facts: no
+  serial: 1
   vars:
     app_dir: "/home/ubuntu/lunchchat-app"
 
@@ -40,5 +41,14 @@
       uri:
         url: http://localhost:8080/actuator/health
         status_code: 200
-      retries: 25
-      delay: 10
+        timeout: 30
+      retries: 60
+      delay: 15
+
+    - name: Clean up unused Docker images
+      docker_prune:
+        images: true
+        images_filters:
+          dangling: false
+          until: "24h"
+      ignore_errors: yes
