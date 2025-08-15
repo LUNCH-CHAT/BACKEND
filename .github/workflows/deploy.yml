@@ -1,7 +1,11 @@
-name: LunchChat CI/CD Pipeline with AWX
+name: LunchChat CI/CD Pipeline
 
 on:
   push:
+    branches:
+      - main
+      - 'dev/**'
+  pull_request:
     branches:
       - main
       - 'dev/**'
@@ -9,69 +13,395 @@ on:
 env:
   DOCKER_IMAGE_NAME: lunchchat-backend
   DOCKER_REGISTRY: xoo1228
+  DEPLOY_SCRIPT: |
+    set -e
+    
+    # 공통 함수들
+    ensure_image() {
+      local img="$1"
+      if ! docker image inspect "$img" >/dev/null 2>&1; then
+        docker pull "$img" || return 1
+      fi
+    }
+    
+    start_services() {
+      local tag="$1"
+      export IMAGE_TAG="$tag"
+      docker-compose up -d backend --no-build
+      sleep 15
+    }
+    
+    health_check() {
+      local max_attempts=25
+      echo "🔍 $SERVER_NAME 헬스체크 시작..."
+      for i in $(seq 1 $max_attempts); do
+        if curl -sf -m 5 http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+          echo "✅ $SERVER_NAME 헬스체크 성공"
+          return 0
+        fi
+        [ $i -eq $max_attempts ] && return 1
+        if [ $((i % 5)) -eq 0 ]; then
+          echo "⏳ 헬스체크 진행 중... ($i/$max_attempts)"
+        fi
+        sleep 12
+      done
+    }
+    
+    cleanup() {
+      docker-compose down || true
+      docker container prune -f >/dev/null 2>&1 || true
+    }
+    
+    # 메인 배포 로직
+    echo "🚀 $SERVER_NAME 배포 시작..."
+    cd /home/ubuntu
+    
+    # 백업 생성
+    if [ -d "lunchchat-app" ]; then
+      cd lunchchat-app
+      cleanup
+    
+      if [ -f ".env" ]; then
+        CURRENT_TAG=$(grep "^IMAGE_TAG=" ".env" | cut -d'=' -f2)
+        if [ -n "$CURRENT_TAG" ]; then
+          BACKUP_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$CURRENT_TAG"
+          if ensure_image "$BACKUP_IMG"; then
+            echo "BACKUP_IMAGE_TAG=$CURRENT_TAG" > /tmp/backup_info.env
+            cp ".env" /tmp/backup.env
+            echo "✅ $SERVER_NAME 백업 생성 완료: $CURRENT_TAG"
+          fi
+        fi
+      fi
+      cd ..
+    fi
+    
+    # 새 버전 배포
+    rm -rf lunchchat-temp lunchchat-app
+    git clone -q --depth 1 --branch "${{ github.ref_name }}" \
+      ${{ github.server_url }}/${{ github.repository }}.git lunchchat-temp
+    
+    mv lunchchat-temp lunchchat-app
+    cd lunchchat-app
+    
+    # 설정 파일 준비
+    cp "$ENV_CONFIG_FILE" .env
+    cat > firebase-service-account-key.json << 'EOF'
+    ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+    EOF
+    chmod 600 firebase-service-account-key.json
+    cat > sheets-key.json << 'EOF'
+    ${{ secrets.GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON }}
+    EOF
+    chmod 600 sheets-key.json
+    sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
+    mkdir -p logs
+    
+    # Database Migration (Server-1에서만)
+    if [ "$INCLUDE_DB_MIGRATION" = "true" ]; then
+      echo "📊 Database Migration 실행 중..."
+    fi
+    
+    # 새 이미지 준비 및 서비스 시작
+    if [ -z "$IMAGE_TAG" ]; then
+      echo "❌ IMAGE_TAG가 설정되지 않았습니다"
+      exit 1
+    fi
+    
+    NEW_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$IMAGE_TAG"
+    ensure_image "$NEW_IMG" || { echo "❌ 새 이미지 다운로드 실패"; exit 1; }
+    start_services "$IMAGE_TAG"
+    
+    # 헬스체크 및 롤백 처리
+    if health_check; then
+      echo "🎉 $SERVER_NAME 배포 성공!"
+      rm -f /tmp/backup*.env
+    
+      # 이미지 정리
+      docker images "$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME" \
+        --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" | \
+        sort -rk2 | awk '{print $1}' | tail -n +2 | \
+        xargs -r docker rmi 2>/dev/null || true
+    
+    else
+      echo "🔄 $SERVER_NAME 배포 실패, 롤백 시도 중..."
+    
+      if [ -f "/tmp/backup.env" ] && [ -f "/tmp/backup_info.env" ]; then
+        cleanup
+        source /tmp/backup_info.env
+    
+        BACKUP_IMG="$DOCKER_REGISTRY/$DOCKER_IMAGE_NAME:$BACKUP_IMAGE_TAG"
+        if ensure_image "$BACKUP_IMG"; then
+          cp /tmp/backup.env .env
+          start_services "$BACKUP_IMAGE_TAG"
+    
+          if health_check; then
+            echo "✅ $SERVER_NAME 롤백 성공!"
+          else
+            echo "❌ $SERVER_NAME 롤백 실패"
+          fi
+        else
+          echo "❌ $SERVER_NAME 백업 이미지 사용 불가"
+        fi
+      else
+        echo "⚠️ $SERVER_NAME 백업 없음, 수동 개입 필요"
+      fi
+    
+      rm -f /tmp/backup*.env
+      exit 1
+    fi
+
+  MONITORING_DEPLOY_SCRIPT: |
+    set -e
+    
+    echo "🎯 모니터링 스택 배포 시작..."
+    cd $HOME
+    
+    if [ -d "lunchchat-monitoring" ]; then
+      cd lunchchat-monitoring/monitoring
+      docker-compose down || true
+      cd ../..
+    fi
+    
+    rm -rf lunchchat-monitoring-temp lunchchat-monitoring
+    git clone -q --depth 1 --branch "${{ github.ref_name }}" \
+      ${{ github.server_url }}/${{ github.repository }}.git lunchchat-monitoring-temp
+    
+    mv lunchchat-monitoring-temp lunchchat-monitoring
+    cd lunchchat-monitoring/monitoring
+    
+    if [ -f "/opt/lunchchat/configs/.env" ]; then
+      cp /opt/lunchchat/configs/.env .env
+      echo "✅ 외부 모니터링 설정 파일 사용"
+    else
+      echo "❌ /opt/lunchchat/configs/.env 파일 없음"
+      exit 1
+    fi
+    
+    if [ -f "prometheus/prometheus.yml.template" ]; then
+      source .env
+      export MONITORING_ENVIRONMENT
+      envsubst < prometheus/prometheus.yml.template > prometheus/prometheus.yml
+      echo "✅ Prometheus 설정 파일 생성 완료"
+    fi
+    
+    if [ -f "alertmanager/alertmanager.yml.template" ]; then
+      source .env
+      export DISCORD_WEBHOOK_URL
+      envsubst < alertmanager/alertmanager.yml.template > alertmanager/alertmanager.yml
+      echo "✅ Alertmanager 설정 파일 생성 완료"
+    fi
+    
+    docker-compose up -d
+    
+    sleep 30
+    
+    if curl -s -m 10 "http://localhost:3000/api/health" > /dev/null && \
+       curl -s -m 10 "http://localhost:9090/-/healthy" > /dev/null; then
+      echo "🎉 모니터링 시작!"
+    else
+      echo "❌ 모니터링 배포 실패"
+      exit 1
+    fi
+
+  VERIFY_SCRIPT: |
+    echo "🔍 $SERVER_NAME 검증 중..."
+    SUCCESS_COUNT=0
+    TOTAL_CHECKS=${TOTAL_CHECKS:-5}
+    SUCCESS_THRESHOLD=${SUCCESS_THRESHOLD:-80}
+
+    for i in $(seq 1 $TOTAL_CHECKS); do
+      response=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "https://$LOAD_BALANCER_IP/actuator/health" || echo "000")
+      if [ "$response" = "200" ]; then
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+      fi
+      sleep 2
+    done
+
+    SUCCESS_RATE=$((SUCCESS_COUNT * 100 / TOTAL_CHECKS))
+    echo "📊 $SERVER_NAME 성공률: $SUCCESS_RATE% ($SUCCESS_COUNT/$TOTAL_CHECKS)"
+
+    if [ $SUCCESS_RATE -ge $SUCCESS_THRESHOLD ]; then
+      if [ "$SERVER_NAME" = "전체 시스템" ]; then
+        echo "🎉 롤링 배포 완료! 시스템 정상 작동 중"
+      else
+        echo "✅ $SERVER_NAME 검증 성공!"
+      fi
+    else
+      echo "❌ $SERVER_NAME 검증 실패"
+      exit 1
+    fi
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    timeout-minutes: 30
+
     outputs:
       image-tag: ${{ steps.set-tag.outputs.IMAGE_TAG }}
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
+
       - name: Build application
         run: ./gradlew build -x test --no-daemon --parallel
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Set image tag
         id: set-tag
         run: |
           SAFE_REF_NAME=$(echo "${{ github.ref_name }}" | tr '/\' '-' )
           echo "IMAGE_TAG=${SAFE_REF_NAME}-${{ github.sha }}" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          platforms: linux/amd64
           tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.set-tag.outputs.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
   deploy-monitoring:
     needs: build-and-push
     runs-on: ubuntu-latest
-    steps:
-      - name: Trigger AWX Monitoring Deployment
-        uses: clowdhaus/awx-action@v1
-        with:
-          awx_token: ${{ secrets.AWX_TOKEN }}
-          awx_server: ${{ secrets.AWX_SERVER_URL }}
-          job_template_name: "Deploy Monitoring Stack"
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    timeout-minutes: 15
 
-  deploy-app-rolling:
+    steps:
+      - name: Deploy Monitoring Stack
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.MONITORING_SERVER_HOST }}
+          username: ${{ secrets.MONITORING_SERVER_USERNAME }}
+          key: ${{ secrets.MONITORING_SERVER_SSH_KEY }}
+          timeout: 12m
+          command_timeout: 10m
+          script: |
+            export SERVER_NAME="Monitoring-Stack"
+            
+            source <(cat << 'MONITORING_DEPLOY_SCRIPT'
+            ${{ env.MONITORING_DEPLOY_SCRIPT }}
+            MONITORING_DEPLOY_SCRIPT
+            )
+
+  deploy-server1:
     needs: [ build-and-push, deploy-monitoring ]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        server: [ 'server1', 'server2' ]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/dev/')
+    timeout-minutes: 20
+
     steps:
-      - name: Trigger AWX App Deployment on ${{ matrix.server }}
-        uses: clowdhaus/awx-action@v1
+      - name: Deploy to Server-1
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          awx_token: ${{ secrets.AWX_TOKEN }}
-          awx_server: ${{ secrets.AWX_SERVER_URL }}
-          job_template_name: "Deploy LunchChat App"
-          extra_vars: |
-            image_tag: ${{ needs.build-and-push.outputs.image_tag }}
-            docker_registry: ${{ env.DOCKER_REGISTRY }}
-            docker_image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          limit: ${{ matrix.server }}
+          host: ${{ secrets.SERVER1_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 15m
+          command_timeout: 10m
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME,IMAGE_TAG
+          script: |
+            export SERVER_NAME="Server-1"
+            export INCLUDE_DB_MIGRATION="true"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
+            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
+            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
+            
+            source <(cat << 'DEPLOY_SCRIPT'
+            ${{ env.DEPLOY_SCRIPT }}
+            DEPLOY_SCRIPT
+            )
+
+  verify-server1:
+    needs: deploy-server1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify Server-1
+        run: |
+          source <(cat << 'VERIFY_SCRIPT'
+          ${{ env.VERIFY_SCRIPT }}
+          VERIFY_SCRIPT
+          )
+        env:
+          SERVER_NAME: "Server-1"
+          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
+
+  deploy-server2:
+    needs: [ build-and-push, verify-server1 ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Deploy to Server-2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER2_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 15m
+          command_timeout: 10m
+          envs: DOCKER_REGISTRY,DOCKER_IMAGE_NAME,IMAGE_TAG
+          script: |
+            export SERVER_NAME="Server-2"
+            export INCLUDE_DB_MIGRATION="false"
+            export IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+            export DOCKER_REGISTRY="${{ env.DOCKER_REGISTRY }}"
+            export DOCKER_IMAGE_NAME="${{ env.DOCKER_IMAGE_NAME }}"
+            export ENV_CONFIG_FILE="/opt/lunchchat/configs/.env.$([[ "${{ github.ref_name }}" == "main" ]] && echo "production" || echo "development")"
+            
+            source <(cat << 'DEPLOY_SCRIPT'
+            ${{ env.DEPLOY_SCRIPT }}
+            DEPLOY_SCRIPT
+            )
+
+  verify-final:
+    needs: deploy-server2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Final System Verification
+        run: |
+          source <(cat << 'VERIFY_SCRIPT'
+          ${{ env.VERIFY_SCRIPT }}
+          VERIFY_SCRIPT
+          )
+        env:
+          SERVER_NAME: "전체 시스템"
+          LOAD_BALANCER_IP: ${{ secrets.LOAD_BALANCER_IP }}
+          TOTAL_CHECKS: "10"
+          SUCCESS_THRESHOLD: "80"
