@@ -26,7 +26,7 @@
     - name: Pull the new image and start services
       community.docker.docker_compose_v2:
         project_src: "{{ app_dir }}"
-        pull: yes
+        pull: "always"
         state: present
 
     - name: Wait for application to be healthy
