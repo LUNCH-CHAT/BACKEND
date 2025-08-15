@@ -1,27 +1,42 @@
 - name: Deploy Monitoring Stack
-  hosts: monitoring # GCP 인벤토리에서 생성될 'monitoring' 그룹을 대상으로 실행
+  hosts: monitoring  # GCP 인벤토리에서 생성될 'monitoring' 그룹을 대상으로 실행
   become: yes
   gather_facts: no
   vars:
     monitoring_dir: "/home/ubuntu/lunchchat-monitoring"
 
   tasks:
+    - name: Debug paths for troubleshooting
+      debug:
+        msg:
+          - "Playbook directory: {{ playbook_dir }}"
+          - "Looking for monitoring files in: {{ playbook_dir }}/../monitoring/"
+
     - name: Copy monitoring stack files from Git repo
       copy:
-        src: ./monitoring/
+        src: "{{ playbook_dir }}/../monitoring/"
         dest: "{{ monitoring_dir }}/"
+        mode: '0644'
+        owner: ubuntu
+        group: ubuntu
 
     - name: Template out prometheus.yml
       template:
-        src: monitoring/prometheus/prometheus.yml.template
+        src: "{{ playbook_dir }}/../monitoring/prometheus/prometheus.yml.template"
         dest: "{{ monitoring_dir }}/monitoring/prometheus/prometheus.yml"
+        mode: '0644'
+        owner: ubuntu
+        group: ubuntu
       vars:
         MONITORING_ENVIRONMENT: "{{ monitoring_environment | default('production') }}"
 
     - name: Template out alertmanager.yml
       template:
-        src: monitoring/alertmanager/alertmanager.yml.template
+        src: "{{ playbook_dir }}/../monitoring/alertmanager/alertmanager.yml.template"
         dest: "{{ monitoring_dir }}/monitoring/alertmanager/alertmanager.yml"
+        mode: '0644'
+        owner: ubuntu
+        group: ubuntu
       vars:
         DISCORD_WEBHOOK_URL: "{{ discord_webhook_url }}"
 

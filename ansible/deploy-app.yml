@@ -1,5 +1,5 @@
 - name: Deploy LunchChat Application
-  hosts: app_servers # 인벤토리의 'app_servers' 그룹을 대상으로 실행
+  hosts: app_server # 인벤토리의 'app_server' 그룹을 대상으로 실행
   become: yes
   gather_facts: no
   vars:
