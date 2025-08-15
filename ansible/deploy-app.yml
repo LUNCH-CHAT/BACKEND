@@ -24,10 +24,10 @@
         mode: '0600'
 
     - name: Pull the new image and start services
-      docker_compose:
-        project_src: "{{ app_dir }}"
-        pull: yes
-        state: present
+      community.docker.docker_compose_v2:
+      project_src: "{{ app_dir }}"
+      pull: yes
+      state: present
 
     - name: Wait for application to be healthy
       uri:
