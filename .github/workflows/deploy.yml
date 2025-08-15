@@ -56,11 +56,11 @@ jobs:
     steps:
       - name: Install and configure AWX CLI
         run: |
-          pip install awxkit
+          pip install "ansible-awx[crypto]"
           export TOWER_HOST=${{ secrets.AWX_SERVER_URL }}
           export TOWER_TOKEN=${{ secrets.AWX_TOKEN }}
           awx config --tower_verify_ssl false
-          awx job_templates launch "Deploy Monitoring Stack"
+          awx job_templates launch "Deploy Monitoring Stack" --monitor
 
   deploy-app-server1:
     needs: [ build-and-push, deploy-monitoring ]
@@ -68,13 +68,21 @@ jobs:
     steps:
       - name: Install and configure AWX CLI
         run: |
-          pip install awxkit
+          pip install "ansible-awx[crypto]"
           export TOWER_HOST=${{ secrets.AWX_SERVER_URL }}
           export TOWER_TOKEN=${{ secrets.AWX_TOKEN }}
           awx config --tower_verify_ssl false
+
+          # extra_vars를 JSON 형식으로 전달하도록 수정
+          EXTRA_VARS='{
+            "image_tag": "${{ needs.build-and-push.outputs.image-tag }}",
+            "docker_registry": "${{ env.DOCKER_REGISTRY }}",
+            "docker_image_name": "${{ env.DOCKER_IMAGE_NAME }}"
+          }'
+
           awx job_templates launch "${{ github.ref_name == 'main' && 'Deploy LunchChat App' || 'Deploy LunchChat App - Dev' }}" \
-          --extra-vars "image_tag=${{ needs.build-and-push.outputs.image-tag }} docker_registry=${{ env.DOCKER_REGISTRY }} docker_image_name=${{ env.DOCKER_IMAGE_NAME }}" \
-          --limit "server1"
+          --extra-vars "$EXTRA_VARS" \
+          --limit "server1" --monitor
 
   deploy-app-server2:
     needs: deploy-app-server1
@@ -82,10 +90,17 @@ jobs:
     steps:
       - name: Install and configure AWX CLI
         run: |
-          pip install awxkit
+          pip install "ansible-awx[crypto]"
           export TOWER_HOST=${{ secrets.AWX_SERVER_URL }}
           export TOWER_TOKEN=${{ secrets.AWX_TOKEN }}
           awx config --tower_verify_ssl false
+          
+          EXTRA_VARS='{
+            "image_tag": "${{ needs.build-and-push.outputs.image_tag }}",
+            "docker_registry": "${{ env.DOCKER_REGISTRY }}",
+            "docker_image_name": "${{ env.DOCKER_IMAGE_NAME }}"
+          }'
+
           awx job_templates launch "${{ github.ref_name == 'main' && 'Deploy LunchChat App' || 'Deploy LunchChat App - Dev' }}" \
-          --extra-vars "image_tag=${{ needs.build-and-push.outputs.image-tag }} docker_registry=${{ env.DOCKER_REGISTRY }} docker_image_name=${{ env.DOCKER_IMAGE_NAME }}" \
-          --limit "server2"
+          --extra-vars "$EXTRA_VARS" \
+          --limit "server2" --monitor
