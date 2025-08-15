@@ -23,11 +23,18 @@
         dest: "{{ app_dir }}/sheets-key.json"
         mode: '0600'
 
+    - name: Stop existing services
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        state: absent
+      ignore_errors: yes
+
     - name: Pull the new image and start services
       community.docker.docker_compose_v2:
         project_src: "{{ app_dir }}"
         pull: "always"
         state: present
+        recreate: always
 
     - name: Wait for application to be healthy
       uri:

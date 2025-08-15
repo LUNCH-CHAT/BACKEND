@@ -3,7 +3,7 @@
   become: yes
   gather_facts: no
   vars:
-    monitoring_dir: "/home/ubuntu/lunchchat-monitoring"
+    monitoring_dir: "/home/g4987kk1379/lunchchat-monitoring"
 
   tasks:
     - name: Stop and remove existing monitoring containers
@@ -16,14 +16,30 @@
       file:
         path: "{{ monitoring_dir }}"
         state: directory
-        owner: ubuntu
-        group: ubuntu
+        owner: g4987kk1379
+        group: g4987kk1379
         mode: '0755'
 
     - name: Copy monitoring stack files from Git repo
       copy:
         src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
+
+    - name: Ensure prometheus directory exists
+      file:
+        path: "{{ monitoring_dir }}/monitoring/prometheus"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
+
+    - name: Ensure alertmanager directory exists
+      file:
+        path: "{{ monitoring_dir }}/monitoring/alertmanager"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
 
     - name: Template out prometheus.yml
       template:
