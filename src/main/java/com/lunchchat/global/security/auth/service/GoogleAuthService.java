@@ -193,9 +193,9 @@ public class GoogleAuthService {
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new AuthException(ErrorStatus.USER_NOT_FOUND));
 
-    if (memberRepository.existsByStudentNo(dto.studentNo())) {
-      throw new AuthException(ErrorStatus.DUPLICATE_STUDENTNO);
-    }
+//    if (memberRepository.existsByStudentNo(dto.studentNo())) {
+//      throw new AuthException(ErrorStatus.DUPLICATE_STUDENTNO);
+//    }
 
     if (dto.interests().size() > 3) {
       throw new AuthException(ErrorStatus.INTEREST_MAX_THREE);

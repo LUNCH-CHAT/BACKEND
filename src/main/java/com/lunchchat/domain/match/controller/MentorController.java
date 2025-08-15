@@ -8,7 +8,9 @@ import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.AuthException;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
+import com.lunchchat.domain.user_interests.entity.Interest;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,6 +38,11 @@ public class MentorController{
     Member member = memberRepository.findByEmail(email)
         .orElseThrow(() -> new AuthException(ErrorStatus.USER_NOT_FOUND));
 
+    String interestNames = member.getInterests()
+        .stream()
+        .map(interest -> interest.getType().name())
+        .collect(Collectors.joining(", "));
+
     mentorService.appendRow(List.of(
         dto.phone(),
         dto.question(),
@@ -43,7 +50,8 @@ public class MentorController{
         member.getEmail(),
         member.getDepartment().getName(),
         member.getStudentNo(),
-        member.getMembername()
+        member.getMembername(),
+        interestNames
     ));
 
     return ApiResponse.onSuccess("엑셀 작성 완료");

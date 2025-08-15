@@ -7,6 +7,7 @@ public record ChatRoomCardRes(
     Long roomId,
     String friendName,
     String friendDepartment,
+    String friendImageUrl,
     String lastMessage,
     @JsonFormat(pattern = "HH:mm")
     LocalDateTime lastMessageSentAt,

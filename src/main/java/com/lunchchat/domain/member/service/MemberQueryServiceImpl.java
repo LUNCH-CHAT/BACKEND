@@ -1,6 +1,5 @@
 package com.lunchchat.domain.member.service;
 
-import com.google.api.client.util.SecurityUtils;
 import com.lunchchat.domain.match.dto.enums.MatchStatusType;
 import com.lunchchat.domain.match.entity.MatchStatus;
 import com.lunchchat.domain.match.repository.MatchRepository;
@@ -10,8 +9,6 @@ import com.lunchchat.domain.member.dto.MemberFilterRequestDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberDetailResponseDTO;
 import com.lunchchat.domain.member.dto.MemberResponseDTO.MemberRecommendationResponseDTO;
-import com.lunchchat.domain.member.dto.MemberResponseDTO.MyPageResponseDTO;
-import com.lunchchat.domain.member.dto.MemberScore;
 import com.lunchchat.domain.member.dto.MemberScoreWrapper;
 import com.lunchchat.domain.member.entity.Member;
 import com.lunchchat.domain.member.entity.enums.InterestType;
@@ -28,7 +25,6 @@ import com.lunchchat.domain.user_statistics.repository.UserStatisticsRepository;
 import com.lunchchat.global.apiPayLoad.PaginatedResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
-import com.lunchchat.global.security.jwt.JwtTokenProvider;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -85,6 +81,7 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member currentMember = memberRepository.findById(currentMemberId)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
+        Long universityId = currentMember.getUniversity().getId();
         List<TimeTable> currentMemberTimeTables = timeTableQueryService.findByMemberId(currentMemberId);
         List<MemberScoreWrapper> scoreList = new ArrayList<>();
 
@@ -93,11 +90,20 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
         while (true) {
             Pageable pageable = PageRequest.of(page, batchSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
-            Page<Member> memberPage = memberRepository.findByIdNot(currentMemberId, pageable);
+            Page<Member> memberPage = memberRepository.findByUniversityIdAndIdNot(universityId, currentMemberId, pageable);
 
             if (memberPage.isEmpty()) break;
 
             for (Member member : memberPage) {
+
+                boolean isMatched = matchRepository.existsByMembersAndStatus(
+                        currentMemberId, member.getId(), MatchStatus.ACCEPTED
+                );
+
+                if (isMatched) {
+                    continue;
+                }
+
                 List<TimeTable> memberTimeTables = timeTableQueryService.findByMemberId(member.getId());
                 int matchedTimeTableCount = calculateTimeTableOverlap(currentMemberTimeTables, memberTimeTables);
                 int matchedInterestsCount = calculateInterestsOverlap(currentMember, member);
@@ -160,8 +166,11 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member currentMember = memberRepository.findByEmail(currentMemberEmail)
                 .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-        List<Object[]> filteredList = memberRepository.findAll().stream()
-                .filter(member -> !member.getEmail().equals(currentMemberEmail))
+        List<Object[]> filteredList = memberRepository
+                .findByUniversityIdAndIdNot(
+                        currentMember.getUniversity().getId(),
+                        currentMember.getId()
+                ).stream()
                 .filter(member -> isFilterMatched(member, req))
                 .map(member -> {
                     long matchCount = matchRepository.countMatchesByMember(member.getEmail());
@@ -176,7 +185,6 @@ public class MemberQueryServiceImpl implements MemberQueryService {
                     }
                 })
                 .toList();
-
         int total = filteredList.size();
         int startIdx = req.getPage() * req.getSize();
         int endIdx = Math.min(startIdx + req.getSize(), total);
@@ -245,11 +253,21 @@ public class MemberQueryServiceImpl implements MemberQueryService {
 
         while (true) {
             Pageable pageable = PageRequest.of(page, batchSize);
-            Page<Member> memberPage = memberRepository.findByIdNot(currentMemberId, pageable);
+            Page<Member> memberPage = memberRepository
+                    .findByUniversityIdAndIdNot(currentMember.getUniversity().getId(), currentMemberId, pageable);
 
             if (memberPage.isEmpty()) break;
 
             for (Member member : memberPage.getContent()) {
+
+                // 이미 매칭이 ACCEPTED 상태인지 확인
+                boolean isMatched = matchRepository.existsByMembersAndStatus(
+                        currentMemberId, member.getId(), MatchStatus.ACCEPTED
+                );
+                if (isMatched) {
+                    continue; // 매칭 완료된 회원은 인기 멤버 목록에서 제외
+                }
+
                 int score = 0;
 
                 // 관심사
@@ -293,17 +311,21 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member member = memberRepository.findByEmail(email)
             .orElseThrow(() -> new MemberException(ErrorStatus.USER_NOT_FOUND));
 
-        UserStatistics userStatistics = userStatisticsRepository.findByMemberId(member.getId())
-            .orElseThrow(() -> new MemberException(ErrorStatus.USER_STATISTICS_NOT_FOUND));
+        int currentRequestedCount = matchRepository.countByFromMemberAndStatus(member, MatchStatus.REQUESTED);
+        int currentReceivedCount  = matchRepository.countByToMemberAndStatus(member, MatchStatus.REQUESTED);
+
+        int matchCompletedCount = userStatisticsRepository.findByMemberId(member.getId())
+            .map(UserStatistics::getMatchCompletedCount)
+            .orElse(0);
 
         List<String> keywords = userKeywordsRepository.findTitlesByMemberId(member.getId());
         List<InterestType> tags = userInterestsRepository.findInterestTypesByMemberId(member.getId());
 
         return MemberConverter.toMyPageDto(
             member,
-            userStatistics.getMatchCompletedCount(),
-            userStatistics.getMatchRequestedCount(),
-            userStatistics.getMatchReceivedCount(),
+            matchCompletedCount,
+            currentRequestedCount,
+            currentReceivedCount,
             keywords,
             tags
         );

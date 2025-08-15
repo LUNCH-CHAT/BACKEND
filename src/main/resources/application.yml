@@ -64,6 +64,10 @@ logging:
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
 
 management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
   endpoints:
     web:
       exposure:

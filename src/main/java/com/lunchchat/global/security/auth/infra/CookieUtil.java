@@ -14,7 +14,7 @@ public class CookieUtil {
         .secure(true)
         .path("/")
         .maxAge(ttl)
-        .sameSite("Strict")
+        .sameSite("None")
         .build();
   }
 
@@ -24,7 +24,7 @@ public class CookieUtil {
         .secure(true)
         .path("/")
         .maxAge(0) // 즉시 만료
-        .sameSite("Strict")
+        .sameSite("None")
         .build();
   }
 }
