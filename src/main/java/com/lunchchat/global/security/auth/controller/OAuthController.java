@@ -33,87 +33,97 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class OAuthController {
 
-  private final GoogleAuthService googleAuthService;
-  private final MemberRepository memberRepository;
+    private final GoogleAuthService googleAuthService;
+    private final MemberRepository memberRepository;
 
-  public OAuthController(GoogleAuthService googleAuthService, MemberRepository memberRepository) {
-    this.googleAuthService = googleAuthService;
-    this.memberRepository = memberRepository;
-  }
-
-  @GetMapping("/callback/google")
-  public void redirectTo(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
-    String redirectUri = "https://lunchchat.vercel.app/auth/login/google?code= " + code;
-    response.sendRedirect(redirectUri);;
-  }
-
-
-  @GetMapping("/login/google")
-  public ApiResponse<?> googleLogin(@RequestParam("code") String accessCode, HttpServletResponse response) {
-    try {
-      Member user = googleAuthService.googleAuthLogin(new GoogleUserDTO.Request(accessCode), response);
-
-      // 상태별 응답
-      if (user.getStatus() == MemberStatus.PENDING) {
-        return ApiResponse.onSuccess("isNewUser");
-      } else {
-        return ApiResponse.onSuccess("로그인 성공");
-      }
-
-    } catch (Exception e) {
-      log.error("❌ [로그인 실패] code = {}, error = {}", accessCode, e.getMessage());
-      return ApiResponse.error(ErrorStatus.UNAUTHORIZED, "accessToken이 유효하지 않습니다");
+    public OAuthController(GoogleAuthService googleAuthService, MemberRepository memberRepository) {
+        this.googleAuthService = googleAuthService;
+        this.memberRepository = memberRepository;
     }
-  }
 
-  // 추가 로그인
-  @PatchMapping("/signUp/lunchChat")
-  public ApiResponse<?> Signup (@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody @Valid GoogleUserDTO.SingUpRequest dto){
-    String email = userDetails.getUsername();
-    googleAuthService.signup(email, dto);
-
-    return ApiResponse.onSuccess("추가 회원정보 등록 완료");
-  }
-
-  // 로그아웃
-  @PostMapping("/logout")
-  public ApiResponse<?> logout(@CookieValue(name = "refresh", required = false) String refreshToken, HttpServletResponse response
-  ) {
-    log.info("✅ logout 성공");
-    googleAuthService.logout(refreshToken, response);
-    return ApiResponse.onSuccess("로그아웃 완료");
-  }
-
-  //Reissue
-  @Transactional
-  @PostMapping("/reissue")
-  public ApiResponse<TokenDTO.Response> reissue(@CookieValue(name = "refresh", required = false) String refreshToken, HttpServletResponse response) {
-    log.info("🍪 [Reissue 요청] 전달된 refreshToken 쿠키 값: {}", refreshToken);
-    TokenDTO.Response tokenResponse = googleAuthService.reissueAccessToken(refreshToken, response);
-    return ApiResponse.onSuccess(tokenResponse);
-  }
-
-  // 대학 간단 조회
-  @GetMapping("/uniName")
-  public ResponseEntity<String> getUniversityName(Authentication authentication) {
-    String email = authentication.getName();
-    String domain = email.substring(email.indexOf("@") + 1);
-
-    Member member = memberRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
-
-    Map<String, String> domainToName = Map.of(
-        "ewhain.net", "이화여대",
-        "ewha.ac.kr", "이화여대",
-        "kau.kr", "한국항공대",
-        "catholic.ac.kr", "가톨릭대"
-    );
-
-    University university = member.getUniversity();
-    if (university == null) {
-      return ResponseEntity.ok("대학 정보 없음");
+    @GetMapping("/callback/google")
+    public void redirectTo(@RequestParam("code") String code, HttpServletResponse response)
+        throws IOException {
+        String redirectUri = "https://lunchchat.site/auth/login/google?code= " + code;
+        response.sendRedirect(redirectUri);
+        ;
     }
-    return ResponseEntity.ok(university.getName());
-  }
+
+
+    @GetMapping("/login/google")
+    public ApiResponse<?> googleLogin(@RequestParam("code") String accessCode,
+        HttpServletResponse response) {
+        try {
+            Member user = googleAuthService.googleAuthLogin(new GoogleUserDTO.Request(accessCode),
+                response);
+
+            // 상태별 응답
+            if (user.getStatus() == MemberStatus.PENDING) {
+                return ApiResponse.onSuccess("isNewUser");
+            } else {
+                return ApiResponse.onSuccess("로그인 성공");
+            }
+
+        } catch (Exception e) {
+            log.error("❌ [로그인 실패] code = {}, error = {}", accessCode, e.getMessage());
+            return ApiResponse.error(ErrorStatus.UNAUTHORIZED, "accessToken이 유효하지 않습니다");
+        }
+    }
+
+    // 추가 로그인
+    @PatchMapping("/signUp/lunchChat")
+    public ApiResponse<?> Signup(@AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody @Valid GoogleUserDTO.SingUpRequest dto) {
+        String email = userDetails.getUsername();
+        googleAuthService.signup(email, dto);
+
+        return ApiResponse.onSuccess("추가 회원정보 등록 완료");
+    }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    public ApiResponse<?> logout(
+        @CookieValue(name = "refresh", required = false) String refreshToken,
+        HttpServletResponse response
+    ) {
+        log.info("✅ logout 성공");
+        googleAuthService.logout(refreshToken, response);
+        return ApiResponse.onSuccess("로그아웃 완료");
+    }
+
+    //Reissue
+    @Transactional
+    @PostMapping("/reissue")
+    public ApiResponse<TokenDTO.Response> reissue(
+        @CookieValue(name = "refresh", required = false) String refreshToken,
+        HttpServletResponse response) {
+        log.info("🍪 [Reissue 요청] 전달된 refreshToken 쿠키 값: {}", refreshToken);
+        TokenDTO.Response tokenResponse = googleAuthService.reissueAccessToken(refreshToken,
+            response);
+        return ApiResponse.onSuccess(tokenResponse);
+    }
+
+    // 대학 간단 조회
+    @GetMapping("/uniName")
+    public ResponseEntity<String> getUniversityName(Authentication authentication) {
+        String email = authentication.getName();
+        String domain = email.substring(email.indexOf("@") + 1);
+
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+        Map<String, String> domainToName = Map.of(
+            "ewhain.net", "이화여대",
+            "ewha.ac.kr", "이화여대",
+            "kau.kr", "한국항공대",
+            "catholic.ac.kr", "가톨릭대"
+        );
+
+        University university = member.getUniversity();
+        if (university == null) {
+            return ResponseEntity.ok("대학 정보 없음");
+        }
+        return ResponseEntity.ok(university.getName());
+    }
 
 }
