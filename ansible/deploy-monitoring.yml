@@ -20,13 +20,19 @@
         group: g4987kk1379
         mode: '0755'
 
-    - name: Copy monitoring stack files from Git repo
-      copy:
+    - name: Sync monitoring stack files from Git repo
+      synchronize:
         src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
-        owner: g4987kk1379
-        group: g4987kk1379
-        mode: preserve
+        delete: yes
+        recursive: yes
+        owner: no
+        group: no
+        times: yes
+        checksum: yes
+        rsync_opts:
+          - "--chown=g4987kk1379:g4987kk1379"
+      delegate_to: localhost
 
     - name: Ensure prometheus directory exists
       file:

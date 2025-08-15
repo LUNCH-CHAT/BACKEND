@@ -35,7 +35,7 @@
 
     - name: Wait for container to start
       pause:
-        seconds: 80
+        seconds: 55
 
     - name: Wait for application to be healthy
       uri:
