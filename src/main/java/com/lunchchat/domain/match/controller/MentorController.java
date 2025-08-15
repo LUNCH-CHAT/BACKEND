@@ -8,7 +8,6 @@ import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.apiPayLoad.exception.AuthException;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
-import com.lunchchat.domain.user_interests.entity.Interest;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
