@@ -54,27 +54,24 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Install AWX CLI
-        uses: redhat-actions/awx-cli@v1
-        with:
-          awx_token: ${{ secrets.AWX_TOKEN }}
-          awx_server: ${{ secrets.AWX_SERVER_URL }}
-
-      - name: Trigger AWX Monitoring Deployment
-        run: awx job_templates launch "Deploy Monitoring Stack"
+      - name: Install and configure AWX CLI
+        run: |
+          pip install ansible-awx
+          export TOWER_HOST=${{ secrets.AWX_SERVER_URL }}
+          export TOWER_TOKEN=${{ secrets.AWX_TOKEN }}
+          awx config --tower_verify_ssl false
+          awx job_templates launch "Deploy Monitoring Stack"
 
   deploy-app-server1:
     needs: [ build-and-push, deploy-monitoring ]
     runs-on: ubuntu-latest
     steps:
-      - name: Install AWX CLI
-        uses: redhat-actions/awx-cli@v1
-        with:
-          awx_token: ${{ secrets.AWX_TOKEN }}
-          awx_server: ${{ secrets.AWX_SERVER_URL }}
-
-      - name: Trigger AWX App Deployment on server1
+      - name: Install and configure AWX CLI
         run: |
+          pip install ansible-awx
+          export TOWER_HOST=${{ secrets.AWX_SERVER_URL }}
+          export TOWER_TOKEN=${{ secrets.AWX_TOKEN }}
+          awx config --tower_verify_ssl false
           awx job_templates launch "${{ github.ref_name == 'main' && 'Deploy LunchChat App' || 'Deploy LunchChat App - Dev' }}" \
           --extra-vars "image_tag=${{ needs.build-and-push.outputs.image-tag }} docker_registry=${{ env.DOCKER_REGISTRY }} docker_image_name=${{ env.DOCKER_IMAGE_NAME }}" \
           --limit "server1"
@@ -83,14 +80,12 @@ jobs:
     needs: deploy-app-server1
     runs-on: ubuntu-latest
     steps:
-      - name: Install AWX CLI
-        uses: redhat-actions/awx-cli@v1
-        with:
-          awx_token: ${{ secrets.AWX_TOKEN }}
-          awx_server: ${{ secrets.AWX_SERVER_URL }}
-
-      - name: Trigger AWX App Deployment on server2
+      - name: Install and configure AWX CLI
         run: |
+          pip install ansible-awx
+          export TOWER_HOST=${{ secrets.AWX_SERVER_URL }}
+          export TOWER_TOKEN=${{ secrets.AWX_TOKEN }}
+          awx config --tower_verify_ssl false
           awx job_templates launch "${{ github.ref_name == 'main' && 'Deploy LunchChat App' || 'Deploy LunchChat App - Dev' }}" \
           --extra-vars "image_tag=${{ needs.build-and-push.outputs.image-tag }} docker_registry=${{ env.DOCKER_REGISTRY }} docker_image_name=${{ env.DOCKER_IMAGE_NAME }}" \
           --limit "server2"
