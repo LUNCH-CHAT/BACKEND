@@ -26,8 +26,9 @@
         DISCORD_WEBHOOK_URL: "{{ discord_webhook_url }}"
 
     - name: Start monitoring stack with environment variables from AWX
-      community.docker.docker_compose_v2:
+      docker_compose:
         project_src: "{{ monitoring_dir }}/monitoring"
+        state: present
         environment:
           PROJECT_NAME: lunchchat
           MONITORING_ENVIRONMENT: "{{ monitoring_environment | default('production') }}"
