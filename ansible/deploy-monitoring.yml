@@ -22,19 +22,19 @@
 
     - name: Copy monitoring stack files from Git repo
       copy:
-        src: ./monitoring/
+        src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
 
     - name: Template out prometheus.yml
       template:
-        src: monitoring/prometheus/prometheus.yml.template
+        src: ../monitoring/prometheus/prometheus.yml.template
         dest: "{{ monitoring_dir }}/monitoring/prometheus/prometheus.yml"
       vars:
         MONITORING_ENVIRONMENT: "{{ monitoring_environment | default('production') }}"
 
     - name: Template out alertmanager.yml
       template:
-        src: monitoring/alertmanager/alertmanager.yml.template
+        src: ../monitoring/alertmanager/alertmanager.yml.template
         dest: "{{ monitoring_dir }}/monitoring/alertmanager/alertmanager.yml"
       vars:
         DISCORD_WEBHOOK_URL: "{{ discord_webhook_url }}"
