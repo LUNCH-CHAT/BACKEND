@@ -20,12 +20,10 @@
         group: g4987kk1379
         mode: '0755'
 
-    - name: Sync monitoring stack files from Git repo
-      synchronize:
+    - name: Copy monitoring stack files from Git repo
+      copy:
         src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
-        delete: no
-        recursive: yes
 
     - name: Ensure prometheus directory exists
       file:
