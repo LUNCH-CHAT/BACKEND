@@ -8,6 +8,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8080
       - TZ=Asia/Seoul
+      - JAVA_OPTS=-Xms512m -Xmx1g -XX:+UseG1GC -XX:+UseStringDeduplication
       - DB_URL={{ db_url }}
       - DB_USER={{ db_user }}
       - DB_PW={{ db_pw }}

@@ -24,8 +24,24 @@
       synchronize:
         src: ../monitoring/
         dest: "{{ monitoring_dir }}/"
-        delete: yes
+        delete: no
         recursive: yes
+
+    - name: Ensure prometheus directory exists
+      file:
+        path: "{{ monitoring_dir }}/monitoring/prometheus"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
+
+    - name: Ensure alertmanager directory exists
+      file:
+        path: "{{ monitoring_dir }}/monitoring/alertmanager"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
 
     - name: Template out prometheus.yml
       template:
