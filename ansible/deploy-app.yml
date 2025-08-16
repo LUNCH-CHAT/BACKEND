@@ -1,0 +1,57 @@
+- name: Deploy LunchChat Application
+  hosts: app_server
+  become: yes
+  gather_facts: no
+  serial: 1
+  vars:
+    app_dir: "/home/ubuntu/lunchchat-app"
+
+  tasks:
+    - name: Create docker-compose.yml from template
+      template:
+        src: templates/docker-compose.app.yml.j2
+        dest: "{{ app_dir }}/docker-compose.yml"
+
+    - name: Create FCM key file from AWX secret
+      copy:
+        content: "{{ fcm_service_account_json }}"
+        dest: "{{ app_dir }}/firebase-service-account-key.json"
+        mode: '0600'
+      when: fcm_service_account_json is defined and fcm_service_account_json != ''
+
+    - name: Create Google Sheets key file from AWX secret
+      copy:
+        content: "{{ google_sheets_service_account_json }}"
+        dest: "{{ app_dir }}/sheets-key.json"
+        mode: '0600'
+      when: google_sheets_service_account_json is defined and google_sheets_service_account_json != ''
+
+    - name: Pull the new image and start services
+      community.docker.docker_compose_v2:
+        project_src: "{{ app_dir }}"
+        pull: "always"
+        state: present
+        recreate: always
+
+    - name: Wait for container to start
+      pause:
+        seconds: 55
+
+    - name: Wait for application to be healthy
+      uri:
+        url: http://localhost:8080/actuator/health
+        status_code: 200
+        timeout: 10
+      retries: 30
+      delay: 20
+      register: health_check
+      until: health_check.status == 200
+      ignore_errors: yes
+
+    - name: Clean up unused Docker images
+      docker_prune:
+        images: true
+        images_filters:
+          dangling: false
+          until: "24h"
+      ignore_errors: yes

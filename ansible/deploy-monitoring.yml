@@ -1,0 +1,95 @@
+- name: Deploy Monitoring Stack
+  hosts: monitoring
+  become: yes
+  gather_facts: no
+  vars:
+    monitoring_dir: "/home/g4987kk1379/lunchchat-monitoring"
+
+  tasks:
+    - name: Stop and remove existing monitoring containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Ensure monitoring directory exists
+      file:
+        path: "{{ monitoring_dir }}"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
+
+    - name: Sync monitoring stack files from Git repo
+      synchronize:
+        src: ../monitoring/
+        dest: "{{ monitoring_dir }}/"
+        delete: yes
+        recursive: yes
+        owner: no
+        group: no
+        times: yes
+        checksum: yes
+        rsync_opts:
+          - "--chown=g4987kk1379:g4987kk1379"
+      delegate_to: localhost
+
+    - name: Ensure prometheus directory exists
+      file:
+        path: "{{ monitoring_dir }}/prometheus"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
+
+    - name: Ensure alertmanager directory exists
+      file:
+        path: "{{ monitoring_dir }}/alertmanager"
+        state: directory
+        owner: g4987kk1379
+        group: g4987kk1379
+        mode: '0755'
+
+    - name: Template out prometheus.yml
+      template:
+        src: ../monitoring/prometheus/prometheus.yml.template
+        dest: "{{ monitoring_dir }}/prometheus/prometheus.yml"
+      vars:
+        MONITORING_ENVIRONMENT: "{{ monitoring_environment | default('production') }}"
+
+    - name: Template out alertmanager.yml
+      template:
+        src: ../monitoring/alertmanager/alertmanager.yml.template
+        dest: "{{ monitoring_dir }}/alertmanager/alertmanager.yml"
+        variable_start_string: '[[['
+        variable_end_string: ']]]'
+      vars:
+        DISCORD_WEBHOOK_URL: "{{ discord_webhook_url }}"
+
+    - name: Create .env file for monitoring stack
+      template:
+        src: ../monitoring/.env.template
+        dest: "{{ monitoring_dir }}/.env"
+        variable_start_string: '[[['
+        variable_end_string: ']]]'
+      vars:
+        PROJECT_NAME: lunchchat
+        MONITORING_ENVIRONMENT: "{{ monitoring_environment | default('production') }}"
+        PROMETHEUS_PORT: "{{ prometheus_port }}"
+        GRAFANA_PORT: "{{ grafana_port }}"
+        NODE_EXPORTER_PORT: "{{ node_exporter_port }}"
+        REDIS_EXPORTER_PORT: "{{ redis_exporter_port }}"
+        PUSHGATEWAY_PORT: "{{ pushgateway_port }}"
+        ALERTMANAGER_PORT: "{{ alertmanager_port }}"
+        GRAFANA_ADMIN_USER: "admin"
+        GRAFANA_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
+        DISCORD_WEBHOOK_URL: "{{ discord_webhook_url }}"
+        REDIS_ADDR: "{{ redis_addr }}"
+
+    - name: Start monitoring stack with environment variables from AWX
+      community.docker.docker_compose_v2:
+        project_src: "{{ monitoring_dir }}"
+        files:
+          - docker-compose.yml
+        env_files:
+          - .env

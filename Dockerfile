@@ -1,12 +1,15 @@
 FROM gradle:jdk17-focal AS build
 WORKDIR /home/gradle/project
 
-COPY gradle gradle
-COPY gradlew gradlew.bat build.gradle settings.gradle ./
-RUN ./gradlew dependencies --no-daemon
+COPY build.gradle settings.gradle ./
+COPY gradle ./gradle
+COPY gradlew ./
 
-COPY src src
-RUN ./gradlew build -x test --no-daemon --parallel
+RUN ./gradlew build --no-daemon --build-cache -x test || true
+
+COPY src ./src
+
+RUN ./gradlew build --no-daemon --build-cache -x test
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
