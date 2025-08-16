@@ -32,7 +32,6 @@
         checksum: yes
         rsync_opts:
           - "--chown=g4987kk1379:g4987kk1379"
-      delegate_to: localhost
 
     - name: Ensure prometheus directory exists
       file:
