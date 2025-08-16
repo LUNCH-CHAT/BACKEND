@@ -16,6 +16,8 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.web.client.RestTemplate;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 @Configuration
 public class RedisConfig {
@@ -69,7 +71,20 @@ public class RedisConfig {
 
     RedisMessageListenerContainer container = new RedisMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
-    container.addMessageListener(listenerAdapter, new PatternTopic("chat"));
+    
+    // 서버별 고유 채널 구독
+    String serverChannel = getServerChannel();
+    container.addMessageListener(listenerAdapter, new PatternTopic(serverChannel));
     return container;
+  }
+  
+  private String getServerChannel() {
+    try {
+      String serverIp = InetAddress.getLocalHost().getHostAddress();
+      return "chat:" + serverIp;
+    } catch (UnknownHostException e) {
+      // fallback: 포트 기반 구분
+      return "chat:" + port;
+    }
   }
 }

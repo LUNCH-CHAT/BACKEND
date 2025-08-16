@@ -14,6 +14,9 @@ import com.lunchchat.global.apiPayLoad.exception.handler.ChatException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +27,9 @@ public class ChatMessageService {
     private final MemberRepository memberRepository;
 //    private final SimpMessageSendingOperations messagingTemplate;
     private final RedisPublisher redisPublisher;
+    
+    @Value("${server.port:8080}")
+    private int port;
 
     // 메시지 전송 로직 구현
     @Transactional
@@ -51,7 +57,8 @@ public class ChatMessageService {
         ChatMessageRes chatMessageRes = ChatMessageRes.of(roomId, message);
 
 //        messagingTemplate.convertAndSend("/sub/rooms/" + roomId, chatMessageRes);
-        redisPublisher.publish("chat", chatMessageRes);
+        String serverChannel = getServerChannel();
+        redisPublisher.publish(serverChannel, chatMessageRes);
 
         //알림 로직 구현시 추가
     }
@@ -66,6 +73,16 @@ public class ChatMessageService {
             return ChatMessage.of(room.getId(), senderId, content);
         } else {
             throw new ChatException(ErrorStatus.UNAUTHORIZED_CHATROOM_ACCESS);
+        }
+    }
+    
+    private String getServerChannel() {
+        try {
+            String serverIp = InetAddress.getLocalHost().getHostAddress();
+            return "chat:" + serverIp;
+        } catch (UnknownHostException e) {
+            // fallback: 포트 기반 구분
+            return "chat:" + port;
         }
     }
 }
