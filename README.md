@@ -62,7 +62,7 @@
 
 
 ## 🛠️ Architecture
-<img width="1855" height="851" alt="diagram-export-2025 -8 -16 -오후-3_54_24" src="https://github.com/user-attachments/assets/4796b60d-449e-4aaf-9d92-d7d3622af584" />
+<img width="1000" height="1000" alt="improved_architecture" src="https://github.com/user-attachments/assets/7c7ddc2c-978e-46d7-b5a1-9266b405c63a" />
 
 
 
