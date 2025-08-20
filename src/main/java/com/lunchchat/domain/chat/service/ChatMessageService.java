@@ -4,7 +4,8 @@ import com.lunchchat.domain.chat.entity.ChatMessage;
 import com.lunchchat.domain.chat.entity.ChatRoom;
 import com.lunchchat.domain.chat.dto.request.ChatMessageReq;
 import com.lunchchat.domain.chat.dto.response.ChatMessageRes;
-import com.lunchchat.domain.chat.redis.RedisPublisher;
+//import com.lunchchat.domain.chat.redis.RedisPublisher;
+import com.lunchchat.domain.chat.redis.RedisStreamProducer;
 import com.lunchchat.domain.chat.repository.ChatRoomRepository;
 import com.lunchchat.domain.chat.repository.ChatMessageRepository;
 import com.lunchchat.domain.member.entity.Member;
@@ -23,7 +24,8 @@ public class ChatMessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
 //    private final SimpMessageSendingOperations messagingTemplate;
-    private final RedisPublisher redisPublisher;
+//    private final RedisPublisher redisPublisher;
+    private final RedisStreamProducer redisStreamProducer;
 
     // 메시지 전송 로직 구현
     @Transactional
@@ -51,7 +53,8 @@ public class ChatMessageService {
         ChatMessageRes chatMessageRes = ChatMessageRes.of(roomId, message);
 
 //        messagingTemplate.convertAndSend("/sub/rooms/" + roomId, chatMessageRes);
-        redisPublisher.publish("chat", chatMessageRes);
+//        redisPublisher.publish("chat", chatMessageRes);
+        redisStreamProducer.produce(chatMessageRes);
 
         //알림 로직 구현시 추가
     }
