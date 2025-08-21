@@ -1,7 +1,6 @@
 package com.lunchchat.domain.chat.config;
 
 import com.lunchchat.domain.chat.service.ChatRoomService;
-import com.lunchchat.domain.chat.service.WebSocketSessionManager;
 import com.lunchchat.global.security.jwt.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,6 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -23,7 +21,6 @@ public class StompHandler implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
     private final ChatRoomService chatRoomService;
-    private final WebSocketSessionManager sessionManager;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -49,7 +46,7 @@ public class StompHandler implements ChannelInterceptor {
 
             // 토큰 유효성 검증 성공 시, 사용자 정보 설정 (선택)
             Claims claims = jwtUtil.parseJwt(token);
-            String email = jwtUtil.getEmail(claims);  // Subject에서 이메일 추출
+            String email = claims.get("email", String.class);
             accessor.setUser(() -> email); // Principal 설정
 
             //사용자 정보를 websocket 연결 컨텍스트에 저장 (이후 subscribe, send 시에도 꺼내 쓸 수 있게)
@@ -80,26 +77,10 @@ public class StompHandler implements ChannelInterceptor {
             }
 
             log.info("채팅방 구독 허용 - userEmail: {}, roomId: {}", email, chatRoomId);
-            
-            // 세션 관리에 사용자 추가 및 Redis Stream 구독
-            try {
-                log.info("🔗 Adding user to session manager: {}, roomId: {}", email, chatRoomId);
-                sessionManager.addSessionToRoom(chatRoomId, email);
-                log.info("✅ Successfully added user to session manager");
-            } catch (Exception e) {
-                log.error("❌ Failed to add user to session manager: {}", e.getMessage(), e);
-            }
         }
 
         if (StompCommand.DISCONNECT.equals(command)) {
-            // 연결 해제 시 모든 구독중인 채팅방에서 사용자 제거
-            Object user = accessor.getSessionAttributes().get("user");
-            if (user != null) {
-                String email = (String) user;
-                // 실제로는 사용자가 구독중인 모든 채팅방을 추적해야 하지만,
-                // 여기서는 간단히 처리 (추후 개선 가능)
-                log.info("사용자 연결 해제: {}", email);
-            }
+            // 연결 해제 시 로그
             log.info("stomp 연결 해제");
         }
 
@@ -112,7 +93,9 @@ public class StompHandler implements ChannelInterceptor {
 
     private Long extractRoomIdFromDestination(String destination) {
         // 예: /sub/chat/room/3 → 3
-        if (destination == null) return null;
+        if (destination == null) {
+            return null;
+        }
         String[] parts = destination.split("/");
         try {
             return Long.parseLong(parts[parts.length - 1]);
