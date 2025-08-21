@@ -16,7 +16,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
-import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -25,7 +26,8 @@ import org.springframework.stereotype.Service;
 public class DynamicStreamConsumerManager implements StreamListener<String, ObjectRecord<String, ChatMessageRes>> {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final ApplicationContext applicationContext;
+    @Lazy
+    private final SimpMessageSendingOperations messagingTemplate;
     
     private static final String STREAM_PREFIX = "chat-stream:";
     private static final String CONSUMER_GROUP = "chat-consumer-group";
@@ -48,7 +50,7 @@ public class DynamicStreamConsumerManager implements StreamListener<String, Obje
                 redisTemplate.getConnectionFactory(), options);
         listenerContainer.start();
         
-        log.info("Dynamic Stream Consumer Manager initialized with consumerId: {}", consumerId);
+        log.info("🚀 Dynamic Stream Consumer Manager initialized with consumerId: {}", consumerId);
     }
 
     public void subscribeToRoom(Long roomId) {
@@ -76,7 +78,7 @@ public class DynamicStreamConsumerManager implements StreamListener<String, Obje
             );
 
             activeSubscriptions.put(roomId, subscription);
-            log.info("Subscribed to room stream: {}", streamKey);
+            log.info("🎯 Subscribed to room stream: {}", streamKey);
             
         } catch (Exception e) {
             log.error("Failed to subscribe to room: {}", roomId, e);
@@ -100,15 +102,14 @@ public class DynamicStreamConsumerManager implements StreamListener<String, Obje
         try {
             ChatMessageRes message = record.getValue();
             
-            // 지연된 SimpMessageSendingOperations 조회로 순환 의존성 해결
+            // @Lazy로 지연 주입된 messagingTemplate 사용
             try {
-                var messagingTemplate = applicationContext.getBean(
-                        org.springframework.messaging.simp.SimpMessageSendingOperations.class);
-                
                 // WebSocket으로 메시지 브로드캐스트
                 messagingTemplate.convertAndSend("/sub/rooms/" + message.roomId(), message);
+                log.info("✅ Message sent to WebSocket: roomId={}, content={}", 
+                        message.roomId(), message.content().substring(0, Math.min(20, message.content().length())));
             } catch (Exception e) {
-                log.warn("SimpMessageSendingOperations not available yet, skipping message broadcast: {}", e.getMessage());
+                log.error("❌ Failed to send message to WebSocket: roomId={}, error={}", message.roomId(), e.getMessage());
                 return; // ACK 하지 않고 나중에 다시 처리
             }
             

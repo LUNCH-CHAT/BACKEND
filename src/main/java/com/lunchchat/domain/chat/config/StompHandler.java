@@ -79,10 +79,16 @@ public class StompHandler implements ChannelInterceptor {
                 return null;  //예외 반환시 웹소켓 연결 해제되는 현상 방지위해 null 반환
             }
 
-            // 세션 관리에 사용자 추가 및 Redis Stream 구독
-            sessionManager.addSessionToRoom(chatRoomId, email);
-            
             log.info("채팅방 구독 허용 - userEmail: {}, roomId: {}", email, chatRoomId);
+            
+            // 세션 관리에 사용자 추가 및 Redis Stream 구독
+            try {
+                log.info("🔗 Adding user to session manager: {}, roomId: {}", email, chatRoomId);
+                sessionManager.addSessionToRoom(chatRoomId, email);
+                log.info("✅ Successfully added user to session manager");
+            } catch (Exception e) {
+                log.error("❌ Failed to add user to session manager: {}", e.getMessage(), e);
+            }
         }
 
         if (StompCommand.DISCONNECT.equals(command)) {

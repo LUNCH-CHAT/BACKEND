@@ -23,8 +23,9 @@ public class WebSocketSessionManager {
         
         // 첫 번째 사용자가 입장할 때 Redis Stream 구독 시작
         if (roomSessions.get(roomId).size() == 1) {
+            log.info("🎯 Starting Redis Stream subscription for room: {}", roomId);
             consumerManager.subscribeToRoom(roomId);
-            log.info("Started Redis Stream subscription for room: {}", roomId);
+            log.info("✅ Started Redis Stream subscription for room: {}", roomId);
         }
         
         log.debug("User {} joined room {}. Total users: {}", 

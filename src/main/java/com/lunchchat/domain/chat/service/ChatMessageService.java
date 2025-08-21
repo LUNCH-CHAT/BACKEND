@@ -51,6 +51,8 @@ public class ChatMessageService {
         ChatMessageRes chatMessageRes = ChatMessageRes.of(roomId, message);
 
 //        messagingTemplate.convertAndSend("/sub/rooms/" + roomId, chatMessageRes);
+        log.info("🚀 Publishing message to Redis Stream: roomId={}, content={}", 
+                roomId, chatMessageRes.content().substring(0, Math.min(20, chatMessageRes.content().length())));
         streamProducer.publishToRoom(roomId, chatMessageRes);
 
         //알림 로직 구현시 추가
