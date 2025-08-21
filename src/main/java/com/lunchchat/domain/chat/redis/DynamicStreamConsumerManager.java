@@ -16,7 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.Subscription;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -25,18 +25,20 @@ import org.springframework.stereotype.Service;
 public class DynamicStreamConsumerManager implements StreamListener<String, ObjectRecord<String, ChatMessageRes>> {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final SimpMessageSendingOperations messagingTemplate;
+    private final ApplicationContext applicationContext;
     
     private static final String STREAM_PREFIX = "chat-stream:";
     private static final String CONSUMER_GROUP = "chat-consumer-group";
     private final String consumerId = "consumer-" + System.currentTimeMillis();
     
-    private StreamMessageListenerContainer<String, ObjectRecord<String, ChatMessageRes>> listenerContainer;
+    @SuppressWarnings("rawtypes")
+    private StreamMessageListenerContainer listenerContainer;
     private final Map<Long, Subscription> activeSubscriptions = new ConcurrentHashMap<>();
 
     @PostConstruct
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public void initContainer() {
-        StreamMessageListenerContainer.StreamMessageListenerContainerOptions<String, ObjectRecord<String, ChatMessageRes>> options =
+        StreamMessageListenerContainer.StreamMessageListenerContainerOptions options =
                 StreamMessageListenerContainer.StreamMessageListenerContainerOptions
                         .builder()
                         .pollTimeout(Duration.ofMillis(100))  // 100ms로 단축
@@ -66,6 +68,7 @@ public class DynamicStreamConsumerManager implements StreamListener<String, Obje
             }
 
             // 채팅방별 구독 시작
+            @SuppressWarnings("unchecked")
             Subscription subscription = listenerContainer.receive(
                     Consumer.from(CONSUMER_GROUP, consumerId),
                     StreamOffset.create(streamKey, ReadOffset.lastConsumed()),
@@ -97,8 +100,17 @@ public class DynamicStreamConsumerManager implements StreamListener<String, Obje
         try {
             ChatMessageRes message = record.getValue();
             
-            // WebSocket으로 메시지 브로드캐스트
-            messagingTemplate.convertAndSend("/sub/rooms/" + message.roomId(), message);
+            // 지연된 SimpMessageSendingOperations 조회로 순환 의존성 해결
+            try {
+                var messagingTemplate = applicationContext.getBean(
+                        org.springframework.messaging.simp.SimpMessageSendingOperations.class);
+                
+                // WebSocket으로 메시지 브로드캐스트
+                messagingTemplate.convertAndSend("/sub/rooms/" + message.roomId(), message);
+            } catch (Exception e) {
+                log.warn("SimpMessageSendingOperations not available yet, skipping message broadcast: {}", e.getMessage());
+                return; // ACK 하지 않고 나중에 다시 처리
+            }
             
             // ACK 처리
             redisTemplate.opsForStream().acknowledge(record.getStream(), CONSUMER_GROUP, record.getId());
