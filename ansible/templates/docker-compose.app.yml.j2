@@ -8,7 +8,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SERVER_PORT=8080
       - TZ=Asia/Seoul
-      - JAVA_OPTS=-Xms512m -Xmx1g -XX:+UseG1GC -XX:+UseStringDeduplication
+      - JAVA_OPTS=-Xms256m -Xmx700m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:G1HeapRegionSize=8m -XX:MaxMetaspaceSize=120m -XX:+DisableExplicitGC -XX:+UseCompressedOops -XX:G1NewSizePercent=25 -XX:G1MaxNewSizePercent=35
       - DB_URL={{ db_url }}
       - DB_USER={{ db_user }}
       - DB_PW={{ db_pw }}
