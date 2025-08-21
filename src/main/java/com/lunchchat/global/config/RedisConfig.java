@@ -1,3 +1,5 @@
+// src/main/java/com/lunchchat/global/config/RedisConfig.java
+
 package com.lunchchat.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,19 +27,16 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int port;
 
-    // 1. Redis 연결 팩토리
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         return new LettuceConnectionFactory(host, port);
     }
 
-    // 2. RedisTemplate 설정
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // ObjectMapper 설정 (LocalDateTime 등 직렬화 처리)
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -56,7 +55,6 @@ public class RedisConfig {
         return template;
     }
 
-    // 3. Redis 메시지 구독 처리 (Pub/Sub)
     @Bean
     public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "onMessage");
@@ -69,8 +67,8 @@ public class RedisConfig {
 
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(listenerAdapter, new PatternTopic("chat"));
+        // 수정된 부분: 'chat:room:*' 패턴을 구독하여 모든 채팅방 메시지를 동적으로 수신합니다.
+        container.addMessageListener(listenerAdapter, new PatternTopic("chat:room:*"));
         return container;
     }
-
 }
