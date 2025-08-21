@@ -3,7 +3,7 @@ package com.lunchchat.global.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.lunchchat.domain.chat.redis.RedisSubscriber;
+// import com.lunchchat.domain.chat.redis.RedisSubscriber; // Streams 사용으로 불필요
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,7 +56,10 @@ public class RedisConfig {
         return template;
     }
 
-    // 3. Redis 메시지 구독 처리 (Pub/Sub)
+    // 3. Redis Streams를 사용하므로 Pub/Sub 설정 비활성화
+    // DynamicStreamConsumerManager에서 동적으로 Streams 구독 관리
+    
+    /*
     @Bean
     public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "onMessage");
@@ -72,5 +75,6 @@ public class RedisConfig {
         container.addMessageListener(listenerAdapter, new PatternTopic("chat"));
         return container;
     }
+    */
 
 }
