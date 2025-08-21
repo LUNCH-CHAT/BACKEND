@@ -3,6 +3,7 @@ package com.lunchchat.global.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.lunchchat.domain.chat.redis.RedisSubscriber;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,21 +56,21 @@ public class RedisConfig {
         return template;
     }
 
-//    // 3. Redis 메시지 구독 처리 (Pub/Sub)
-//    @Bean
-//    public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
-//        return new MessageListenerAdapter(subscriber, "onMessage");
-//    }
-//
-//    @Bean
-//    public RedisMessageListenerContainer redisMessageListenerContainer(
-//            RedisConnectionFactory connectionFactory,
-//            MessageListenerAdapter listenerAdapter) {
-//
-//        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-//        container.setConnectionFactory(connectionFactory);
-//        container.addMessageListener(listenerAdapter, new PatternTopic("chat"));
-//        return container;
-//    }
+    // 3. Redis 메시지 구독 처리 (Pub/Sub)
+    @Bean
+    public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, "onMessage");
+    }
+
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            MessageListenerAdapter listenerAdapter) {
+
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(listenerAdapter, new PatternTopic("chat"));
+        return container;
+    }
 
 }
