@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-@Component
+// @Component  // Redis Streams 사용으로 비활성화
 @RequiredArgsConstructor
 public class RedisPublisher {
 

@@ -11,7 +11,7 @@ import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
+// @Component  // Redis Streams 사용으로 비활성화
 @RequiredArgsConstructor
 public class RedisSubscriber implements MessageListener {
 

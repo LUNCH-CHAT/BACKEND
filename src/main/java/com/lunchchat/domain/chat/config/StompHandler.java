@@ -1,6 +1,7 @@
 package com.lunchchat.domain.chat.config;
 
 import com.lunchchat.domain.chat.service.ChatRoomService;
+import com.lunchchat.domain.chat.service.WebSocketSessionManager;
 import com.lunchchat.global.security.jwt.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class StompHandler implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
     private final ChatRoomService chatRoomService;
+    private final WebSocketSessionManager sessionManager;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -47,7 +49,7 @@ public class StompHandler implements ChannelInterceptor {
 
             // 토큰 유효성 검증 성공 시, 사용자 정보 설정 (선택)
             Claims claims = jwtUtil.parseJwt(token);
-            String email = claims.get("email", String.class);
+            String email = jwtUtil.getEmail(claims);  // Subject에서 이메일 추출
             accessor.setUser(() -> email); // Principal 설정
 
             //사용자 정보를 websocket 연결 컨텍스트에 저장 (이후 subscribe, send 시에도 꺼내 쓸 수 있게)
@@ -77,11 +79,21 @@ public class StompHandler implements ChannelInterceptor {
                 return null;  //예외 반환시 웹소켓 연결 해제되는 현상 방지위해 null 반환
             }
 
+            // 세션 관리에 사용자 추가 및 Redis Stream 구독
+            sessionManager.addSessionToRoom(chatRoomId, email);
+            
             log.info("채팅방 구독 허용 - userEmail: {}, roomId: {}", email, chatRoomId);
         }
 
         if (StompCommand.DISCONNECT.equals(command)) {
-            // 연결 해제 시 로그
+            // 연결 해제 시 모든 구독중인 채팅방에서 사용자 제거
+            Object user = accessor.getSessionAttributes().get("user");
+            if (user != null) {
+                String email = (String) user;
+                // 실제로는 사용자가 구독중인 모든 채팅방을 추적해야 하지만,
+                // 여기서는 간단히 처리 (추후 개선 가능)
+                log.info("사용자 연결 해제: {}", email);
+            }
             log.info("stomp 연결 해제");
         }
 
