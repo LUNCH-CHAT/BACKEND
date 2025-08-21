@@ -28,7 +28,8 @@ jobs:
       - name: Setup Gradle for optimal caching
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-home-cache-cleanup: on-success
+          gradle-home-cache-cleanup: true
+          gradle-home-cache-strict-match: true
 
       - name: Build application with Gradle
         run: ./gradlew build -x test
