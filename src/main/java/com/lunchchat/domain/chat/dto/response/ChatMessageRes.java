@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import org.bson.types.ObjectId;
 
 public record ChatMessageRes(
-    ObjectId id,
+    String id,
     Long roomId,
     Long senderId,
     String content,
@@ -15,7 +15,7 @@ public record ChatMessageRes(
 ){
     public static ChatMessageRes from(ChatMessage chatMessage) {
         return new ChatMessageRes(
-            chatMessage.getId(),
+            chatMessage.getId().toString(),
             chatMessage.getChatRoomId(),
             chatMessage.getSenderId(),
             chatMessage.getContent(),
@@ -25,7 +25,7 @@ public record ChatMessageRes(
 
     public static ChatMessageRes of(Long roomId, ChatMessage message) {
         return new ChatMessageRes(
-            message.getId(),
+            message.getId().toString(),
             roomId,
             message.getSenderId(),
             message.getContent(),
