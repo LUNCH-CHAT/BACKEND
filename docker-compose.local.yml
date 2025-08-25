@@ -1,0 +1,311 @@
+services:
+
+  nginx:
+    image: nginx:alpine
+    container_name: lunchchat-nginx-local
+    ports:
+      - "80:80"
+      - "8081:8081"
+    volumes:
+      - ./performance/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./performance/logs/nginx:/var/log/nginx
+    depends_on:
+      - backend1
+      - backend2
+    networks:
+      - lunchchat-local
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+  backend1:
+    container_name: lunchchat-backend1-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # 기본 Spring Boot 설정
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      - TZ=Asia/Seoul
+      - JAVA_OPTS=-Xms256m -Xmx700m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:G1HeapRegionSize=8m -XX:+DisableExplicitGC -XX:+UseCompressedOops -Duser.timezone=Asia/Seoul
+
+      # 데이터베이스 설정 (로컬 호스트 연결)
+      - DB_URL=jdbc:mysql://host.docker.internal:3306/lunchchat
+      - DB_USER=${DB_USER}
+      - DB_PW=${DB_PW}
+
+      # Redis 설정 (로컬 호스트 연결)
+      - REDIS_HOST=host.docker.internal
+      - REDIS_PORT=6379
+
+      # MongoDB 설정 (로컬 호스트 연결)
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PW}@host.docker.internal:27017/lunchchatdb?authSource=admin
+
+      # JPA 설정
+      - JPA_DDL_AUTO=validate
+      - JPA_SHOW_SQL=false
+
+      # Flyway 설정
+      - FLYWAY_BASELINE_ON_MIGRATE=true
+      - FLYWAY_CLEAN_DISABLED=false
+      - FLYWAY_REPAIR_BEFORE_MIGRATION=true
+      - FLYWAY_VALIDATE_ON_MIGRATE=false
+
+      # 로깅 설정
+      - LOG_LEVEL=INFO
+      - SQL_LOG_LEVEL=WARN
+
+      # WebSocket & Chat 설정
+      - WEBSOCKET_ALLOWED_ORIGINS=*
+      - CHAT_REDIS_CHANNEL=lunchchat
+
+      # JWT/OAuth 설정
+      - SECRET_KEY=${SECRET_KEY}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+
+      # FCM 설정
+      - FCM_SERVICE_ACCOUNT_JSON=${FCM_SERVICE_ACCOUNT_JSON}
+
+      # Google Sheets 설정
+      - GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE=/app/src/main/resources/sheets-key.json
+      - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+
+      # AWS S3 설정
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_REGION=ap-northeast-2
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+
+      # OpenAI 설정
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+    volumes:
+      - ./performance/logs/backend1:/var/log/lunchchat
+      - ./src/main/resources/sheets-key.json:/app/src/main/resources/sheets-key.json:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    networks:
+      - lunchchat-local
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.3'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  backend2:
+    container_name: lunchchat-backend2-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # 기본 Spring Boot 설정
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      - TZ=Asia/Seoul
+      - JAVA_OPTS=-Xms256m -Xmx700m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:G1HeapRegionSize=8m -XX:+DisableExplicitGC -XX:+UseCompressedOops -Duser.timezone=Asia/Seoul
+
+      # 데이터베이스 설정 (로컬 호스트 연결)
+      - DB_URL=jdbc:mysql://host.docker.internal:3306/lunchchat
+      - DB_USER=${DB_USER}
+      - DB_PW=${DB_PW}
+
+      # Redis 설정 (로컬 호스트 연결)
+      - REDIS_HOST=host.docker.internal
+      - REDIS_PORT=6379
+
+      # MongoDB 설정 (로컬 호스트 연결)
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PW}@host.docker.internal:27017/lunchchatdb?authSource=admin
+
+      # JPA 설정
+      - JPA_DDL_AUTO=validate
+      - JPA_SHOW_SQL=false
+
+      # Flyway 설정
+      - FLYWAY_BASELINE_ON_MIGRATE=true
+      - FLYWAY_CLEAN_DISABLED=false
+      - FLYWAY_REPAIR_BEFORE_MIGRATION=true
+      - FLYWAY_VALIDATE_ON_MIGRATE=false
+
+      # 로깅 설정
+      - LOG_LEVEL=INFO
+      - SQL_LOG_LEVEL=WARN
+
+      # WebSocket & Chat 설정
+      - WEBSOCKET_ALLOWED_ORIGINS=*
+      - CHAT_REDIS_CHANNEL=lunchchat
+
+      # JWT/OAuth 설정
+      - SECRET_KEY=${SECRET_KEY}
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+
+      # FCM 설정
+      - FCM_SERVICE_ACCOUNT_JSON=${FCM_SERVICE_ACCOUNT_JSON}
+
+      # Google Sheets 설정
+      - GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE=/app/src/main/resources/sheets-key.json
+      - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+
+      # AWS S3 설정
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_REGION=ap-northeast-2
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
+
+      # OpenAI 설정
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+    volumes:
+      - ./performance/logs/backend2:/var/log/lunchchat
+      - ./src/main/resources/sheets-key.json:/app/src/main/resources/sheets-key.json:ro
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    networks:
+      - lunchchat-local
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.3'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # 모니터링 서비스들
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lunchchat-prometheus-local
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9091}:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+      - '--storage.tsdb.retention.size=5GB'
+      - '--query.max-concurrency=10'
+      - '--query.max-samples=5000000'
+      - '--web.max-connections=512'
+      - '--storage.tsdb.wal-compression'
+      - '--storage.tsdb.min-block-duration=2h'
+      - '--storage.tsdb.max-block-duration=24h'
+      - '--web.enable-lifecycle'
+      - '--web.route-prefix=/'
+      - '--web.external-url=http://localhost:${PROMETHEUS_PORT:-9091}'
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+    networks:
+      - lunchchat-local
+    user: "65534:65534"
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles: [ "monitoring" ]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lunchchat-grafana-local
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:${GRAFANA_PORT:-3001}
+      - GF_SECURITY_COOKIE_SECURE=false
+      - GF_SECURITY_COOKIE_SAMESITE=lax
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_LOG_LEVEL=warn
+      - GF_DATABASE_MAX_OPEN_CONN=20
+      - GF_DATABASE_MAX_IDLE_CONN=5
+      - GF_FEATURE_TOGGLES_ENABLE=alertingBigTransactions
+      - GF_RENDERING_SERVER_URL=""
+      - GF_RENDERING_CALLBACK_URL=""
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - lunchchat-local
+    user: "472:472"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    profiles: [ "monitoring" ]
+
+  # K6 성능 테스트
+  k6:
+    image: grafana/k6:latest
+    container_name: lunchchat-k6-local
+    volumes:
+      - ./k6/tests:/scripts
+      - ./k6/results:/results
+    working_dir: /scripts
+    environment:
+      - BASE_URL=http://nginx
+      - WS_URL=ws://nginx
+    networks:
+      - lunchchat-local
+    command: [ "run", "/scripts/member-api-test.js", "--summary-export", "/results/member-test-summary.json" ]
+    profiles: [ "k6", "testing" ]
+
+networks:
+  lunchchat-local:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
