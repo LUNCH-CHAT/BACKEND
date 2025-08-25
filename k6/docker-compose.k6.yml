@@ -1,0 +1,13 @@
+services:
+  k6:
+    image: grafana/k6:latest
+    container_name: k6-local
+    volumes:
+      - ./tests:/scripts
+      - ./results:/results
+    working_dir: /scripts
+    environment:
+      - BASE_URL=http://host.docker.internal:8080
+      - WS_URL=ws://host.docker.internal:8080
+    network_mode: host
+    command: [ "--help" ]

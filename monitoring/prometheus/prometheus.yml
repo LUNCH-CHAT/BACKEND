@@ -1,0 +1,50 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  query_log_file: /prometheus/queries.log
+  external_labels:
+    cluster: 'lunchchat'
+    environment: 'local'
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: [ 'localhost:9090' ]
+        labels:
+          service: 'prometheus'
+          server_name: 'monitoring'
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  - job_name: 'lunchchat-backend1'
+    static_configs:
+      - targets: [ 'backend1:8080' ]
+        labels:
+          service: 'lunchchat-backend'
+          instance: 'backend1'
+    metrics_path: /actuator/prometheus
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'lunchchat-backend2'
+    static_configs:
+      - targets: [ 'backend2:8080' ]
+        labels:
+          service: 'lunchchat-backend'
+          instance: 'backend2'
+    metrics_path: /actuator/prometheus
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: [ 'nginx:8081' ]
+        labels:
+          service: 'nginx'
+          instance: 'loadbalancer'
+    metrics_path: /nginx_status
+    scrape_interval: 15s
