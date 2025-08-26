@@ -36,17 +36,17 @@ services:
       - TZ=Asia/Seoul
       - JAVA_OPTS=-Xms256m -Xmx700m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:G1HeapRegionSize=8m -XX:+DisableExplicitGC -XX:+UseCompressedOops -Duser.timezone=Asia/Seoul
 
-      # 데이터베이스 설정 (로컬 호스트 연결)
-      - DB_URL=jdbc:mysql://host.docker.internal:3306/lunchchat
+      # 데이터베이스 설정 (로컬 Docker 연결)
+      - DB_URL=jdbc:mysql://host.docker.internal:3306/lunchChat?serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8
       - DB_USER=${DB_USER}
       - DB_PW=${DB_PW}
 
-      # Redis 설정 (로컬 호스트 연결)
+      # Redis 설정 (로컬 Docker 연결)
       - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6379
 
-      # MongoDB 설정 (로컬 호스트 연결)
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PW}@host.docker.internal:27017/lunchchatdb?authSource=admin
+      # MongoDB 설정 (클라우드 연결)
+      - MONGO_URI=${MONGO_URI}
 
       # JPA 설정
       - JPA_DDL_AUTO=validate
@@ -77,6 +77,9 @@ services:
       # Google Sheets 설정
       - GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE=/app/src/main/resources/sheets-key.json
       - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+      
+      # FCM 설정
+      - FCM_SERVICE_ACCOUNT_FILE=/app/src/main/resources/fcm-key.json
 
       # AWS S3 설정
       - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
@@ -91,6 +94,7 @@ services:
     volumes:
       - ./performance/logs/backend1:/var/log/lunchchat
       - ./src/main/resources/sheets-key.json:/app/src/main/resources/sheets-key.json:ro
+      - ./src/main/resources/fcm-key.json:/app/src/main/resources/fcm-key.json:ro
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     networks:
@@ -122,17 +126,17 @@ services:
       - TZ=Asia/Seoul
       - JAVA_OPTS=-Xms256m -Xmx700m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:G1HeapRegionSize=8m -XX:+DisableExplicitGC -XX:+UseCompressedOops -Duser.timezone=Asia/Seoul
 
-      # 데이터베이스 설정 (로컬 호스트 연결)
-      - DB_URL=jdbc:mysql://host.docker.internal:3306/lunchchat
+      # 데이터베이스 설정 (로컬 Docker 연결)
+      - DB_URL=jdbc:mysql://host.docker.internal:3306/lunchChat?serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8
       - DB_USER=${DB_USER}
       - DB_PW=${DB_PW}
 
-      # Redis 설정 (로컬 호스트 연결)
+      # Redis 설정 (로컬 Docker 연결)
       - REDIS_HOST=host.docker.internal
       - REDIS_PORT=6379
 
-      # MongoDB 설정 (로컬 호스트 연결)
-      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PW}@host.docker.internal:27017/lunchchatdb?authSource=admin
+      # MongoDB 설정 (클라우드 연결)
+      - MONGO_URI=${MONGO_URI}
 
       # JPA 설정
       - JPA_DDL_AUTO=validate
@@ -163,6 +167,9 @@ services:
       # Google Sheets 설정
       - GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE=/app/src/main/resources/sheets-key.json
       - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+      
+      # FCM 설정
+      - FCM_SERVICE_ACCOUNT_FILE=/app/src/main/resources/fcm-key.json
 
       # AWS S3 설정
       - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
@@ -297,7 +304,7 @@ services:
       - WS_URL=ws://nginx
     networks:
       - lunchchat-local
-    command: [ "run", "/scripts/member-api-test.js", "--summary-export", "/results/member-test-summary.json" ]
+    command: [ "run", "/scripts/database-intensive-test.js", "--summary-export", "/results/database-test-summary.json" ]
     profiles: [ "k6", "testing" ]
 
 networks:
