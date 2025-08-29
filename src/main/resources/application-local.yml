@@ -69,6 +69,9 @@ spring:
 google:
   sheet:
     id: ${GOOGLE_SHEET_ID}
+  sheets:
+    credentials:
+      path: "sheets-key.json"
 
 fcm:
   service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}

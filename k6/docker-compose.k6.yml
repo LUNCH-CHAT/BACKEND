@@ -1,0 +1,19 @@
+services:
+  k6:
+    image: grafana/k6:latest
+    container_name: k6-local
+    volumes:
+      - ./tests:/scripts
+      - ./results:/results
+    working_dir: /scripts
+    environment:
+      - BASE_URL=http://nginx
+      - WS_URL=ws://nginx
+    networks:
+      - lunchchat-local
+    command: [ "run", "/scripts/high-load-scaling-test.js" ]
+
+networks:
+  lunchchat-local:
+    external: true
+    name: lunch-chat-backend

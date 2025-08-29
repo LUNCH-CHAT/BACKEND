@@ -18,42 +18,42 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/mentor")
-public class MentorController{
+public class MentorController {
 
-  private final MentorService mentorService;
-  private final MemberRepository memberRepository;
+    private final MentorService mentorService;
+    private final MemberRepository memberRepository;
 
-  public MentorController(MentorService mentorService, MemberRepository memberRepository) {
-    this.mentorService = mentorService;
-    this.memberRepository = memberRepository;
-  }
+    public MentorController(MentorService mentorService, MemberRepository memberRepository) {
+        this.mentorService = mentorService;
+        this.memberRepository = memberRepository;
+    }
 
-  @PostMapping("/monthlyM")
-  public ApiResponse<String> submit(
-      @AuthenticationPrincipal CustomUserDetails userDetails,
-      @RequestBody MentorDTO.MonthlyMentorDTO dto
-  ) {
-    String email = userDetails.getUsername();
-    Member member = memberRepository.findByEmail(email)
-        .orElseThrow(() -> new AuthException(ErrorStatus.USER_NOT_FOUND));
+    @PostMapping("/monthlyM")
+    public ApiResponse<String> submit(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @RequestBody MentorDTO.MonthlyMentorDTO dto
+    ) {
+        String email = userDetails.getUsername();
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new AuthException(ErrorStatus.USER_NOT_FOUND));
 
-    String interestNames = member.getInterests()
-        .stream()
-        .map(interest -> interest.getType().name())
-        .collect(Collectors.joining(", "));
+        String interestNames = member.getInterests()
+            .stream()
+            .map(interest -> interest.getType().name())
+            .collect(Collectors.joining(", "));
 
-    mentorService.appendRow(List.of(
-        dto.phone(),
-        dto.question(),
-        member.getUniversity().getName(),
-        member.getEmail(),
-        member.getDepartment().getName(),
-        member.getStudentNo(),
-        member.getMembername(),
-        interestNames
-    ));
+        mentorService.appendRow(List.of(
+            dto.phone(),
+            dto.question(),
+            member.getUniversity().getName(),
+            member.getEmail(),
+            member.getDepartment().getName(),
+            member.getStudentNo(),
+            member.getMembername(),
+            interestNames
+        ));
 
-    return ApiResponse.onSuccess("엑셀 작성 완료");
-  }
+        return ApiResponse.onSuccess("엑셀 작성 완료");
+    }
 
 }

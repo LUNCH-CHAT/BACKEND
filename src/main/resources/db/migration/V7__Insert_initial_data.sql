@@ -1,5 +1,5 @@
 -- ===========================================
--- LunchChat V6 Initial Data Insertion Script
+-- LunchChat V7 Initial Data Insertion Script
 -- ===========================================
 
 -- 1. 관심사 (Interest) 테이블 데이터 삽입
@@ -22,3 +22,10 @@ INSERT INTO university (id, name, domain, created_at, updated_at) VALUES
 (3, '이화여대', 'ewha.ac.kr', CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)),
 (4, '이화여대', 'ewhain.net', CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)),
 (5, 'UMC대', '', CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6));
+
+-- 3. 학과 (Department) 테이블 데이터 삽입
+-- V6 스크립트에서 college id=1이 생성된다고 가정합니다.
+INSERT INTO department (id, name, college_id, created_at, updated_at) VALUES
+(1, '컴퓨터공학전공', 1, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)),
+(2, '사이버보안전공', 1, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)),
+(3, '소프트웨어학부', 1, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6));
