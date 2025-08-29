@@ -7,10 +7,8 @@ import com.lunchchat.domain.university.entity.University;
 import com.lunchchat.global.apiPayLoad.ApiResponse;
 import com.lunchchat.global.apiPayLoad.code.status.ErrorStatus;
 import com.lunchchat.global.security.auth.dto.CustomUserDetails;
-import com.lunchchat.global.security.auth.dto.DirectLoginDTO;
 import com.lunchchat.global.security.auth.dto.GoogleUserDTO;
 import com.lunchchat.global.security.auth.dto.TokenDTO;
-import com.lunchchat.global.security.auth.service.DirectAuthService;
 import com.lunchchat.global.security.auth.service.GoogleAuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -36,43 +34,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class OAuthController {
 
     private final GoogleAuthService googleAuthService;
-    private final DirectAuthService directAuthService;
     private final MemberRepository memberRepository;
 
-    public OAuthController(GoogleAuthService googleAuthService, DirectAuthService directAuthService, MemberRepository memberRepository) {
+    public OAuthController(GoogleAuthService googleAuthService, MemberRepository memberRepository) {
         this.googleAuthService = googleAuthService;
-        this.directAuthService = directAuthService;
         this.memberRepository = memberRepository;
     }
 
-    // 직접 로그인 (k6 테스트용)
-    @PostMapping("/login/direct")
-    public ApiResponse<?> directLogin(
-        @RequestBody @Valid DirectLoginDTO.Request request,
-        HttpServletResponse response) {
-        try {
-            DirectLoginDTO.Response loginResponse = directAuthService.directLogin(request, response);
-            log.info("✅ [직접 로그인 성공] email={}", request.email());
-            return ApiResponse.onSuccess(loginResponse);
-        } catch (Exception e) {
-            log.error("❌ [직접 로그인 실패] email={}, error={}", request.email(), e.getMessage());
-            return ApiResponse.error(ErrorStatus.UNAUTHORIZED, "로그인에 실패했습니다.");
-        }
-    }
-
-    // 직접 회원가입 및 로그인
-    @PostMapping("/register/direct")
-    public ApiResponse<?> registerAndLogin(
-        @RequestBody @Valid DirectLoginDTO.Request request,
-        HttpServletResponse response) {
-        try {
-            DirectLoginDTO.Response loginResponse = directAuthService.registerAndLogin(request, response);
-            log.info("✅ [직접 회원가입 및 로그인 성공] email={}", request.email());
-            return ApiResponse.onSuccess(loginResponse);
-        } catch (Exception e) {
-            log.error("❌ [직접 회원가입 실패] email={}, error={}", request.email(), e.getMessage());
-            return ApiResponse.error(ErrorStatus.BAD_REQUEST, "회원가입에 실패했습니다: " + e.getMessage());
-        }
+    @GetMapping("/callback/google")
+    public void redirectTo(@RequestParam("code") String code, HttpServletResponse response)
+        throws IOException {
+        String redirectUri = "https://lunchchat.site/auth/login/google?code=" + code;
+        response.sendRedirect(redirectUri);
+        ;
     }
 
 
@@ -80,8 +54,7 @@ public class OAuthController {
     public ApiResponse<?> googleLogin(@RequestParam("code") String accessCode,
         HttpServletResponse response) {
         try {
-            String decodedCode = java.net.URLDecoder.decode(accessCode, java.nio.charset.StandardCharsets.UTF_8);
-            Member user = googleAuthService.googleAuthLogin(new GoogleUserDTO.Request(decodedCode),
+            Member user = googleAuthService.googleAuthLogin(new GoogleUserDTO.Request(accessCode),
                 response);
 
             // 상태별 응답

@@ -5,24 +5,24 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 
-//@Configuration
+@Configuration
 public class GoogleSheetsConfig {
 
-    @Value("${google.sheets.credentials.path}")
-    private String credentialsPath;
+    @Value("${GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE}")
+    private String serviceAccountFilePath;
 
     @Bean
     public Sheets sheetsService() throws Exception {
 
-        // Classpath에서 인증 파일 읽기
-        InputStream input = new ClassPathResource(credentialsPath).getInputStream();
+        // 인증파일 (FCM과 동일한 방식으로 환경변수에서 파일 경로 읽기)
+        InputStream input = new FileInputStream(serviceAccountFilePath);
 
         // 인증객체 생성
         GoogleCredentials credentials = GoogleCredentials.fromStream(input)
